@@ -1,0 +1,13 @@
+:root {
+  --color-text: #111827;
+}
+html,
+body,
+#__next {
+  height: 100%;
+}
+body {
+  margin: 0;
+  color: var(--color-text);
+  font-family: Inter, system-ui, Arial;
+}

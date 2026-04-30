@@ -1,0 +1,792 @@
+openapi: 3.1.0
+info:
+  title: Tuhfat al-Muhtaj Learning Platform API
+  version: 1.0.0
+  description: |
+    REST API for the Tuhfat al-Muhtaj audio lesson platform.
+    Serves 648+ lessons by Sheikh Dr. Abdul Hakim Al-Sa'di.
+    Public read endpoints are unauthenticated.
+    Admin write endpoints require a session cookie obtained via POST /api/v1/admin/auth.
+  contact:
+    name: Platform Admin
+  license:
+    name: MIT
+
+servers:
+  - url: https://tuhfa.vercel.app/api/v1
+    description: Production
+  - url: http://localhost:3000/api/v1
+    description: Local development
+
+tags:
+  - name: Lessons
+    description: Public lesson read endpoints
+  - name: Admin Auth
+    description: Admin authentication
+  - name: Admin Lessons
+    description: Admin lesson management (authenticated)
+  - name: Admin Upload
+    description: Admin audio upload to Internet Archive (authenticated)
+
+# ─────────────────────────────────────────────
+# SECURITY SCHEMES
+# ─────────────────────────────────────────────
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: tuhfa_session
+      description: HttpOnly iron-session cookie. Obtained via POST /api/v1/admin/auth.
+
+  # ─────────────────────────────────────────────
+  # SHARED SCHEMAS
+  # ─────────────────────────────────────────────
+  schemas:
+    Chapter:
+      type: object
+      required: [kitab, bab, fasl]
+      properties:
+        kitab:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: "كتاب الطهارة"
+        bab:
+          type: [string, "null"]
+          maxLength: 200
+          example: "باب الماء"
+        fasl:
+          type: [string, "null"]
+          maxLength: 200
+          example: null
+
+    Lesson:
+      type: object
+      required:
+        - id
+        - volume
+        - lesson_number
+        - title_ar
+        - chapter
+        - duration_seconds
+        - upload_date
+        - archive_url
+        - telegram_post_id
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          readOnly: true
+          example: 1
+        volume:
+          type: integer
+          enum: [1, 2, 3, 4]
+          example: 1
+        lesson_number:
+          type: integer
+          minimum: 1
+          example: 1
+        title_ar:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "قول المصنف: باب في أحكام الطهارة"
+        chapter:
+          $ref: "#/components/schemas/Chapter"
+        duration_seconds:
+          type: integer
+          minimum: 1
+          example: 3720
+        upload_date:
+          type: string
+          format: date
+          example: "2023-01-15"
+        archive_url:
+          type: string
+          format: uri
+          pattern: "^https://archive\\.org/download/"
+          example: "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-001.mp3"
+        telegram_post_id:
+          type: integer
+          minimum: 1
+          example: 12
+
+    LessonCreateBody:
+      type: object
+      required:
+        - volume
+        - lesson_number
+        - title_ar
+        - chapter
+        - duration_seconds
+        - upload_date
+        - archive_url
+        - telegram_post_id
+      properties:
+        volume:
+          type: integer
+          enum: [1, 2, 3, 4]
+          example: 1
+        lesson_number:
+          type: integer
+          minimum: 1
+          example: 214
+        title_ar:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "قول المصنف: فصل في أحكام الغسل"
+        chapter:
+          $ref: "#/components/schemas/Chapter"
+        duration_seconds:
+          type: integer
+          minimum: 1
+          example: 4200
+        upload_date:
+          type: string
+          format: date
+          example: "2026-04-01"
+        archive_url:
+          type: string
+          format: uri
+          pattern: "^https://archive\\.org/download/"
+          example: "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3"
+        telegram_post_id:
+          type: integer
+          minimum: 1
+          example: 679
+
+    LessonUpdateBody:
+      type: object
+      minProperties: 1
+      properties:
+        title_ar:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "قول المصنف: فصل في أحكام الغسل — مراجعة"
+        chapter:
+          $ref: "#/components/schemas/Chapter"
+        duration_seconds:
+          type: integer
+          minimum: 1
+          example: 4350
+        upload_date:
+          type: string
+          format: date
+          example: "2026-04-01"
+        archive_url:
+          type: string
+          format: uri
+          pattern: "^https://archive\\.org/download/"
+          example: "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3"
+        telegram_post_id:
+          type: integer
+          minimum: 1
+          example: 679
+
+    ResponseMeta:
+      type: object
+      required: [requestId, timestamp]
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-04-20T10:00:00.000Z"
+        total:
+          type: integer
+          description: Total count (only present on list endpoints)
+          example: 648
+        limit:
+          type: integer
+          example: 50
+        offset:
+          type: integer
+          example: 0
+
+    ApiError:
+      type: object
+      required: [error, requestId, timestamp]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "Request validation failed"
+            details:
+              type: object
+              additionalProperties: true
+              example: { "lesson_number": "Must be a positive integer" }
+        requestId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-04-20T10:00:00.000Z"
+
+  # ─────────────────────────────────────────────
+  # SHARED RESPONSES
+  # ─────────────────────────────────────────────
+  responses:
+    Unauthorized:
+      description: Session cookie missing, invalid, or expired
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"
+              details: {}
+            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: "NOT_FOUND"
+              message: "Lesson not found"
+              details: {}
+            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    ValidationError:
+      description: Zod validation failure — field-level errors in details
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: "VALIDATION_ERROR"
+              message: "Request validation failed"
+              details:
+                title_ar: "Required"
+                volume: "Must be one of: 1, 2, 3, 4"
+            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    Conflict:
+      description: Duplicate lesson_number in volume OR GitHub SHA conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: "DUPLICATE_LESSON_NUMBER"
+              message: "A lesson with this number already exists in volume 1"
+              details: {}
+            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until the rate limit window resets
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: "RATE_LIMITED"
+              message: "Too many requests. Please try again later."
+              details: { "retryAfterSeconds": 60 }
+            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    InternalError:
+      description: Unexpected server error (no stack trace)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"
+              details: {}
+            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    UpstreamError:
+      description: GitHub API or Internet Archive unreachable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: "UPSTREAM_ERROR"
+              message: "External service unavailable. Please try again."
+              details: {}
+            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+# ─────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────
+paths:
+  /lessons:
+    get:
+      tags: [Lessons]
+      operationId: listLessons
+      summary: List lessons with optional filters and pagination
+      description: |
+        Returns lessons sorted by volume ASC, lesson_number ASC.
+        Supports filtering by volume, kitab, bab, and text search on title_ar.
+        Cached at CDN edge for 60 seconds.
+      parameters:
+        - name: volume
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [1, 2, 3, 4]
+          description: Filter by volume number
+          example: 1
+        - name: kitab
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+          description: Exact match on chapter.kitab
+          example: "كتاب الطهارة"
+        - name: bab
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+          description: Exact match on chapter.bab
+          example: "باب الماء"
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+          description: Substring match on title_ar
+          example: "الطهارة"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+          example: 50
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+      responses:
+        "200":
+          description: Lessons retrieved successfully
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: "public, s-maxage=60, stale-while-revalidate=300"
+            X-Request-Id:
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    required: [lessons]
+                    properties:
+                      lessons:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Lesson"
+                  meta:
+                    $ref: "#/components/schemas/ResponseMeta"
+        "400":
+          description: Invalid query parameter type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/UpstreamError"
+
+  /lessons/{id}:
+    get:
+      tags: [Lessons]
+      operationId: getLessonById
+      summary: Get a single lesson by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        "200":
+          description: Lesson found
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    required: [lesson]
+                    properties:
+                      lesson:
+                        $ref: "#/components/schemas/Lesson"
+                  meta:
+                    $ref: "#/components/schemas/ResponseMeta"
+        "400":
+          description: ID is not a valid integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/UpstreamError"
+
+  /admin/auth:
+    post:
+      tags: [Admin Auth]
+      operationId: adminAuth
+      summary: Authenticate as admin — returns session cookie
+      description: |
+        Validates admin password. On success, sets HttpOnly iron-session cookie.
+        Rate limited to 5 requests per 15 minutes per IP.
+        Wrong password always returns 401 with generic message (no enumeration).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                  example: "your_admin_password"
+      responses:
+        "200":
+          description: Authentication successful. Session cookie set.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              example: "tuhfa_session=<token>; HttpOnly; Secure; SameSite=Strict; Max-Age=86400"
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    required: [authenticated]
+                    properties:
+                      authenticated:
+                        type: boolean
+                        example: true
+                  meta:
+                    $ref: "#/components/schemas/ResponseMeta"
+        "401":
+          description: Invalid password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                error:
+                  code: "INVALID_CREDENTIALS"
+                  message: "Invalid credentials"
+                  details: {}
+                requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                timestamp: "2026-04-20T10:00:00.000Z"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /admin/lessons:
+    post:
+      tags: [Admin Lessons]
+      operationId: createLesson
+      summary: Create a new lesson record
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LessonCreateBody"
+      responses:
+        "201":
+          description: Lesson created and committed to GitHub
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    required: [lesson]
+                    properties:
+                      lesson:
+                        $ref: "#/components/schemas/Lesson"
+                  meta:
+                    $ref: "#/components/schemas/ResponseMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/UpstreamError"
+
+  /admin/lessons/{id}:
+    put:
+      tags: [Admin Lessons]
+      operationId: updateLesson
+      summary: Update lesson metadata (partial update — only provided fields change)
+      description: |
+        id, volume, and lesson_number are immutable and cannot be updated.
+        Provide only the fields that should change.
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 649
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LessonUpdateBody"
+      responses:
+        "200":
+          description: Lesson updated and committed to GitHub
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    required: [lesson]
+                    properties:
+                      lesson:
+                        $ref: "#/components/schemas/Lesson"
+                  meta:
+                    $ref: "#/components/schemas/ResponseMeta"
+        "400":
+          description: ID is not a valid integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/UpstreamError"
+
+    delete:
+      tags: [Admin Lessons]
+      operationId: deleteLesson
+      summary: Permanently delete a lesson
+      description: Hard delete. Removes lesson from lessons.json. Cannot be undone via API — only via GitHub history revert.
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 649
+      responses:
+        "204":
+          description: Lesson deleted. No body.
+        "400":
+          description: ID is not a valid integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/UpstreamError"
+
+  /admin/upload:
+    post:
+      tags: [Admin Upload]
+      operationId: uploadAudio
+      summary: Upload audio file to Internet Archive via backend proxy
+      description: |
+        Accepts multipart/form-data. Streams file to Internet Archive S3.
+        Returns the archive_url to use when creating the lesson record.
+        Filename generated as: lesson-v{volume}-{lesson_number_padded3}.mp3
+        Max file size: 500MB.
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, volume, lesson_number]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Audio file. Max 500MB. Accepted types — audio/mpeg, audio/mp4, audio/ogg, audio/wav.
+                volume:
+                  type: string
+                  enum: ["1", "2", "3", "4"]
+                  example: "1"
+                lesson_number:
+                  type: string
+                  pattern: "^[1-9][0-9]*$"
+                  example: "214"
+      responses:
+        "200":
+          description: File uploaded to Internet Archive
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: object
+                    required: [archive_url, filename, size_bytes]
+                    properties:
+                      archive_url:
+                        type: string
+                        format: uri
+                        example: "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3"
+                      filename:
+                        type: string
+                        example: "lesson-v1-214.mp3"
+                      size_bytes:
+                        type: integer
+                        example: 104857600
+                  meta:
+                    $ref: "#/components/schemas/ResponseMeta"
+        "400":
+          description: Missing file or invalid form fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          description: File exceeds 500MB limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                error:
+                  code: "FILE_TOO_LARGE"
+                  message: "File exceeds maximum size of 500MB"
+                  details: {}
+                requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                timestamp: "2026-04-20T10:00:00.000Z"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          $ref: "#/components/responses/UpstreamError"
