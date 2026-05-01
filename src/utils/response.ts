@@ -1,5 +1,13 @@
-import { ApiResponse, ApiError } from "@/types/api";
+import { components } from "@/types/api";
 import { generateRequestId } from "@/utils/request-id";
+
+export type ApiError = components["schemas"]["ApiError"];
+export type ResponseMeta = components["schemas"]["ResponseMeta"];
+
+export type ApiResponse<T> = {
+  data: T;
+  meta: ResponseMeta;
+};
 
 export function nowIso(): string {
   return new Date().toISOString();
