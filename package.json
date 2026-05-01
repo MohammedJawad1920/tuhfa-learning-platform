@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint src/",
     "test:unit": "vitest run tests/unit/",
-    "mock": "prism mock ./docs/openapi.yaml --port 4010"
+    "mock": "node scripts/mock-server.mjs"
   },
   "dependencies": {
     "iron-session": "^8.0.4",
