@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LessonListQuerySchema } from "@/schemas/lesson-query.schema";
 import { buildError, buildSuccess } from "@/utils/response";
+import { filterAndPaginate } from "@/lib/lessons";
+import { Lesson } from "@/types/lesson";
 
 export async function GET(request: NextRequest) {
   let githubModule: typeof import("@/lib/github") | undefined;
@@ -32,12 +34,31 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const { volume, kitab, bab, search, limit, offset } = parsed.data;
+
   try {
     githubModule = await import("@/lib/github");
     const lessonsFile = await githubModule.fetchLessons();
-    const lessons = (lessonsFile.data as { lessons?: unknown[] }).lessons ?? [];
+    const lessons = ((lessonsFile.data as { lessons?: unknown[] }).lessons ??
+      []) as Lesson[];
 
-    return NextResponse.json(buildSuccess({ lessons }), { status: 200 });
+    const { filtered, paginated } = filterAndPaginate(
+      lessons,
+      { volume, kitab, bab, search },
+      { limit, offset },
+    );
+
+    return NextResponse.json(
+      buildSuccess(
+        { lessons: paginated },
+        {
+          total: filtered.length,
+          limit,
+          offset,
+        },
+      ),
+      { status: 200 },
+    );
   } catch (error) {
     if (githubModule && error instanceof githubModule.UpstreamError) {
       return NextResponse.json(
