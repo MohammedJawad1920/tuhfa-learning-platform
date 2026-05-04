@@ -38,6 +38,9 @@ describe("lessons route", () => {
     expect(body.data.lessons).toEqual([{ id: 1, title_ar: "درس" }]);
     expect(typeof body.meta.requestId).toBe("string");
     expect(typeof body.meta.timestamp).toBe("string");
+    expect(response.headers.get("Cache-Control")).toBe(
+      "public, s-maxage=60, stale-while-revalidate=300",
+    );
     expect(fetchLessonsMock).toHaveBeenCalledTimes(1);
   });
 

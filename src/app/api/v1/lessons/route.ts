@@ -6,6 +6,9 @@ import { Lesson } from "@/types/lesson";
 
 export async function GET(request: NextRequest) {
   let githubModule: typeof import("@/lib/github") | undefined;
+  const cacheHeaders = {
+    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+  };
 
   const parsed = LessonListQuerySchema.safeParse(
     Object.fromEntries(request.nextUrl.searchParams.entries()),
@@ -57,7 +60,7 @@ export async function GET(request: NextRequest) {
           offset,
         },
       ),
-      { status: 200 },
+      { status: 200, headers: cacheHeaders },
     );
   } catch (error) {
     if (githubModule && error instanceof githubModule.UpstreamError) {
