@@ -9,7 +9,7 @@
     "lint": "eslint src/",
     "test:unit": "vitest run tests/unit/",
     "test:integration": "vitest run tests/integration/",
-    "test:contract": "echo \"No contract tests yet\"",
+    "test:contract": "vitest run tests/contract/",
     "mock": "node scripts/mock-server.mjs"
   },
   "dependencies": {
