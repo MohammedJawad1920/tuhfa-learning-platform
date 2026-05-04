@@ -1,10 +1,17 @@
 import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { getIronSession } from "iron-session";
 
 import { env } from "@/config/env";
 import { AuthSchema } from "@/schemas/auth.schema";
 import { buildError, buildSuccess } from "@/utils/response";
 import { logger } from "@/lib/logger";
+import { sessionOptions } from "@/config/session";
+
+type AdminSession = {
+  authenticated?: boolean;
+  createdAt?: number;
+};
 
 function getRetryAfterSeconds(reset: number): number {
   const resetMs = reset < 1_000_000_000_000 ? reset * 1000 : reset;
@@ -98,12 +105,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Create session on successful auth
+  const response = NextResponse.json(buildSuccess({ authenticated: true }), {
+    status: 200,
+  });
+  const session = await getIronSession<AdminSession>(
+    request,
+    response,
+    sessionOptions,
+  );
+  session.authenticated = true;
+  session.createdAt = Date.now();
+  await session.save();
+
   logger.info(
     { route: "/api/v1/admin/auth", method: "POST", statusCode: 200 },
     "Admin authenticated",
   );
 
-  return NextResponse.json(buildSuccess({ authenticated: true }), {
-    status: 200,
-  });
+  return response;
 }

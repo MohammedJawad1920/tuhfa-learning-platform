@@ -20,6 +20,29 @@ vi.mock("@/lib/logger", () => ({
   logger: loggerMock,
 }));
 
+const sessionMock = vi.hoisted(() => ({
+  authenticated: false,
+  createdAt: 0,
+  save: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("iron-session", () => ({
+  getIronSession: vi.fn().mockResolvedValue(sessionMock),
+}));
+
+vi.mock("@/config/session", () => ({
+  sessionOptions: {
+    cookieName: "tuhfa_session",
+    password: "test-session-secret",
+    cookieOptions: {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 86400,
+    },
+  },
+}));
+
 import { POST } from "@/app/api/v1/admin/auth/route";
 
 describe("POST /api/v1/admin/auth", () => {
