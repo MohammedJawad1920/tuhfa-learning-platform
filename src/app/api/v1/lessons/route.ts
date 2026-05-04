@@ -4,11 +4,37 @@ import { buildError, buildSuccess } from "@/utils/response";
 import { filterAndPaginate } from "@/lib/lessons";
 import { Lesson } from "@/types/lesson";
 
+function getRetryAfterSeconds(reset: number): number {
+  const resetMs = reset < 1_000_000_000_000 ? reset * 1000 : reset;
+  return Math.max(1, Math.ceil((resetMs - Date.now()) / 1000));
+}
+
 export async function GET(request: NextRequest) {
   let githubModule: typeof import("@/lib/github") | undefined;
   const cacheHeaders = {
     "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
   };
+
+  const rateLimitModule = await import("@/lib/rate-limit");
+  const rateLimitResult = await rateLimitModule.checkPublicRateLimit(
+    request.headers,
+  );
+
+  if (!rateLimitResult.success) {
+    const retryAfterSeconds = getRetryAfterSeconds(rateLimitResult.reset);
+
+    return NextResponse.json(
+      buildError("RATE_LIMITED", "Too many requests. Please try again later.", {
+        retryAfterSeconds,
+      }),
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(retryAfterSeconds),
+        },
+      },
+    );
+  }
 
   const parsed = LessonListQuerySchema.safeParse(
     Object.fromEntries(request.nextUrl.searchParams.entries()),

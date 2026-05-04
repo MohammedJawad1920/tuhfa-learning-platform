@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const fetchLessonsMock = vi.fn();
+const checkPublicRateLimitMock = vi.fn();
 
 vi.mock("@/lib/github", async () => {
   class UpstreamError extends Error {}
@@ -12,11 +13,22 @@ vi.mock("@/lib/github", async () => {
   };
 });
 
+vi.mock("@/lib/rate-limit", () => ({
+  checkPublicRateLimit: checkPublicRateLimitMock,
+}));
+
 import { GET } from "@/app/api/v1/lessons/route";
 
 describe("lessons route", () => {
   beforeEach(() => {
     fetchLessonsMock.mockReset();
+    checkPublicRateLimitMock.mockReset();
+    checkPublicRateLimitMock.mockResolvedValue({
+      success: true,
+      limit: 120,
+      remaining: 119,
+      reset: Date.now() + 60_000,
+    });
   });
 
   it("returns lessons from GitHub", async () => {
@@ -55,5 +67,23 @@ describe("lessons route", () => {
     const body = await response.json();
     expect(body.error.code).toBe("UPSTREAM_ERROR");
     expect(body.error.message).toContain("GitHub");
+  });
+
+  it("returns 429 when the public rate limit is exceeded", async () => {
+    checkPublicRateLimitMock.mockResolvedValueOnce({
+      success: false,
+      limit: 120,
+      remaining: 0,
+      reset: Date.now() + 60_000,
+    });
+
+    const request = new NextRequest("http://localhost/api/v1/lessons");
+    const response = await GET(request);
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeTruthy();
+    const body = await response.json();
+    expect(body.error.code).toBe("RATE_LIMITED");
+    expect(body.error.details.retryAfterSeconds).toBeGreaterThan(0);
   });
 });

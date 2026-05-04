@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import {
   LessonIdSchema,
@@ -7,7 +7,20 @@ import {
 import { GET as getLessons } from "@/app/api/v1/lessons/route";
 import { GET as getLessonById } from "@/app/api/v1/lessons/[id]/route";
 
+const checkPublicRateLimitMock = vi.fn();
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkPublicRateLimit: checkPublicRateLimitMock,
+}));
+
 describe("lesson query validation", () => {
+  vi.mocked(checkPublicRateLimitMock).mockResolvedValue({
+    success: true,
+    limit: 120,
+    remaining: 119,
+    reset: Date.now() + 60_000,
+  });
+
   it("parses valid list query params and applies defaults", () => {
     const parsed = LessonListQuerySchema.parse({
       volume: "1",
@@ -68,5 +81,22 @@ describe("lesson query validation", () => {
     expect(response.status).toBe(400);
     const body = await response.json();
     expect(body.error.code).toBe("BAD_REQUEST");
+  });
+
+  it("returns 429 for the lesson by id route when rate limited", async () => {
+    checkPublicRateLimitMock.mockResolvedValueOnce({
+      success: false,
+      limit: 120,
+      remaining: 0,
+      reset: Date.now() + 60_000,
+    });
+
+    const request = new NextRequest("http://localhost/api/v1/lessons/1");
+    const response = await getLessonById(request, { params: { id: "1" } });
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeTruthy();
+    const body = await response.json();
+    expect(body.error.code).toBe("RATE_LIMITED");
   });
 });
