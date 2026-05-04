@@ -10,7 +10,7 @@ beforeEach(() => {
   // Minimal env values required by src/config/env.ts
   process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
   process.env.NEXT_PUBLIC_API_BASE_URL = "http://localhost:4010";
-  process.env.NODE_ENV = "test";
+  // NODE_ENV is read-only and set by vitest automatically
   process.env.ADMIN_PASSWORD = "A".repeat(16);
   process.env.SESSION_SECRET = "S".repeat(32);
   process.env.SESSION_MAX_AGE_SECONDS = "86400";
