@@ -206,4 +206,88 @@ describe("Integration: /api/v1/admin/lessons (POST)", () => {
       expect(body.error.code).toBe("UNAUTHORIZED");
     });
   });
+
+  describe("DELETE /api/v1/admin/lessons/{id}", () => {
+    it("deletes an existing lesson and returns 204", async () => {
+      const lessonNumber = Math.floor(Date.now() % 100000) || 10001;
+      const lessonData = {
+        volume: 1,
+        lesson_number: lessonNumber,
+        title_ar: "اختبار حذف درس",
+        chapter: {
+          kitab: "كتاب الطهارة",
+          bab: null,
+          fasl: null,
+        },
+        duration_seconds: 1800,
+        upload_date: "2026-05-01",
+        archive_url:
+          "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-test-delete.mp3",
+        telegram_post_id: 54321,
+      };
+
+      const createRes = await fetch(`${baseUrl}/admin/lessons`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(sessionCookie && { cookie: sessionCookie }),
+        },
+        body: JSON.stringify(lessonData),
+      });
+
+      expect(createRes.status).toBe(201);
+      const createBody = await createRes.json();
+      const lessonId = createBody.data.lesson.id as number;
+
+      const deleteRes = await fetch(`${baseUrl}/admin/lessons/${lessonId}`, {
+        method: "DELETE",
+        headers: {
+          ...(sessionCookie && { cookie: sessionCookie }),
+        },
+      });
+
+      expect(deleteRes.status).toBe(204);
+      expect(await deleteRes.text()).toBe("");
+
+      const getRes = await fetch(`${baseUrl}/lessons/${lessonId}`);
+      expect(getRes.status).toBe(404);
+    });
+
+    it("returns 404 when lesson does not exist", async () => {
+      const res = await fetch(`${baseUrl}/admin/lessons/9999999`, {
+        method: "DELETE",
+        headers: {
+          ...(sessionCookie && { cookie: sessionCookie }),
+        },
+      });
+
+      expect(res.status).toBe(404);
+      const body = await res.json();
+      expect(body.error.code).toBe("NOT_FOUND");
+    });
+
+    it("returns 400 for invalid lesson id", async () => {
+      const res = await fetch(`${baseUrl}/admin/lessons/not-a-number`, {
+        method: "DELETE",
+        headers: {
+          ...(sessionCookie && { cookie: sessionCookie }),
+        },
+      });
+
+      expect(res.status).toBe(400);
+      const body = await res.json();
+      expect(body.error.code).toBe("BAD_REQUEST");
+    });
+
+    it("returns 401 when session cookie is missing", async () => {
+      const res = await fetch(`${baseUrl}/admin/lessons/1`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.error.code).toBe("UNAUTHORIZED");
+    });
+  });
 });

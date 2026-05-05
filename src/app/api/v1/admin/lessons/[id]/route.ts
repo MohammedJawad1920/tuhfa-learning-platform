@@ -210,13 +210,105 @@ export async function PUT(
   }
 }
 
-export async function DELETE() {
-  return NextResponse.json(
-    buildError(
-      "NOT_IMPLEMENTED",
-      "DELETE /api/v1/admin/lessons/[id] is not implemented yet",
-      {},
-    ),
-    { status: 501 },
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> | { id: string } },
+) {
+  const rateLimitModule = await import("@/lib/rate-limit");
+  const rateLimitResult = await rateLimitModule.checkAdminWriteRateLimit(
+    request.headers,
   );
+
+  if (!rateLimitResult.success) {
+    const retryAfterSeconds = getRetryAfterSeconds(rateLimitResult.reset);
+
+    return NextResponse.json(
+      buildError("RATE_LIMITED", "Too many requests. Please try again later.", {
+        retryAfterSeconds,
+      }),
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfterSeconds) },
+      },
+    );
+  }
+
+  const params = await context.params;
+  const parsedId = Number(params.id);
+
+  if (!Number.isInteger(parsedId) || parsedId < 1) {
+    return NextResponse.json(
+      buildError("BAD_REQUEST", "ID is not a valid positive integer", {
+        id: "id must be a positive integer",
+      }),
+      { status: 400 },
+    );
+  }
+
+  try {
+    const lessonsFile = (await github.fetchLessons()) as {
+      data: LessonsFile;
+      sha: string;
+    };
+    const existingLessons = lessonsFile.data.lessons ?? [];
+    const lessonIndex = existingLessons.findIndex(
+      (lesson) => lesson.id === parsedId,
+    );
+
+    if (lessonIndex === -1) {
+      return NextResponse.json(
+        buildError("NOT_FOUND", "Lesson not found", {}),
+        { status: 404 },
+      );
+    }
+
+    const updatedLessons = existingLessons.filter(
+      (lesson) => lesson.id !== parsedId,
+    );
+
+    await github.updateLessons(
+      {
+        ...lessonsFile.data,
+        last_updated: new Date().toISOString(),
+        lessons: updatedLessons,
+      },
+      lessonsFile.sha,
+      `Delete lesson ${parsedId}`,
+    );
+
+    fireAndForgetRevalidate(`/lessons/${parsedId}`);
+
+    logger.info(
+      {
+        route: "/api/v1/admin/lessons/[id]",
+        method: "DELETE",
+        statusCode: 204,
+        action: "lesson.delete",
+        lessonId: parsedId,
+      },
+      "Admin deleted lesson",
+    );
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    if (error instanceof github.ConflictError) {
+      return NextResponse.json(
+        buildError(
+          "CONCURRENT_EDIT_CONFLICT",
+          "Concurrent edit detected. Please retry.",
+          {},
+        ),
+        { status: 409 },
+      );
+    }
+
+    if (error instanceof github.UpstreamError) {
+      return NextResponse.json(
+        buildError("UPSTREAM_ERROR", "Unable to reach GitHub API"),
+        { status: 502 },
+      );
+    }
+
+    throw error;
+  }
 }
