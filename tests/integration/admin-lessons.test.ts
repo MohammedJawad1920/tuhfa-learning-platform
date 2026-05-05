@@ -291,3 +291,52 @@ describe("Integration: /api/v1/admin/lessons (POST)", () => {
     });
   });
 });
+
+describe("Integration: /api/revalidate (ISR webhook)", () => {
+  const baseUrl = "http://127.0.0.1:3000";
+
+  describe("GET /api/revalidate", () => {
+    it("returns 200 with correct secret", async () => {
+      const secret = process.env.REVALIDATION_SECRET || "test-secret";
+      const res = await fetch(
+        `${baseUrl}/api/revalidate?secret=${encodeURIComponent(secret)}`,
+      );
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toHaveProperty("data");
+      expect(body.data).toHaveProperty("revalidated");
+      expect(body.data.revalidated).toBe(true);
+      expect(body).toHaveProperty("meta");
+      expect(body.meta).toHaveProperty("requestId");
+      expect(body.meta).toHaveProperty("timestamp");
+    });
+
+    it("returns 401 when secret is missing", async () => {
+      const res = await fetch(`${baseUrl}/api/revalidate`);
+
+      expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.error.code).toBe("UNAUTHORIZED");
+      expect(body.error.message).toContain("Invalid");
+    });
+
+    it("returns 401 when secret is incorrect", async () => {
+      const res = await fetch(
+        `${baseUrl}/api/revalidate?secret=wrong-secret-value`,
+      );
+
+      expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.error.code).toBe("UNAUTHORIZED");
+    });
+
+    it("returns 401 when secret is empty string", async () => {
+      const res = await fetch(`${baseUrl}/api/revalidate?secret=`);
+
+      expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.error.code).toBe("UNAUTHORIZED");
+    });
+  });
+});
