@@ -5,8 +5,8 @@ import { z } from "zod";
  */
 const ChapterSchema = z.object({
   kitab: z.string().trim().min(1, "kitab must be non-empty"),
-  bab: z.string().nullable().optional(),
-  fasl: z.string().nullable().optional(),
+  bab: z.string().nullable(),
+  fasl: z.string().nullable(),
 });
 
 /**
@@ -50,7 +50,13 @@ export const LessonUpdateSchema = z
       .optional(),
     lesson_number: z.number().int().positive().optional(),
     title_ar: z.string().trim().min(1).optional(),
-    chapter: ChapterSchema.optional(),
+    chapter: z
+      .object({
+        kitab: z.string().trim().min(1).optional(),
+        bab: z.string().nullable().optional(),
+        fasl: z.string().nullable().optional(),
+      })
+      .optional(),
     duration_seconds: z.number().int().positive().optional(),
     upload_date: z
       .string()
