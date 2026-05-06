@@ -28,12 +28,20 @@ export type FilterParams = {
   search?: string;
 };
 
-export function useFilteredLessons(filters?: FilterParams, page = 1, limit = 50) {
+export function useFilteredLessons(
+  filters?: FilterParams,
+  page = 1,
+  limit = 50,
+) {
   return useQuery<Lesson[], Error>({
     queryKey: ["lessons", "filtered", filters ?? {}, page],
     queryFn: async () => {
       const offset = Math.max(0, (page - 1) * limit);
-      const resp = await endpoints.listLessons({ ...filters, limit, offset } as any);
+      const resp = await endpoints.listLessons({
+        ...filters,
+        limit,
+        offset,
+      } as any);
       return (resp as any).data?.lessons ?? [];
     },
     staleTime: 60_000,

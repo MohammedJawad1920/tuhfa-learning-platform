@@ -16,13 +16,20 @@ function renderWithClient(ui: React.ReactElement) {
 
 describe("useAllLessons", () => {
   it("fetches 4 pages and merges results", async () => {
-    const page1 = { data: { lessons: [{ id: 1, volume: 1, lesson_number: 1 }] } };
-    const page2 = { data: { lessons: [{ id: 2, volume: 1, lesson_number: 2 }] } };
-    const page3 = { data: { lessons: [{ id: 3, volume: 2, lesson_number: 1 }] } };
+    const page1 = {
+      data: { lessons: [{ id: 1, volume: 1, lesson_number: 1 }] },
+    };
+    const page2 = {
+      data: { lessons: [{ id: 2, volume: 1, lesson_number: 2 }] },
+    };
+    const page3 = {
+      data: { lessons: [{ id: 3, volume: 2, lesson_number: 1 }] },
+    };
     const page4 = { data: { lessons: [] } };
 
     const spy = vi.spyOn(endpoints, "listLessons");
-    spy.mockResolvedValueOnce(page1 as any)
+    spy
+      .mockResolvedValueOnce(page1 as any)
       .mockResolvedValueOnce(page2 as any)
       .mockResolvedValueOnce(page3 as any)
       .mockResolvedValueOnce(page4 as any);
@@ -35,15 +42,21 @@ describe("useAllLessons", () => {
 
     renderWithClient(<C />);
 
-    await waitFor(() => expect(screen.getByTestId("count")).toHaveTextContent("3"));
+    await waitFor(() =>
+      expect(screen.getByTestId("count")).toHaveTextContent("3"),
+    );
     spy.mockRestore();
   });
 });
 
 describe("useFilteredLessons", () => {
   it("calls listLessons with filters and pagination", async () => {
-    const resp = { data: { lessons: [{ id: 10, volume: 1, lesson_number: 5 }] } };
-    const spy = vi.spyOn(endpoints, "listLessons").mockResolvedValue(resp as any);
+    const resp = {
+      data: { lessons: [{ id: 10, volume: 1, lesson_number: 5 }] },
+    };
+    const spy = vi
+      .spyOn(endpoints, "listLessons")
+      .mockResolvedValue(resp as any);
 
     function C() {
       const q = useFilteredLessons({ volume: 1, kitab: "K" }, 2, 10);
@@ -53,9 +66,16 @@ describe("useFilteredLessons", () => {
 
     renderWithClient(<C />);
 
-    await waitFor(() => expect(screen.getByTestId("first")).toHaveTextContent("10"));
+    await waitFor(() =>
+      expect(screen.getByTestId("first")).toHaveTextContent("10"),
+    );
 
-    expect(spy).toHaveBeenCalledWith({ volume: 1, kitab: "K", limit: 10, offset: 10 });
+    expect(spy).toHaveBeenCalledWith({
+      volume: 1,
+      kitab: "K",
+      limit: 10,
+      offset: 10,
+    });
     spy.mockRestore();
   });
 });
