@@ -10,6 +10,7 @@
     "test:unit": "vitest run tests/unit/",
     "test:integration": "vitest run tests/integration/",
     "test:contract": "vitest run tests/contract/",
+    "test:coverage": "vitest run tests/unit/ --coverage && node scripts/check-coverage-thresholds.mjs",
     "mock": "node scripts/mock-server.mjs"
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "autoprefixer": "^10.4.21",
     "axe-core": "^4.11.4",
     "jsdom": "^29.1.1",
