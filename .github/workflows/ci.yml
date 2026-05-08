@@ -239,9 +239,21 @@ jobs:
         run: npx next start > /tmp/nextjs.log 2>&1 &
 
       - name: Wait for Next.js
-        run: sleep 5 && curl -f http://localhost:3000 || exit 1
+        run: |
+          for i in {1..12}; do
+            if curl -sSf http://localhost:3000 >/dev/null; then
+              echo "Next.js is up"
+              break
+            fi
+            echo "Waiting for Next.js... ($i/12)"
+            sleep 5
+          done
+          curl -f http://localhost:3000 || (cat /tmp/nextjs.log && exit 1)
 
       - name: Run Lighthouse CI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx lhci autorun
 
   bundle-check:
