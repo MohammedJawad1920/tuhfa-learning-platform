@@ -884,7 +884,7 @@ Components (build in this order — simpler first):
 
 - Push `main` branch — Vercel auto-deploys.
 - Confirm deployment succeeds in Vercel dashboard.
-- Note production URL (e.g., `tuhfa.vercel.app`).
+- Note production URL (e.g., `tuhfa-learning-platform.vercel.app`).
 
 **P14-3 — Smoke test (production)**
 Run all 7 smoke test items from README.md against production URL:

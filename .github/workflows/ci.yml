@@ -101,9 +101,9 @@ jobs:
         run: npm ci
 
       - name: Start Prism mock server
-        run: npx prism mock ./openapi.yaml --port 4010 > /tmp/prism.log 2>&1 &
+        run: npm run mock > /tmp/mock-server.log 2>&1 &
 
-      - name: Wait for Prism
+      - name: Wait for mock server
         run: sleep 3
 
       - name: Run integration tests

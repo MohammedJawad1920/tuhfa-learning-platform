@@ -122,7 +122,7 @@ NEXT_PUBLIC_VERCEL_ANALYTICS_ID=""
 
 **Configuration Rules:**
 
-- `NEXT_PUBLIC_API_BASE_URL` must be set per environment. Development: `http://localhost:3000/api/v1`. Production: `https://tuhfa.vercel.app/api/v1`.
+- `NEXT_PUBLIC_API_BASE_URL` must be set per environment. Development: `http://localhost:3000/api/v1`. Production: `https://tuhfa-learning-platform.vercel.app/api/v1`.
 - No secrets in `NEXT_PUBLIC_*` env vars (they are build-time public).
 - `REVALIDATION_SECRET` is server-side only (no `NEXT_PUBLIC_` prefix) — used only in `/api/revalidate` route handler, already defined in backend freeze.
 - Admin session cookie (`tuhfa_session`) is HttpOnly, SameSite=Strict — never readable by JavaScript. No client-side auth token storage of any kind.
