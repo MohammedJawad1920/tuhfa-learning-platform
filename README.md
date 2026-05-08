@@ -43,15 +43,15 @@ Use `npm run mock` to start the Prism mock server on port 4010.
 
 ## Smoke test checklist
 
-Run these checks against the deployment before launch:
+Run these checks against the deployment (production or preview) before launch:
 
-1. `GET /api/v1/lessons` returns `200` and includes `Cache-Control`.
-2. `GET /api/v1/lessons/1` returns `200` or `404` if the lesson does not exist yet.
+1. `GET /api/v1/lessons` returns `200` and includes `Cache-Control` header.
+2. `GET /api/v1/lessons/1` returns `200` (if populated) or `404` (if not yet populated).
 3. `GET /api/docs` loads the OpenAPI UI and shows all 7 endpoints.
-4. `POST /api/v1/admin/auth` with the wrong password returns `401` with `INVALID_CREDENTIALS`.
-5. `POST /api/v1/admin/auth` with the correct password returns `200` and sets the session cookie.
-6. `GET /api/v1/admin/lessons` without a session returns `401` `UNAUTHORIZED`.
-7. Visiting `/admin` without a session redirects to `/admin/login`.
+4. `POST /api/v1/admin/auth` with wrong password returns `401 INVALID_CREDENTIALS`.
+5. `POST /api/v1/admin/auth` with correct password returns `200` and includes `Set-Cookie` header.
+6. `GET /api/v1/admin/lessons` without session cookie returns `401 UNAUTHORIZED`.
+7. Visit `/admin` without session → redirects to `/admin/login`.
 
 ## Notes
 

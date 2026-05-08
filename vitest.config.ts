@@ -18,6 +18,10 @@ export default defineConfig({
         "src/features/**",
         "src/hooks/**",
       ],
+      thresholds: {
+        "src/lib/": { lines: 80 },
+        "src/schemas/": { lines: 100 },
+      },
     },
   },
   resolve: {
