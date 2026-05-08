@@ -100,6 +100,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Start Prism mock server
+        run: npx prism mock ./openapi.yaml --port 4010 > /tmp/prism.log 2>&1 &
+
+      - name: Wait for Prism
+        run: sleep 3
+
       - name: Run integration tests
         run: npx vitest run tests/integration/
 
