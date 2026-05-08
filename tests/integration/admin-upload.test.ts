@@ -1,6 +1,12 @@
 import { describe, it, beforeEach, expect, vi } from "vitest";
 import { Readable } from "stream";
 
+const checkUploadRateLimitMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkUploadRateLimit: checkUploadRateLimitMock,
+}));
+
 beforeEach(() => {
   process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
   process.env.NEXT_PUBLIC_API_BASE_URL = "http://localhost:4010";
@@ -23,6 +29,16 @@ beforeEach(() => {
 });
 
 describe("admin upload route", () => {
+  beforeEach(() => {
+    checkUploadRateLimitMock.mockReset();
+    checkUploadRateLimitMock.mockResolvedValue({
+      success: true,
+      limit: 10,
+      remaining: 9,
+      reset: Date.now() + 60 * 60 * 1000,
+    });
+  });
+
   it("returns 400 when no multipart content", async () => {
     const { POST } = await import("@/app/api/v1/admin/upload/route");
 
