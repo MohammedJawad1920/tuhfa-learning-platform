@@ -12,8 +12,12 @@ const nextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
+            // Allow inline scripts during development to avoid blocking Next.js
+            // runtime/hmr inline scripts. In production we keep a stricter policy.
             value:
-              "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src https://archive.org; connect-src 'self'; frame-ancestors 'none';",
+              process.env.NODE_ENV === "production"
+                ? "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src https://archive.org; connect-src 'self'; frame-ancestors 'none';"
+                : "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src https://archive.org; connect-src 'self'; frame-ancestors 'none';",
           },
           {
             key: "X-Frame-Options",
