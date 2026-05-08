@@ -57,7 +57,7 @@ async function fireAndForgetRevalidate(path: string): Promise<void> {
 
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   const rateLimitModule = await import("@/lib/rate-limit");
   const rateLimitResult = await rateLimitModule.checkAdminWriteRateLimit(
@@ -212,7 +212,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   const rateLimitModule = await import("@/lib/rate-limit");
   const rateLimitResult = await rateLimitModule.checkAdminWriteRateLimit(

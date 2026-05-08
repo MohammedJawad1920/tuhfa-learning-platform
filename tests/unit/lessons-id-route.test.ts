@@ -54,7 +54,9 @@ describe("lessons by id route", () => {
     });
 
     const request = new NextRequest("http://localhost/api/v1/lessons/7");
-    const response = await GET(request, { params: { id: "7" } });
+    const response = await GET(request, {
+      params: Promise.resolve({ id: "7" }),
+    });
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -76,7 +78,9 @@ describe("lessons by id route", () => {
     });
 
     const request = new NextRequest("http://localhost/api/v1/lessons/99");
-    const response = await GET(request, { params: { id: "99" } });
+    const response = await GET(request, {
+      params: Promise.resolve({ id: "99" }),
+    });
 
     expect(response.status).toBe(404);
     const body = await response.json();
@@ -89,7 +93,9 @@ describe("lessons by id route", () => {
     fetchLessonsMock.mockRejectedValue(new UpstreamError("boom"));
 
     const request = new NextRequest("http://localhost/api/v1/lessons/7");
-    const response = await GET(request, { params: { id: "7" } });
+    const response = await GET(request, {
+      params: Promise.resolve({ id: "7" }),
+    });
 
     expect(response.status).toBe(502);
     const body = await response.json();

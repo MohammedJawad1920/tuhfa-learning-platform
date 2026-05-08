@@ -1,6 +1,6 @@
 name: CI
 
-"on":
+on:
   push:
     branches:
       - "**"
@@ -186,4 +186,4 @@ jobs:
         run: npm ci
 
       - name: Check bundle budgets
-        run: npx @next/bundle-analyzer
+        run: ANALYZE=true npx next build --webpack

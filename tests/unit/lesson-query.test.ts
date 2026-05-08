@@ -76,7 +76,9 @@ describe("lesson query validation", () => {
 
   it("returns 400 for invalid lesson ids", async () => {
     const request = new NextRequest("http://localhost/api/v1/lessons/abc");
-    const response = await getLessonById(request, { params: { id: "abc" } });
+    const response = await getLessonById(request, {
+      params: Promise.resolve({ id: "abc" }),
+    });
 
     expect(response.status).toBe(400);
     const body = await response.json();
@@ -92,7 +94,9 @@ describe("lesson query validation", () => {
     });
 
     const request = new NextRequest("http://localhost/api/v1/lessons/1");
-    const response = await getLessonById(request, { params: { id: "1" } });
+    const response = await getLessonById(request, {
+      params: Promise.resolve({ id: "1" }),
+    });
 
     expect(response.status).toBe(429);
     expect(response.headers.get("Retry-After")).toBeTruthy();
