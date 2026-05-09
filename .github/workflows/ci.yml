@@ -261,6 +261,18 @@ jobs:
             sleep 2
           done
 
+      - name: Verify Next.js is responsive
+        run: |
+          response=$(curl -w "\n%{http_code}" -s http://localhost:3000)
+          http_code=$(echo "$response" | tail -n1)
+          if [ "$http_code" != "200" ]; then
+            echo "❌ Server returned HTTP $http_code"
+            echo "Server logs:"
+            tail -n 50 /tmp/nextjs.log || echo "No log file found"
+            exit 1
+          fi
+          echo "✅ Server is responding with HTTP $http_code"
+
       - name: Run Lighthouse CI
         env:
           LIGHTHOUSE_URL: "http://localhost:3000"
