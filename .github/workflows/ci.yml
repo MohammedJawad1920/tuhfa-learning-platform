@@ -254,8 +254,16 @@ jobs:
           done
           curl -f http://localhost:3000 || (cat /tmp/nextjs.log && exit 1)
 
+      - name: Warm up homepage
+        run: |
+          for i in {1..5}; do
+            curl -sSf http://localhost:3000 >/dev/null
+            sleep 2
+          done
+
       - name: Run Lighthouse CI
         env:
+          LIGHTHOUSE_URL: "http://localhost:3000"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx lhci autorun
