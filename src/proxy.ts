@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/config/env";
 import { sessionOptions } from "@/config/session";
 import { buildError } from "@/utils/response";
+import { logger } from "@/lib/logger";
 
 type AdminSession = {
   authenticated?: boolean;
@@ -46,12 +47,36 @@ function applyCorsHeaders(response: NextResponse, request: NextRequest) {
   );
   response.headers.set("Vary", "Origin");
 
+  // Diagnostic headers to help debug production CORS issues
+  try {
+    const originHeader = origin ?? "";
+    response.headers.set("x-debug-origin", originHeader);
+    response.headers.set(
+      "x-debug-allowed-origins",
+      getAllowedOrigins().join(","),
+    );
+  } catch (err) {
+    // ignore
+  }
+
   return response;
 }
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
+  // Log basic request info for debugging CORS/method routing in production
+  try {
+    logger.info(
+      {
+        route: pathname,
+        method: request.method,
+        origin: request.headers.get("origin") || "",
+      },
+      "proxy request",
+    );
+  } catch (err) {
+    // ignore logging errors
+  }
   if (!pathname.startsWith("/admin")) {
     if (!pathname.startsWith("/api/v1/admin/")) {
       return NextResponse.next();
