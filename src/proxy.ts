@@ -86,6 +86,11 @@ export async function proxy(request: NextRequest) {
       return applyCorsHeaders(new NextResponse(null, { status: 204 }), request);
     }
 
+    // Login endpoint must remain publicly accessible to establish session.
+    if (!isAdminApiPath(pathname)) {
+      return applyCorsHeaders(NextResponse.next(), request);
+    }
+
     const response = applyCorsHeaders(NextResponse.next(), request);
     const session = await getIronSession<AdminSession>(
       request,
@@ -111,6 +116,11 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === "/admin/login") {
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      const loginUrl = new URL("/admin/login", request.url);
+      return NextResponse.redirect(loginUrl, 303);
+    }
+
     return NextResponse.next();
   }
 

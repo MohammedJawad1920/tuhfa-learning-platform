@@ -60,6 +60,19 @@ describe("proxy", () => {
     expect(response.status).toBe(200);
   });
 
+  it("redirects POST /admin/login back to GET /admin/login", async () => {
+    const request = new NextRequest("http://localhost/admin/login", {
+      method: "POST",
+    });
+
+    const response = await proxy(request);
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/admin/login",
+    );
+  });
+
   it("returns 401 JSON for unauthenticated admin API routes", async () => {
     getIronSessionMock.mockResolvedValue({
       authenticated: false,
@@ -79,6 +92,21 @@ describe("proxy", () => {
     expect(response.status).toBe(401);
     const body = await response.json();
     expect(body.error.code).toBe("UNAUTHORIZED");
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "http://localhost:3000",
+    );
+  });
+
+  it("allows /api/v1/admin/auth through without requiring session", async () => {
+    const request = new NextRequest("http://localhost/api/v1/admin/auth", {
+      method: "POST",
+      headers: { origin: "http://localhost:3000" },
+    });
+
+    const response = await proxy(request);
+
+    expect(response.status).toBe(200);
+    expect(getIronSessionMock).not.toHaveBeenCalled();
     expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
       "http://localhost:3000",
     );
