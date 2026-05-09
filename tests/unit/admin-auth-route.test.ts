@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const envMock = vi.hoisted(() => ({
   ADMIN_PASSWORD: "correct-horse-battery-staple",
+  ALLOWED_ORIGINS: "http://localhost:3000,https://app.example.com",
 }));
 
 vi.mock("@/config/env", () => ({
@@ -43,11 +44,12 @@ vi.mock("@/config/session", () => ({
   },
 }));
 
-import { POST } from "@/app/api/v1/admin/auth/route";
+import { OPTIONS, POST } from "@/app/api/v1/admin/auth/route";
 
 describe("POST /api/v1/admin/auth", () => {
   beforeEach(() => {
     envMock.ADMIN_PASSWORD = "correct-horse-battery-staple";
+    envMock.ALLOWED_ORIGINS = "http://localhost:3000,https://app.example.com";
     checkAuthRateLimitMock.mockReset();
     checkAuthRateLimitMock.mockResolvedValue({
       success: true,
@@ -63,7 +65,10 @@ describe("POST /api/v1/admin/auth", () => {
     const request = new NextRequest("http://localhost/api/v1/admin/auth", {
       method: "POST",
       body: JSON.stringify({ password: "correct-horse-battery-staple" }),
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        origin: "http://localhost:3000",
+      },
     });
 
     const response = await POST(request);
@@ -73,6 +78,29 @@ describe("POST /api/v1/admin/auth", () => {
     expect(body.data).toEqual({ authenticated: true });
     expect(typeof body.meta.requestId).toBe("string");
     expect(typeof body.meta.timestamp).toBe("string");
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "http://localhost:3000",
+    );
+  });
+
+  it("returns CORS headers for OPTIONS preflight from an allowed origin", async () => {
+    const request = new NextRequest("http://localhost/api/v1/admin/auth", {
+      method: "OPTIONS",
+      headers: { origin: "http://localhost:3000" },
+    });
+
+    const response = await OPTIONS(request);
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "http://localhost:3000",
+    );
+    expect(response.headers.get("Access-Control-Allow-Credentials")).toBe(
+      "true",
+    );
+    expect(response.headers.get("Access-Control-Allow-Methods")).toContain(
+      "POST",
+    );
   });
 
   it("returns 401 for an incorrect password", async () => {

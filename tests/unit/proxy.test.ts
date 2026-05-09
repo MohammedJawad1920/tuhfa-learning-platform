@@ -69,13 +69,36 @@ describe("proxy", () => {
       updateConfig: vi.fn(),
     });
 
-    const request = new NextRequest("http://localhost/api/v1/admin/lessons");
+    const request = new NextRequest("http://localhost/api/v1/admin/lessons", {
+      method: "POST",
+      headers: { origin: "http://localhost:3000" },
+    });
 
     const response = await proxy(request);
 
     expect(response.status).toBe(401);
     const body = await response.json();
     expect(body.error.code).toBe("UNAUTHORIZED");
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "http://localhost:3000",
+    );
+  });
+
+  it("returns CORS preflight responses for admin API routes", async () => {
+    const request = new NextRequest("http://localhost/api/v1/admin/lessons", {
+      method: "OPTIONS",
+      headers: { origin: "http://localhost:3000" },
+    });
+
+    const response = await proxy(request);
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "http://localhost:3000",
+    );
+    expect(response.headers.get("Access-Control-Allow-Methods")).toContain(
+      "OPTIONS",
+    );
   });
 
   it("allows authenticated admin API routes through", async () => {
@@ -87,10 +110,15 @@ describe("proxy", () => {
       updateConfig: vi.fn(),
     });
 
-    const request = new NextRequest("http://localhost/api/v1/admin/lessons");
+    const request = new NextRequest("http://localhost/api/v1/admin/lessons", {
+      headers: { origin: "http://localhost:3000" },
+    });
 
     const response = await proxy(request);
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "http://localhost:3000",
+    );
   });
 });
