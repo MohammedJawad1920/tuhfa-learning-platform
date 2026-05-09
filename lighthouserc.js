@@ -25,6 +25,8 @@ module.exports = {
         // CI runners are slower and less predictable than production infra.
         // Use provided throttling to avoid extreme synthetic slowdowns.
         throttlingMethod: "provided",
+        // Give Lighthouse more time to observe first paint on slower CI runners.
+        maxWaitForFcp: 90000,
         // Increase the maximum wait for load to account for slower CI machines
         maxWaitForLoad: 90000,
         // Add Chrome flags helpful on CI (no sandbox, disable shared memory usage, and avoid background throttling)
