@@ -812,37 +812,26 @@ Components (build in this order — simpler first):
 - Jobs (in order):
 
 ```yaml
-1. type-check:    npx tsc --noEmit
-2. lint:          eslint src/   (NOT next lint — removed in Next.js 16)
-3. unit-tests:    vitest run tests/unit/
+1. type-check: npx tsc --noEmit
+2. lint: eslint src/   (NOT next lint — removed in Next.js 16)
+3. unit-tests: vitest run tests/unit/
 4. component-tests: vitest run tests/component/
 5. integration-tests: vitest run tests/integration/
 6. contract-tests:
-   - start: prism mock ./openapi.yaml --port 4010 &
-   - wait:  sleep 3
-   - run:   vitest run tests/contract/
-7. build:         next build    (Turbopack, default in Next.js 16)
-8. lighthouse-ci: @lhci/cli autorun (against Vercel preview deployment)
-9. bundle-check:  @next/bundle-analyzer (fails if route budget exceeded)
+  - start: prism mock ./openapi.yaml --port 4010 &
+  - wait: sleep 3
+  - run: vitest run tests/contract/
+7. build: next build    (Turbopack, default in Next.js 16)
 ```
 
-- CI fails on: TypeScript error, lint error, any test failure, Lighthouse budget exceeded, bundle budget exceeded.
+- CI fails on: TypeScript error, lint error, any test failure.
 
-**P13-2 — lighthouserc.js**
-
-- Configure Lighthouse CI budgets from Frontend Freeze Section 7:
-  - LCP < 2500ms
-  - CLS < 0.1
-  - INP < 200ms
-  - Accessibility score ≥ 90
-- Target URLs: production or Vercel preview deployment.
-
-**P13-3 — Smoke test documentation**
+**P13-2 — Smoke test documentation**
 
 - Create `README.md` with the smoke test checklist (7 checks from Backend Freeze Section 7 Phase 4 and Frontend Freeze Section 10 MVP test checklist).
 - Document: project setup steps, env vars required, `npm run mock` for local API mocking, how to add new lessons via admin panel.
 
-**P13-4 — Coverage thresholds**
+**P13-3 — Coverage thresholds**
 
 - Configure Vitest coverage: `/src/lib/` ≥ 80%, `/src/schemas/` 100%.
 - Add `vitest run --coverage` to CI.
@@ -853,8 +842,6 @@ Components (build in this order — simpler first):
 - [ ] `tsc --noEmit` passes.
 - [ ] `eslint src/` passes (no `next lint`).
 - [ ] All test suites pass.
-- [ ] Lighthouse LCP/CLS/INP/a11y budgets green.
-- [ ] Bundle budgets: `/` < 80KB, `/lessons/[id]` < 80KB, `/admin/*` < 120KB.
 
 ---
 

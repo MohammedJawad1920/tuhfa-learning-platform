@@ -28,7 +28,7 @@
 
 - Backend Freeze v1.1 is the governing contract. No API changes without a Backend Freeze version bump.
 - `openapi.yaml` v1.0.0 is locked. No field or endpoint additions without a new OpenAPI version.
-- Google Fonts (fonts.googleapis.com) is reachable from target users' browsers.
+- System font fallbacks are available to target users' browsers.
 - Vercel account linked to GitHub repo before frontend deployment begins.
 - Admin is a single operator (project owner) on a modern desktop browser.
 
@@ -86,7 +86,7 @@
 **Success Definition (measurable):**
 
 - All 648 lessons browsable and streamable at launch via chapter nav and search.
-- LCP < 2,500ms on `/` and `/lessons/[id]` (Lighthouse CI gate).
+- LCP < 2,500ms on `/` and `/lessons/[id]` (performance target).
 - Audio playback starts within 3 seconds of pressing play on a 10Mbps connection (IA direct stream).
 - Admin can add a new lesson (upload → create) end-to-end in under 6 minutes (5 min IA upload + <60s form submit + ISR revalidation).
 - Zero admin actions lost due to missing 409/402/502 error handling.
@@ -100,7 +100,6 @@
 **Design Source:** None. Design language defined in Section 5 of this document.
 **External Dependencies (2):**
 
-- Dependency 1: **Google Fonts**, purpose: load Noto Naskh Arabic + Noto Sans Malayalam + Inter via `<link>` in `<head>`, failure UX: browser falls back to system Arabic/sans-serif fonts. Layout is not broken. No JS dependency.
 - Dependency 2: **Internet Archive (archive.org)**, purpose: audio streaming via native `<audio src="{archive_url}">`. Failure UX: browser shows native audio error state. Lesson metadata page remains fully functional. No custom error handling needed beyond the backend's 502 definition.
 
 ---
@@ -458,12 +457,8 @@ type UploadAudioResponse = {
 **Typography (LOCKED):**
 | Font | Purpose | Load |
 |---|---|---|
-| Noto Naskh Arabic | Arabic text (`title_ar`, `kitab`, `bab`, `fasl`, Arabic UI labels) | Google Fonts |
-| Noto Sans Malayalam | Malayalam UI labels, navigation, buttons | Google Fonts |
-| Inter | Numbers, Latin fallback, admin form fields | Google Fonts |
 
 ```css
-/* Google Fonts import (in layout.tsx <head>) */
 /* Noto Naskh Arabic: weights 400, 700 */
 /* Noto Sans Malayalam: weights 400, 600 */
 /* Inter: weights 400, 500, 600 */
@@ -546,7 +541,7 @@ type UploadAudioResponse = {
 - No color-only information (error states also use icon + text, not color alone).
 - Arabic text: `lang="ar"` + `dir="rtl"` on all Arabic content blocks.
 - Images: none in scope (no lesson thumbnails in data model).
-- Testing: `axe-core` via `@axe-core/react` in development. Lighthouse CI a11y score ≥ 90 gate.
+- Testing: `axe-core` via `@axe-core/react` in development.
 
 ---
 
@@ -564,8 +559,8 @@ type UploadAudioResponse = {
 
 **Enforcement:**
 
-- CI: Lighthouse CI (`@lhci/cli`) on every PR against preview deployment. Fails on LCP > 2500, CLS > 0.1, INP > 200.
-- Bundle: `@next/bundle-analyzer` in CI. Fails if any route bundle exceeds budget.
+- CI: No Lighthouse CI gate in the current workflow.
+- Bundle: route budget is a design target; it is not enforced by a dedicated CI job in the current workflow.
 - Runtime: Vercel Speed Insights enabled in production.
 
 **Techniques (LOCKED):**
@@ -573,7 +568,6 @@ type UploadAudioResponse = {
 - Code splitting: Yes — Next.js App Router per-route splitting (automatic).
 - Image optimization: N/A (no images in scope).
 - Virtualized lists: No (648 rows is within DOM budget, no virtualization needed).
-- Font loading: `font-display: swap` on all Google Fonts. Preconnect to `fonts.googleapis.com` and `fonts.gstatic.com` in `<head>`.
 - Audio: `preload="metadata"` only (not `auto`). No preloading of audio files.
 - 4-parallel lesson calls: fired in parallel (`Promise.all`), not serial. ISR cache means these hit CDN edge on public pages.
 
@@ -624,7 +618,7 @@ Note: Next.js App Router uses inline scripts for hydration — nonce-based CSP w
 
 **Third-party script governance:**
 
-- Google Fonts: loaded via `<link>` only (CSS + font files). No JS from Google Fonts.
+- No external font loader is required in the current layout; system font fallbacks are used.
 - Vercel Speed Insights: one script from Vercel's domain. Explicitly allowed in CSP `script-src` if added.
 - No other third-party scripts.
 
@@ -677,8 +671,8 @@ Note: Next.js App Router uses inline scripts for hydration — nonce-based CSP w
 - Component: All custom components listed in Section 5 — render, interaction, error states. Tool: vitest + @testing-library/react.
 - Integration (mock-based): All screen-level flows against Prism mock server (`http://localhost:4010`). Tool: vitest + MSW for component-level, Playwright for E2E.
 - E2E: Critical paths only. Tool: Playwright.
-- Accessibility: `axe-core` via `@axe-core/react` in development. Lighthouse CI a11y score ≥ 90 in CI.
-- Performance: Lighthouse CI on PR preview deployments. Budgets enforced (Section 7).
+- Accessibility: `axe-core` via `@axe-core/react` in development.
+- Performance: route budgets remain target values for `/` and `/lessons/[id]`.
 - Contract conformance: Frontend API calls validated against OpenAPI types via TypeScript strict compilation (`tsc --noEmit`). No runtime contract tests beyond type safety.
 - Visual regression: No (out of scope — no design file baseline).
 
@@ -694,7 +688,7 @@ Note: Next.js App Router uses inline scripts for hydration — nonce-based CSP w
 - [ ] 429 on any route → Retry-After countdown shown.
 - [ ] 502 on any admin write → inline retry prompt.
 - [ ] A11y: axe-core passes on all 6 routes.
-- [ ] Performance: Lighthouse CI passes LCP/CLS/INP/bundle budgets on `/` and `/lessons/[id]`.
+- [ ] Performance: route bundle sizes stay within target on `/` and `/lessons/[id]`.
 
 ---
 
@@ -710,7 +704,7 @@ Note: Next.js App Router uses inline scripts for hydration — nonce-based CSP w
 ├── next.config.ts                    ← headers (CSP, X-Frame-Options), ISR config
 ├── tailwind.config.ts                ← design tokens (colors, fonts)
 ├── postcss.config.js
-├── lighthouserc.js                   ← Lighthouse CI budgets
+├── lighthouserc.js                   ← Lighthouse config (manual use only)
 ├── README.md
 ├── openapi.yaml                      ← locked contract source of truth
 ├── /src
