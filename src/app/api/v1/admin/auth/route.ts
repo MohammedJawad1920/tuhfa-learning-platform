@@ -57,31 +57,6 @@ function applyCorsHeaders(response: NextResponse, request: NextRequest) {
 
   const allowedOrigins = new Set(getAllowedOrigins());
   if (!allowedOrigins.has(origin)) {
-    // Log diagnostic info so we can see why CORS was not applied
-    try {
-      logger.warn(
-        {
-          route: "/api/v1/admin/auth",
-          origin,
-          allowedOrigins: Array.from(allowedOrigins),
-        },
-        "CORS origin not allowed",
-      );
-    } catch (err) {
-      // ignore
-    }
-
-    // Provide minimal debug headers so we can inspect runtime env from responses
-    try {
-      response.headers.set("x-debug-origin", origin);
-      response.headers.set(
-        "x-debug-allowed-origins",
-        getAllowedOrigins().join(","),
-      );
-    } catch (err) {
-      // ignore
-    }
-
     return response;
   }
 
@@ -91,49 +66,14 @@ function applyCorsHeaders(response: NextResponse, request: NextRequest) {
   response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   response.headers.set("Vary", "Origin");
 
-  // Diagnostic headers to help debug production CORS issues
-  try {
-    response.headers.set("x-debug-origin", origin);
-    response.headers.set(
-      "x-debug-allowed-origins",
-      getAllowedOrigins().join(","),
-    );
-  } catch (err) {
-    // ignore
-  }
-
   return response;
 }
 
 export async function OPTIONS(request: NextRequest) {
-  try {
-    logger.info(
-      {
-        route: "/api/v1/admin/auth",
-        method: "OPTIONS",
-        origin: request.headers.get("origin") || "",
-      },
-      "auth options",
-    );
-  } catch (err) {
-    // ignore
-  }
   return applyCorsHeaders(new NextResponse(null, { status: 204 }), request);
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    logger.info(
-      {
-        route: "/api/v1/admin/auth",
-        method: "POST",
-        origin: request.headers.get("origin") || "",
-      },
-      "auth POST",
-    );
-  } catch (err) {
-    // ignore
-  }
   // Check auth rate limit before processing body
   const rateLimitModule = await import("@/lib/rate-limit");
   const rateLimitResult = await rateLimitModule.checkAuthRateLimit(
