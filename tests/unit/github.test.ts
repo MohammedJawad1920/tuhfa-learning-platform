@@ -20,7 +20,6 @@ beforeEach(() => {
   process.env.IA_S3_ENDPOINT = "https://s3.example.org";
   process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
   process.env.UPSTASH_REDIS_REST_TOKEN = "token";
-  process.env.ALLOWED_ORIGINS = "*";
   process.env.REVALIDATION_SECRET = "R".repeat(32);
 });
 
@@ -58,13 +57,11 @@ describe("github client", () => {
       last_updated: "2026-05-03T00:00:00Z",
       lessons: [{ id: 1 }],
     };
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => ({ commit: { sha: "newsha" } }),
-      });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ commit: { sha: "newsha" } }),
+    });
     vi.stubGlobal("fetch", fetchMock);
 
     const mod = await import("@/lib/github");
@@ -84,13 +81,11 @@ describe("github client", () => {
   });
 
   it("updateLessons throws ConflictError on 409", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({
-        ok: false,
-        status: 409,
-        text: async () => "conflict",
-      });
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      text: async () => "conflict",
+    });
     vi.stubGlobal("fetch", fetchMock);
 
     const mod = await import("@/lib/github");

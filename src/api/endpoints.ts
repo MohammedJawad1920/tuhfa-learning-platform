@@ -2,6 +2,10 @@ import client, {
   apiFetch,
   ListLessonsResponse,
   GetLessonByIdResponse,
+  AdminAuthResponse,
+  CreateLessonResponse,
+  UpdateLessonResponse,
+  PresignUploadResponse,
 } from "./client";
 
 export type ListParams = {
@@ -23,32 +27,41 @@ export async function getLessonById(id: number) {
 }
 
 export async function adminAuth(password: string) {
-  return await apiFetch<any>(`/admin/auth`, {
+  return await apiFetch<AdminAuthResponse>(`/admin/auth`, {
     method: "POST",
     body: JSON.stringify({ password }),
   });
 }
 
 export async function createLesson(body: unknown) {
-  return await apiFetch<any>(`/admin/lessons`, {
+  return await apiFetch<CreateLessonResponse>(`/admin/lessons`, {
     method: "POST",
     body: JSON.stringify(body),
   });
 }
 
 export async function updateLesson(id: number, body: unknown) {
-  return await apiFetch<any>(`/admin/lessons/${id}`, {
+  return await apiFetch<UpdateLessonResponse>(`/admin/lessons/${id}`, {
     method: "PUT",
     body: JSON.stringify(body),
   });
 }
 
 export async function deleteLesson(id: number) {
-  return await apiFetch<any>(`/admin/lessons/${id}`, { method: "DELETE" });
+  return await apiFetch<UpdateLessonResponse>(`/admin/lessons/${id}`, {
+    method: "DELETE",
+  });
 }
 
-export async function uploadAudio(form: FormData) {
-  return await apiFetch<any>(`/admin/upload`, { method: "POST", body: form });
+export async function presignUpload(data: {
+  volume: number;
+  lesson_number: number;
+  content_type?: string;
+}) {
+  return await apiFetch<PresignUploadResponse>(`/admin/upload/presign`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 export default {
@@ -58,5 +71,5 @@ export default {
   createLesson,
   updateLesson,
   deleteLesson,
-  uploadAudio,
+  presignUpload,
 };

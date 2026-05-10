@@ -19,7 +19,6 @@ const envMock = vi.hoisted(() => ({
   IA_S3_ENDPOINT: "https://s3.us.archive.org",
   UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
   UPSTASH_REDIS_REST_TOKEN: "token",
-  ALLOWED_ORIGINS: "http://localhost:3000",
   REVALIDATION_SECRET: "0123456789abcdef0123456789abcdef",
   NEXT_PUBLIC_VERCEL_ANALYTICS_ID: "",
 }));
@@ -92,9 +91,6 @@ describe("proxy", () => {
     expect(response.status).toBe(401);
     const body = await response.json();
     expect(body.error.code).toBe("UNAUTHORIZED");
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-      "http://localhost:3000",
-    );
   });
 
   it("allows /api/v1/admin/auth through without requiring session", async () => {
@@ -107,26 +103,6 @@ describe("proxy", () => {
 
     expect(response.status).toBe(200);
     expect(getIronSessionMock).not.toHaveBeenCalled();
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-      "http://localhost:3000",
-    );
-  });
-
-  it("returns CORS preflight responses for admin API routes", async () => {
-    const request = new NextRequest("http://localhost/api/v1/admin/lessons", {
-      method: "OPTIONS",
-      headers: { origin: "http://localhost:3000" },
-    });
-
-    const response = await proxy(request);
-
-    expect(response.status).toBe(204);
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-      "http://localhost:3000",
-    );
-    expect(response.headers.get("Access-Control-Allow-Methods")).toContain(
-      "OPTIONS",
-    );
   });
 
   it("allows authenticated admin API routes through", async () => {
@@ -145,8 +121,5 @@ describe("proxy", () => {
     const response = await proxy(request);
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-      "http://localhost:3000",
-    );
   });
 });

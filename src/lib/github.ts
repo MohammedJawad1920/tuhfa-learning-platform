@@ -30,7 +30,8 @@ async function timedFetch(
       return res;
     } catch (err) {
       clearTimeout(id);
-      if (err instanceof Error && (err as any).name === "AbortError") {
+      const error = err as Error;
+      if (error?.name === "AbortError") {
         throw new UpstreamError("Request timed out");
       }
       throw err;

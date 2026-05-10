@@ -9,7 +9,6 @@ import {
 import { ChapterNav } from "./ChapterNav";
 import { LessonCard } from "./LessonCard";
 import { Spinner } from "@/components/ui/Spinner";
-import { Toast } from "@/components/ui/Toast";
 import { Pagination } from "@/components/ui/Pagination";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -77,9 +76,10 @@ export function LessonBrowser() {
 
   // Fetch filtered lessons
   const filters: FilterParams = {
-    volume: state.activeVolume as any,
+    volume: state.activeVolume as 1 | 2 | 3 | 4 | undefined,
     kitab: state.activeKitab,
     bab: state.activeBab,
+    fasl: state.activeFasl,
     search: state.searchQuery.length >= 2 ? state.searchQuery : undefined,
   };
   const filteredQuery = useFilteredLessons(filters, state.currentPage, LIMIT);

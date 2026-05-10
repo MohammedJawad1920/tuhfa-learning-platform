@@ -175,6 +175,5 @@ jobs:
           IA_S3_ENDPOINT: "https://s3.us.archive.org"
           UPSTASH_REDIS_REST_URL: "https://test.upstash.io"
           UPSTASH_REDIS_REST_TOKEN: "test-token"
-          ALLOWED_ORIGINS: "http://localhost:3000"
           REVALIDATION_SECRET: "test-revalidation-secret-32-char-minimum1234"
         run: npx next build

@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import type { Lesson } from "@/types/lesson";
+import type { GetLessonByIdResponse } from "@/api/client";
 
 interface LessonDetailProps {
   lessonId: number;
@@ -19,7 +20,8 @@ export function LessonDetail({ lessonId }: LessonDetailProps) {
     queryKey: ["lesson", lessonId],
     queryFn: async () => {
       const resp = await endpoints.getLessonById(lessonId);
-      return (resp as any).data?.lesson ?? null;
+      const typedResp = resp as GetLessonByIdResponse;
+      return typedResp.data?.lesson ?? null;
     },
     staleTime: 60_000,
   });

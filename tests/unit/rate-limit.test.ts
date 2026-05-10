@@ -18,7 +18,6 @@ const validEnv = {
   IA_S3_ENDPOINT: "https://s3.us.archive.org",
   UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
   UPSTASH_REDIS_REST_TOKEN: "upstash-token",
-  ALLOWED_ORIGINS: "http://localhost:3000",
   REVALIDATION_SECRET: "12345678901234567890123456789012",
   NEXT_PUBLIC_VERCEL_ANALYTICS_ID: "",
 };

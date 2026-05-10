@@ -3,11 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import * as endpoints from "@/api/endpoints";
-import type { components } from "@/types/api";
 
 export type AdminAuthError = {
   fieldErrors?: Record<string, string>;
   inlineError?: string;
+};
+
+type ErrorWithStatus = Error & {
+  status?: number;
+  body?: Record<string, unknown>;
 };
 
 export function useAdminAuth() {
@@ -18,9 +22,9 @@ export function useAdminAuth() {
       try {
         await endpoints.adminAuth(password);
       } catch (err: unknown) {
-        const error = err as any;
-        const status = error?.status as number | undefined;
-        const body = error?.body as any;
+        const error = err as ErrorWithStatus;
+        const status = error?.status;
+        const body = error?.body;
 
         if (status === 401) {
           throw {
@@ -29,7 +33,8 @@ export function useAdminAuth() {
         }
 
         if (status === 422) {
-          const details = body?.error?.details || {};
+          const details =
+            (body?.error as Record<string, unknown>)?.details || {};
           throw {
             fieldErrors: details as Record<string, string>,
           } as AdminAuthError;

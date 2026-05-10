@@ -42,6 +42,13 @@ type ToastState = {
   message: string;
 };
 
+type RequestErrorBody = {
+  error?: {
+    message?: string;
+    details?: Record<string, unknown>;
+  };
+};
+
 const acceptedMimeTypes = ["audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav"];
 
 function fileToFormData(values: UploadFormValues): FormData | null {
@@ -259,7 +266,7 @@ export function AddLessonWizard() {
       }
     } catch (error) {
       const status = (error as { status?: number })?.status;
-      const bodyError = (error as { body?: Record<string, unknown> })?.body;
+      const bodyError = (error as { body?: RequestErrorBody })?.body;
 
       if (status === 401) {
         router.replace("/admin/login");

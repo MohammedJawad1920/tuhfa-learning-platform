@@ -43,34 +43,8 @@ function buildValidationDetails(
   );
 }
 
-function getAllowedOrigins() {
-  return env.ALLOWED_ORIGINS.split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-}
-
-function applyCorsHeaders(response: NextResponse, request: NextRequest) {
-  const origin = request.headers.get("origin");
-  if (!origin) {
-    return response;
-  }
-
-  const allowedOrigins = new Set(getAllowedOrigins());
-  if (!allowedOrigins.has(origin)) {
-    return response;
-  }
-
-  response.headers.set("Access-Control-Allow-Origin", origin);
-  response.headers.set("Access-Control-Allow-Credentials", "true");
-  response.headers.set("Access-Control-Allow-Headers", "Content-Type");
-  response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  response.headers.set("Vary", "Origin");
-
-  return response;
-}
-
-export async function OPTIONS(request: NextRequest) {
-  return applyCorsHeaders(new NextResponse(null, { status: 204 }), request);
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 405 });
 }
 
 export async function POST(request: NextRequest) {
@@ -83,21 +57,14 @@ export async function POST(request: NextRequest) {
   if (!rateLimitResult.success) {
     const retryAfterSeconds = getRetryAfterSeconds(rateLimitResult.reset);
 
-    return applyCorsHeaders(
-      NextResponse.json(
-        buildError(
-          "RATE_LIMITED",
-          "Too many requests. Please try again later.",
-          {
-            retryAfterSeconds,
-          },
-        ),
-        {
-          status: 429,
-          headers: { "Retry-After": String(retryAfterSeconds) },
-        },
-      ),
-      request,
+    return NextResponse.json(
+      buildError("RATE_LIMITED", "Too many requests. Please try again later.", {
+        retryAfterSeconds,
+      }),
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfterSeconds) },
+      },
     );
   }
 
@@ -106,27 +73,24 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return applyCorsHeaders(
-      NextResponse.json(buildError("BAD_REQUEST", "Invalid JSON body", {}), {
+    return NextResponse.json(
+      buildError("BAD_REQUEST", "Invalid JSON body", {}),
+      {
         status: 400,
-      }),
-      request,
+      },
     );
   }
 
   const parsed = AuthSchema.safeParse(body);
 
   if (!parsed.success) {
-    return applyCorsHeaders(
-      NextResponse.json(
-        buildError(
-          "VALIDATION_ERROR",
-          "Validation failed",
-          buildValidationDetails(parsed.error.issues),
-        ),
-        { status: 422 },
+    return NextResponse.json(
+      buildError(
+        "VALIDATION_ERROR",
+        "Validation failed",
+        buildValidationDetails(parsed.error.issues),
       ),
-      request,
+      { status: 422 },
     );
   }
 
@@ -141,22 +105,16 @@ export async function POST(request: NextRequest) {
       "Invalid admin login attempt",
     );
 
-    return applyCorsHeaders(
-      NextResponse.json(
-        buildError("INVALID_CREDENTIALS", "Invalid credentials", {}),
-        { status: 401 },
-      ),
-      request,
+    return NextResponse.json(
+      buildError("INVALID_CREDENTIALS", "Invalid credentials", {}),
+      { status: 401 },
     );
   }
 
   // Create session on successful auth
-  const response = applyCorsHeaders(
-    NextResponse.json(buildSuccess({ authenticated: true }), {
-      status: 200,
-    }),
-    request,
-  );
+  const response = NextResponse.json(buildSuccess({ authenticated: true }), {
+    status: 200,
+  });
   const session = await getIronSession<AdminSession>(
     request,
     response,

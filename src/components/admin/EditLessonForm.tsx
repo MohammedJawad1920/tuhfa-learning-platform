@@ -32,6 +32,12 @@ type ToastState = {
   message: string;
 };
 
+type RequestErrorBody = {
+  error?: {
+    details?: Record<string, unknown>;
+  };
+};
+
 function normalizeText(value: string | undefined | null): string {
   return value?.trim() ?? "";
 }
@@ -112,7 +118,7 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
       router.replace("/admin");
     } catch (error) {
       const status = (error as { status?: number })?.status;
-      const body = (error as { body?: Record<string, unknown> })?.body;
+      const body = (error as { body?: RequestErrorBody })?.body;
 
       if (status === 401) {
         router.replace("/admin/login");
