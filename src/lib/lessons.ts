@@ -61,6 +61,7 @@ export type FilterOptions = {
   volume?: number;
   kitab?: string;
   bab?: string;
+  fasl?: string;
   search?: string;
 };
 
@@ -83,6 +84,10 @@ export function filterLessons(
     }
 
     if (filters.bab !== undefined && lesson.chapter.bab !== filters.bab) {
+      return false;
+    }
+
+    if (filters.fasl !== undefined && lesson.chapter.fasl !== filters.fasl) {
       return false;
     }
 

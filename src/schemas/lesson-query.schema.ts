@@ -16,6 +16,10 @@ export const LessonListQuerySchema = z
       .string({ invalid_type_error: "bab must be a string" })
       .max(200, "bab must be at most 200 characters")
       .optional(),
+    fasl: z
+      .string({ invalid_type_error: "fasl must be a string" })
+      .max(200, "fasl must be at most 200 characters")
+      .optional(),
     search: z
       .string({ invalid_type_error: "search must be a string" })
       .min(2, "search must be at least 2 characters")

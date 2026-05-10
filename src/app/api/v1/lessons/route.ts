@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { volume, kitab, bab, search, limit, offset } = parsed.data;
+  const { volume, kitab, bab, fasl, search, limit, offset } = parsed.data;
 
   try {
     githubModule = await import("@/lib/github");
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     const { filtered, paginated } = filterAndPaginate(
       lessons,
-      { volume, kitab, bab, search },
+      { volume, kitab, bab, fasl, search },
       { limit, offset },
     );
 
