@@ -23,7 +23,6 @@ export const envSchema = z.object({
       message: "UPSTASH_REDIS_REST_URL must be an HTTPS URL",
     }),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
-  ALLOWED_ORIGINS: z.string().min(1),
   REVALIDATION_SECRET: z.string().min(32),
   NEXT_PUBLIC_VERCEL_ANALYTICS_ID: z.string().optional().default(""),
 });

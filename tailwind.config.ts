@@ -18,9 +18,21 @@ const config: Config = {
         warning: "#92400E",
       },
       fontFamily: {
-        "noto-naskh-arabic": ['"Noto Naskh Arabic"', "serif"],
-        "noto-sans-malayalam": ['"Noto Sans Malayalam"', "sans-serif"],
-        inter: ["Inter", "system-ui", "sans-serif"],
+        sans: [
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif",
+        ],
+        arabic: [
+          "Noto Naskh Arabic",
+          "Traditional Arabic",
+          "Arabic Typesetting",
+          "Geeza Pro",
+          "serif",
+        ],
       },
       fontSize: {
         display: ["2.25rem", { lineHeight: "2.5rem", fontWeight: "700" }],

@@ -22,7 +22,6 @@
     "@lhci/cli": "^0.14.0",
     "@next/bundle-analyzer": "^16.0.0",
     "clsx": "^2.1.1",
-    "formidable": "^3.5.4",
     "iron-session": "^8.0.4",
     "next": "^16.0.0",
     "pino": "^9.0.0",

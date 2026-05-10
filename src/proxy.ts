@@ -20,35 +20,6 @@ function isAdminApiPath(pathname: string) {
   );
 }
 
-function getAllowedOrigins() {
-  return env.ALLOWED_ORIGINS.split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-}
-
-function applyCorsHeaders(response: NextResponse, request: NextRequest) {
-  const origin = request.headers.get("origin");
-  if (!origin) {
-    return response;
-  }
-
-  const allowedOrigins = new Set(getAllowedOrigins());
-  if (!allowedOrigins.has(origin)) {
-    return response;
-  }
-
-  response.headers.set("Access-Control-Allow-Origin", origin);
-  response.headers.set("Access-Control-Allow-Credentials", "true");
-  response.headers.set("Access-Control-Allow-Headers", "Content-Type");
-  response.headers.set(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-  );
-  response.headers.set("Vary", "Origin");
-
-  return response;
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (!pathname.startsWith("/admin")) {
@@ -56,16 +27,12 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next();
     }
 
-    if (request.method === "OPTIONS") {
-      return applyCorsHeaders(new NextResponse(null, { status: 204 }), request);
-    }
-
     // Login endpoint must remain publicly accessible to establish session.
     if (!isAdminApiPath(pathname)) {
-      return applyCorsHeaders(NextResponse.next(), request);
+      return NextResponse.next();
     }
 
-    const response = applyCorsHeaders(NextResponse.next(), request);
+    const response = NextResponse.next();
     const session = await getIronSession<AdminSession>(
       request,
       response,
@@ -77,12 +44,9 @@ export async function proxy(request: NextRequest) {
       typeof session.createdAt !== "number" ||
       Date.now() - session.createdAt > getSessionExpiryMs()
     ) {
-      return applyCorsHeaders(
-        NextResponse.json(
-          buildError("UNAUTHORIZED", "Authentication required", {}),
-          { status: 401 },
-        ),
-        request,
+      return NextResponse.json(
+        buildError("UNAUTHORIZED", "Authentication required", {}),
+        { status: 401 },
       );
     }
 
