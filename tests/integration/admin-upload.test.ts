@@ -1,10 +1,10 @@
 import { describe, it, beforeEach, expect, vi } from "vitest";
 import { Readable } from "stream";
 
-const checkUploadRateLimitMock = vi.hoisted(() => vi.fn());
+const checkPresignRateLimitMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/rate-limit", () => ({
-  checkUploadRateLimit: checkUploadRateLimitMock,
+  checkPresignRateLimit: checkPresignRateLimitMock,
 }));
 
 beforeEach(() => {
@@ -22,16 +22,16 @@ beforeEach(() => {
   process.env.IA_SECRET_KEY = "test-secret-key";
   process.env.IA_COLLECTION_IDENTIFIER = "test-collection";
   process.env.IA_S3_ENDPOINT = "https://s3.us.archive.org";
+  process.env.UPLOAD_PRESIGN_EXPIRY_SECONDS = "900";
   process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
   process.env.UPSTASH_REDIS_REST_TOKEN = "token";
-  process.env.ALLOWED_ORIGINS = "*";
   process.env.REVALIDATION_SECRET = "R".repeat(32);
 });
 
-describe("admin upload route", () => {
+describe("admin presign upload route", () => {
   beforeEach(() => {
-    checkUploadRateLimitMock.mockReset();
-    checkUploadRateLimitMock.mockResolvedValue({
+    checkPresignRateLimitMock.mockReset();
+    checkPresignRateLimitMock.mockResolvedValue({
       success: true,
       limit: 10,
       remaining: 9,
@@ -39,16 +39,85 @@ describe("admin upload route", () => {
     });
   });
 
-  it("returns 400 when no multipart content", async () => {
-    const { POST } = await import("@/app/api/v1/admin/upload/route");
+  it("returns 400 when request body is not valid JSON", async () => {
+    const { POST } = await import("@/app/api/v1/admin/upload/presign/route");
 
-    const req = new Request("http://localhost/api/v1/admin/upload", {
+    const req = new Request("http://localhost/api/v1/admin/upload/presign", {
       method: "POST",
       headers: { "content-type": "text/plain" },
-      body: "hello",
+      body: "not json",
     });
 
     const res = await POST(req as any);
     expect(res.status).toBe(400);
+  });
+
+  it("returns 422 on invalid volume", async () => {
+    const { POST } = await import("@/app/api/v1/admin/upload/presign/route");
+
+    const req = new Request("http://localhost/api/v1/admin/upload/presign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ volume: 5, lesson_number: 1 }),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(422);
+  });
+
+  it("returns 422 on invalid lesson_number", async () => {
+    const { POST } = await import("@/app/api/v1/admin/upload/presign/route");
+
+    const req = new Request("http://localhost/api/v1/admin/upload/presign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ volume: 1, lesson_number: 0 }),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(422);
+  });
+
+  it("returns 200 with presigned URL on valid request", async () => {
+    const { POST } = await import("@/app/api/v1/admin/upload/presign/route");
+
+    const req = new Request("http://localhost/api/v1/admin/upload/presign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        volume: 1,
+        lesson_number: 100,
+        content_type: "audio/mpeg",
+      }),
+    });
+
+    const res = await POST(req as any);
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.data.presigned_url).toBeDefined();
+    expect(data.data.archive_url).toBeDefined();
+    expect(data.data.filename).toBe("lesson-v1-100.mp3");
+    expect(data.data.method).toBe("PUT");
+  });
+
+  it("returns 429 on rate limit exceeded", async () => {
+    checkPresignRateLimitMock.mockResolvedValue({
+      success: false,
+      limit: 10,
+      remaining: 0,
+      reset: Date.now() + 3600 * 1000,
+    });
+
+    const { POST } = await import("@/app/api/v1/admin/upload/presign/route");
+
+    const req = new Request("http://localhost/api/v1/admin/upload/presign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ volume: 1, lesson_number: 100 }),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(429);
   });
 });

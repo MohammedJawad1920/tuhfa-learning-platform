@@ -29,7 +29,7 @@ function createLimiter(
 export const publicRateLimit = createLimiter("rl:public", 120, "1 m");
 export const authRateLimit = createLimiter("rl:auth", 5, "15 m");
 export const adminWriteRateLimit = createLimiter("rl:admin-write", 60, "1 m");
-export const uploadRateLimit = createLimiter("rl:upload", 10, "1 h");
+export const presignRateLimit = createLimiter("rl:presign", 10, "1 h");
 
 export function getClientIp(
   headers: Headers | Record<string, string | undefined>,
@@ -61,20 +61,20 @@ export async function checkAdminWriteRateLimit(
   return adminWriteRateLimit.limit(getClientIp(headers));
 }
 
-export async function checkUploadRateLimit(
+export async function checkPresignRateLimit(
   headers: Headers | Record<string, string | undefined>,
 ) {
-  return uploadRateLimit.limit(getClientIp(headers));
+  return presignRateLimit.limit(getClientIp(headers));
 }
 
 export default {
   publicRateLimit,
   authRateLimit,
   adminWriteRateLimit,
-  uploadRateLimit,
+  presignRateLimit,
   getClientIp,
   checkPublicRateLimit,
   checkAuthRateLimit,
   checkAdminWriteRateLimit,
-  checkUploadRateLimit,
+  checkPresignRateLimit,
 };
