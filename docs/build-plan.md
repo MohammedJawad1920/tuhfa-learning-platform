@@ -1,8 +1,9 @@
 # BUILD PLAN: Tuhfat al-Muhtaj Learning Platform
 
-**Version:** 1.0
-**Date:** 2026-04-30
-**Governed by:** Backend Freeze v1.1 · Frontend Freeze v1.1 · OpenAPI v1.0.0
+**Version:** 1.2
+**Date:** 2026-05-10
+**Governed by:** Backend Freeze v1.2 · Frontend Freeze v1.2 · OpenAPI v1.0.1
+**Supersedes:** v1.1 (2026-05-09) — updated by Vercel Upload Fix (2026-05-10)
 **Estimated timeline:** 2–3 weeks
 
 > **Execution rule:** Every task references a freeze section or OpenAPI endpoint.
@@ -26,7 +27,7 @@ Phase 3 — Backend: Auth + Proxy             ← unblocks Phase 9
 Phase 4 — Backend: Admin Lesson CRUD        ← unblocks Phase 10, 11, 12
     ↓
 Phase 5 — Backend: IA Upload                ← unblocks Phase 11 (upload step)
-    ↓  (backend acceptance checkpoint — ALL must pass before any real API calls in frontend)
+    ↓  (backend acceptance checkpoint — ALL must pass before real API calls in frontend)
 Phase 6 — Frontend: Design System + Foundation
     ↓
 Phase 7 — Frontend: Lesson Browser (/)
@@ -48,12 +49,12 @@ Phase 14 — Deployment + Data Population
 
 **Parallel work allowed:**
 
-- Phase 6 (Frontend Foundation) can start in parallel with Phase 2 using the Prism mock server.
-- Phase 7 and 8 can use Prism mock until Phase 2 backend is complete.
+- Phase 6 can start in parallel with Phase 2 using the Prism mock server.
+- Phases 7–8 can use Prism mock until Phase 2 is complete.
 - Phase 9 can use Prism mock until Phase 3 is complete.
 - Phases 10–12 must wait for Phases 4–5 to be complete and tested.
 
-**Hard blockers (nothing downstream can start until resolved):**
+**Hard blockers:**
 
 - Phase 0 must be fully complete before Phase 1.
 - Backend acceptance checkpoint (end of Phase 5) must pass before Phases 10–12 connect to the real API.
@@ -63,36 +64,30 @@ Phase 14 — Deployment + Data Population
 
 ## Phase 0 — Prerequisites
 
-**Ref:** Backend Freeze v1.1 Section 0 Assumptions
+**Ref:** Backend Freeze v1.2 §0 Assumptions
 **Estimated time:** 1–2 hours
 **No code written in this phase.**
 
-### Tasks
-
 **P0-1 — GitHub repository**
 
-- Create a new GitHub repository (public or private).
-- Confirm GITHUB_TOKEN (Personal Access Token) with `repo` scope is generated and stored securely.
-- Confirm `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`, `GITHUB_BRANCH=main` values are known.
+- Create GitHub repository (public or private).
+- Generate GITHUB_TOKEN (Personal Access Token) with `repo` scope.
+- Confirm GITHUB_REPO_OWNER, GITHUB_REPO_NAME, GITHUB_BRANCH=main.
 
 **P0-2 — Internet Archive account**
 
 - Create account at archive.org.
-- Generate S3-compatible access keys (IA_ACCESS_KEY, IA_SECRET_KEY) from https://archive.org/account/s3.php.
-- Create the collection item with identifier matching `IA_COLLECTION_IDENTIFIER` value (e.g., `tuhfat-al-muhtaj-abdulhakim-saadi`).
-- Confirm the collection is accessible at `https://archive.org/details/{IA_COLLECTION_IDENTIFIER}`.
+- Generate IA_ACCESS_KEY and IA_SECRET_KEY from https://archive.org/account/s3.php.
+- Create collection item with identifier matching IA_COLLECTION_IDENTIFIER value.
 
 **P0-3 — Upstash Redis**
 
-- Create a free Upstash account at upstash.com.
-- Create a new Redis database (free tier, 10,000 req/day).
-- Copy `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+- Create free Upstash account and Redis database (free tier).
+- Copy UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.
 
 **P0-4 — Vercel account**
 
-- Create Vercel account if not already linked.
-- Link Vercel to the GitHub repository created in P0-1.
-- Do NOT configure environment variables yet — that is Phase 14.
+- Link Vercel to GitHub repo. Do not configure env vars yet — that is Phase 14.
 
 ### Checkpoint P0
 
@@ -105,813 +100,786 @@ Phase 14 — Deployment + Data Population
 
 ## Phase 1 — Project Scaffold + Foundation
 
-**Ref:** Backend Freeze v1.1 Sections 1.5, 1.6, 2, 8 · Frontend Freeze v1.1 Sections 1.5, 1.6, 5, 8, 11
+**Ref:** Backend Freeze v1.2 §1.5, §1.6, §2, §8 · Frontend Freeze v1.2 §1.5, §1.6, §5, §8, §11
 **Estimated time:** 1 day
 **Blocker:** Phase 0 complete.
-
-### Tasks
 
 **P1-1 — Repository initialisation**
 
 - Bootstrap with `npx create-next-app@latest` selecting: TypeScript, App Router, Tailwind CSS, `src/` directory, import alias `@/*`.
-- Set Node.js version to 22 LTS in `.nvmrc` and `package.json` engines field.
-- Commit initial scaffold to `main` branch.
+- Set Node.js 22 LTS in `.nvmrc` and `package.json` engines field.
+- **Upgrade React to 19.x immediately after scaffold:** `npm install react@19 react-dom@19 @types/react@19 @types/react-dom@19`. Do not leave React 18 from create-next-app. _(CR-001: Backend Freeze v1.2 §1.6)_
+- Confirm `package.json` shows `react: ^19.x` and `react-dom: ^19.x`.
 
 **P1-2 — TypeScript strict config**
 
-- Set `strict: true`, `noEmit: true` (for CI), `paths: { "@/*": ["./src/*"] }` in `tsconfig.json`.
+- Set `strict: true`, `noEmit: true`, `paths: { "@/*": ["./src/*"] }` in `tsconfig.json`.
+- Remove `allowJs: true` if present (not needed — TypeScript-only project).
+- Remove `ignoreDeprecations` if present. _(CR-001: Backend Freeze v1.2 §8)_
 - Confirm `tsc --noEmit` passes on clean scaffold.
 
 **P1-3 — Environment configuration**
 
-- Create `.env.example` with all vars from Backend Freeze v1.1 Section 1.5 and Frontend Freeze v1.1 Section 1.5.
+- Create `.env.example` with all vars from Backend Freeze v1.2 §1.5 and Frontend Freeze v1.2 §1.5.
+- Single canonical copy — NO duplication. _(CR-001: Backend Freeze v1.2 §7 Phase 1)_
+- Vars present: NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_API_BASE_URL, NODE_ENV, ADMIN_PASSWORD, SESSION_SECRET, SESSION_MAX_AGE_SECONDS, GITHUB_TOKEN, GITHUB_REPO_OWNER, GITHUB_REPO_NAME, GITHUB_FILE_PATH, GITHUB_BRANCH, IA_ACCESS_KEY, IA_SECRET_KEY, IA_COLLECTION_IDENTIFIER, IA_S3_ENDPOINT, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, REVALIDATION_SECRET, NEXT_PUBLIC_VERCEL_ANALYTICS_ID.
+- **ALLOWED_ORIGINS is NOT in .env.example** (removed — same-origin deployment). _(CR-001)_
 - Create `.env.local` (gitignored) with local dev values.
-- Add `.env.local` to `.gitignore`.
 
 **P1-4 — Zod env validation**
 
 - Create `src/config/env.ts`.
-- Validate all required env vars at module import time using Zod.
-- Rules: `ADMIN_PASSWORD` >= 16 chars, `SESSION_SECRET` >= 32 chars, `UPSTASH_REDIS_REST_URL` valid HTTPS URL.
+- Validate all required env vars at module import time.
+- Rules: ADMIN_PASSWORD ≥ 16 chars, SESSION_SECRET ≥ 32 chars, REVALIDATION_SECRET ≥ 32 chars, UPSTASH_REDIS_REST_URL valid HTTPS URL.
+- **ALLOWED_ORIGINS removed from env schema.** _(CR-001)_
 - App must refuse to start (throw at import time) if any required var is missing or invalid.
 - Unit test: `tests/unit/env.test.ts` — missing var throws, short password throws, valid config passes.
 
 **P1-5 — iron-session config**
 
-- Create `src/config/session.ts` with iron-session options: `cookieName: 'tuhfa_session'`, `password: SESSION_SECRET`, `cookieOptions: { httpOnly: true, secure: NODE_ENV === 'production', sameSite: 'strict', maxAge: SESSION_MAX_AGE_SECONDS }`.
+- Create `src/config/session.ts`: cookieName `tuhfa_session`, HttpOnly, Secure in production, SameSite=strict, maxAge: SESSION_MAX_AGE_SECONDS.
 
 **P1-6 — Shared types**
 
-- Create `src/types/api.ts` — `ApiResponse<T>`, `ApiError` types matching the global error shape from Backend Freeze Section 3.
-- Create `src/types/lesson.ts` — `Lesson`, `Chapter`, `LessonCreateBody`, `LessonUpdateBody` types matching the data schema from Backend Freeze Section 2.
+- `src/types/api.ts` — `ApiResponse<T>`, `ApiError` matching Backend Freeze v1.2 §3 global error format.
+- `src/types/lesson.ts` — `Lesson`, `Chapter`, `LessonCreateBody`, `LessonUpdateBody` matching §2 schema.
 
 **P1-7 — Zod schemas**
 
-- Create `src/schemas/lesson.schema.ts` — Zod schemas for LessonCreateSchema, LessonUpdateSchema enforcing all invariants from Backend Freeze Section 2 (archive_url pattern, volume enum, title_ar non-empty, etc.).
-- Create `src/schemas/auth.schema.ts` — Zod schema for `{ password: z.string().min(1).max(128) }`.
-- Unit test: `tests/unit/lesson-schema.test.ts` — valid passes, invalid archive_url fails, volume=5 fails, empty title_ar fails, unknown fields stripped.
+- `src/schemas/lesson.schema.ts` — LessonCreateSchema, LessonUpdateSchema with all invariants from §2.
+- `src/schemas/auth.schema.ts` — `{ password: z.string().min(1).max(128) }`.
+- Unit test: `tests/unit/lesson-schema.test.ts`.
 
 **P1-8 — Shared utilities**
 
-- Create `src/utils/request-id.ts` — UUID v4 generator (use Node.js `crypto.randomUUID()`).
-- Create `src/utils/response.ts` — `buildSuccess(data, meta?)` and `buildError(code, message, details?, status?)` helpers that always include `requestId` and `timestamp`.
-- Unit test: `tests/unit/response.test.ts` — buildError always includes requestId (UUID v4 format) and timestamp (ISO 8601).
+- `src/utils/request-id.ts` — `crypto.randomUUID()`.
+- `src/utils/response.ts` — `buildSuccess(data, meta?)` and `buildError(code, message, details?, status?)`.
+- Unit test: `tests/unit/response.test.ts`.
 
 **P1-9 — Logger**
 
-- Create `src/lib/logger.ts` — pino instance with required fields: `requestId`, `route`, `method`, `statusCode`, `latencyMs`, `timestamp`.
+- `src/lib/logger.ts` — pino instance. Required fields: requestId, route, method, statusCode, latencyMs, timestamp.
 - PII rules: never log ADMIN_PASSWORD, SESSION_SECRET, GITHUB_TOKEN, IA_ACCESS_KEY, IA_SECRET_KEY, REVALIDATION_SECRET, cookie values.
 
 **P1-10 — Tailwind design tokens**
 
-- Extend `tailwind.config.ts` with all color tokens from Frontend Freeze Section 5: `primary`, `primary-hover`, `surface`, `surface-card`, `border`, `text-primary`, `text-secondary`, `text-arabic`, `error`, `success`, `warning`.
-- Add font families: `noto-naskh-arabic`, `noto-sans-malayalam`, `inter`.
-- Type scale: extend with `display`, `heading`, `subheading` sizes from freeze.
+- Extend `tailwind.config.ts` with all color tokens from Frontend Freeze v1.2 §5.
+- Font family tokens: _(CR-001 — system fonts only, no Google Fonts)_
+  - `fontFamily.sans` (UI / English): `['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']`
+  - `fontFamily.arabic` (lesson content): `['Noto Naskh Arabic', 'Traditional Arabic', 'Arabic Typesetting', 'Geeza Pro', 'serif']`
+- No Google Fonts import anywhere in this task or any other.
+- Type scale: extend with display (2.25rem/700), heading (1.5rem/700), subheading (1.125rem/600).
 
-**P1-11 — next.config.ts**
+**P1-11 — next.config.js**
 
-- Add CSP headers from Frontend Freeze Section 8 (locked policy).
-- Add `X-Frame-Options: DENY`.
-- No ISR config here — ISR `revalidate` is set per route in page files.
+- Implement **split CSP** — production nonce-based, development relaxed. _(CR-001: Frontend Freeze v1.2 §8)_
+- Production CSP (NODE_ENV === 'production'):
+  - `default-src 'self'` _(Frontend Freeze v1.2 §8 — absent from Backend Freeze TASK 15; Frontend Freeze governs next.config.js)_
+  - `script-src 'self' 'nonce-{NONCE}' 'strict-dynamic'`
+  - `style-src 'self' 'nonce-{NONCE}'`
+  - `font-src 'self'` (no fonts.gstatic.com)
+  - `img-src 'self' data:` _(Frontend Freeze v1.2 §8 — required for inline SVG data: URIs)_
+  - `media-src https://archive.org`
+  - `connect-src 'self'`
+  - `frame-ancestors 'none'`
+  - No `unsafe-inline`, no `unsafe-eval`, no Google Fonts domains.
+- Development CSP (NODE_ENV !== 'production'): allow `unsafe-inline`, `unsafe-eval`, `ws:` for HMR; `img-src 'self' data: blob:`.
+- `X-Frame-Options: DENY`.
+- Nonce generated per-request via `headers()` function and made available for `<script>`/`<style>` tag propagation.
+- No ISR config here — ISR `revalidate` is set per-route in page files.
 
 **P1-12 — lessons.json seed**
 
-- Create `data/lessons.json` with initial structure:
-  ```json
-  { "version": 1, "last_updated": "2026-04-30T00:00:00.000Z", "lessons": [] }
-  ```
-- Commit to `main` branch.
+- Commit `data/lessons.json` to repo with correct root schema: `{ "version": 1, "last_updated": "...", "lessons": [] }`.
+- Schema validated against Backend Freeze v1.2 §2.
 
-**P1-13 — OpenAPI type generation**
+**P1-13 — layout.tsx**
 
-- Add `openapi-typescript` to devDependencies.
-- Add `package.json` script: `"gen:types": "openapi-typescript openapi.yaml -o src/types/api.ts"`.
-- Run script, commit generated `src/types/api.ts`.
-- This file is the single source of typed API surface — do not hand-edit.
-
-**P1-14 — Prism mock server**
-
-- Add `@stoplight/prism-cli` to devDependencies.
-- Add script: `"mock": "prism mock ./openapi.yaml --port 4010"`.
-- Verify mock server starts and responds to `GET http://localhost:4010/api/v1/lessons`.
-- This unblocks frontend development before backend API routes are implemented.
-
-**P1-15 — openapi-fetch client**
-
-- Create `src/api/client.ts` — openapi-fetch client pointing to `NEXT_PUBLIC_API_BASE_URL`.
-- Create `src/api/endpoints.ts` — typed query/mutation functions. No raw `fetch` calls in components — all API calls go through this file.
+- Set `<html lang="en">`. _(CR-001: Frontend Freeze v1.2 §2)_
+- Apply system font class via Tailwind.
+- **No `<link>` to Google Fonts or any external font CDN.** _(CR-001)_
+- No preconnect hints to fonts.googleapis.com or fonts.gstatic.com.
+- Wire QueryProvider (TanStack Query).
+- Wire Vercel Speed Insights if NEXT_PUBLIC_VERCEL_ANALYTICS_ID is set.
 
 ### Checkpoint P1
 
-- [ ] `npx tsc --noEmit` passes with zero errors.
-- [ ] `next dev` starts without errors on `.env.local`.
-- [ ] Zod env validation throws if `ADMIN_PASSWORD` is missing from env.
-- [ ] `data/lessons.json` exists with correct schema structure.
-- [ ] `npm run mock` starts Prism at port 4010. `GET http://localhost:4010/api/v1/lessons` returns 200 matching OpenAPI schema.
-- [ ] All unit tests in Phase 1 pass: `vitest run tests/unit/`.
+- [ ] `tsc --noEmit` passes.
+- [ ] `eslint src/` passes (no-explicit-any: error, no-unused-vars: error, no-empty: error).
+- [ ] react@19, react-dom@19 confirmed in package.json.
+- [ ] ALLOWED_ORIGINS absent from env.ts and .env.example.
+- [ ] No Google Fonts anywhere in codebase.
+- [ ] CSP split verified: production has no unsafe-inline/eval; development has both.
+- [ ] `<html lang="en">` in layout.tsx.
+- [ ] .env.example has exactly one copy of each variable.
 
 ---
 
 ## Phase 2 — Backend: Public Read API
 
-**Ref:** Backend Freeze v1.1 Sections 3, 4, 5, 6 · OpenAPI `GET /api/v1/lessons`, `GET /api/v1/lessons/{id}`
+**Ref:** Backend Freeze v1.2 §3 (GET /api/v1/lessons, GET /api/v1/lessons/[id]) · OpenAPI v1.0.1 operationIds: `listLessons`, `getLessonById`
 **Estimated time:** 1 day
 **Blocker:** Phase 1 complete.
 
-### Tasks
+**P2-1 — GitHub client (`src/lib/github.ts`)**
 
-**P2-1 — GitHub client**
+- Implement `getLessons()` and `getLessonById(id)` using GitHub Contents API.
+- **ALL fetch calls must use `next: { tags: ['lessons'] }` option.** _(CR-001: Backend Freeze v1.2 §3)_
+  - Correct: `fetch(url, { headers, next: { tags: ['lessons'] } })`
+  - This is the tag that `revalidateTag('lessons')` will invalidate.
+- `getLessons()` applies filter/search/pagination in-memory after fetching lessons.json.
+- Apply 1-retry-after-1000ms on GitHub 5xx. No retry on 409.
+- Return typed `{ lessons: Lesson[], total: number }`.
 
-- Create `src/lib/github.ts`.
-- Implement `fetchLessons()`: GET `/repos/{owner}/{repo}/contents/{path}` → base64 decode → parse JSON → return `{ data: LessonsFile, sha: string }`. Timeout: 10,000ms. 1 retry after 1,000ms on 5xx. Throws `UpstreamError` on failure.
-- Implement `updateLessons(lessons, sha, commitMessage)`: base64 encode → PUT to GitHub Contents API using SHA. Throws `ConflictError` on 409, `UpstreamError` on other failures.
-- Unit test: `tests/unit/github.test.ts` — fetchLessons returns parsed JSON; updateLessons calls PUT with correct SHA; GitHub 409 throws ConflictError; network error throws UpstreamError. Use MSW to mock GitHub API.
+**P2-2 — GET /api/v1/lessons route**
 
-**P2-2 — Rate limit helpers**
+- File: `src/app/api/v1/lessons/route.ts`
+- Parse and validate query params (volume, kitab, bab, **fasl**, search, limit, offset) with Zod. _(fasl added by CR-001: Backend Freeze v1.2 §3 TASK 14)_
+- Call `getLessons()`.
+- **Response must include `meta.total`** — the total count of matching lessons (before pagination slice). _(CR-001: Backend Freeze v1.2 §3 Pagination Standard)_
+- Apply rate limit: 120 req/min/IP via `checkPublicRateLimit`.
+- Cache headers: `Cache-Control: public, s-maxage=60, stale-while-revalidate=300`. _(300 not 30 — matches Backend Freeze v1.2 §3 and OpenAPI v1.0.1)_
+- Integration test: `tests/integration/lessons.test.ts` — filters work (volume, kitab, bab, **fasl**, search), meta.total is present and correct.
 
-- Create `src/lib/rate-limit.ts`.
-- Implement `publicRateLimit` (120/min/IP) and `authRateLimit` (5/15min/IP) and `adminWriteRateLimit` (60/min/IP) and `uploadRateLimit` (10/hour/IP) using `@upstash/ratelimit` + `@upstash/redis`.
-- IP extraction: use Vercel's trusted `x-forwarded-for` header — do not trust user-supplied IP headers.
-- Unit test: `tests/unit/rate-limit.test.ts` — public limit allows 120 and blocks 121st; auth limit blocks 6th attempt within 15min.
+**P2-3 — GET /api/v1/lessons/[id] route**
 
-**P2-3 — GET /api/v1/lessons**
-
-- Create `src/app/api/v1/lessons/route.ts`.
-- Apply `publicRateLimit`. Return 429 with `Retry-After` header on limit exceeded.
-- Parse and validate query params with Zod: `volume` (enum 1–4), `kitab`, `bab`, `search` (min 2, max 100), `limit` (1–200, default 50), `offset` (≥0, default 0). Return 400 on invalid param type, 422 on Zod validation failure with field details.
-- Fetch `lessons.json` via `fetchLessons()`. Return 502 if GitHub unreachable.
-- Apply filters in-memory: volume exact match, kitab exact match, bab exact match, search substring match on `title_ar`.
-- Apply pagination: slice array by offset and limit.
-- Return 200 with `{ data: { lessons }, meta: { total, limit, offset, requestId, timestamp } }`.
-- Set `Cache-Control: public, s-maxage=60, stale-while-revalidate=300` header.
-- Integration test: `tests/integration/lessons.test.ts` — 200 all lessons; volume filter; search filter; limit+offset pagination; invalid volume → 400; search < 2 chars → 422; rate limit → 429; GitHub down → 502.
-
-**P2-4 — GET /api/v1/lessons/[id]**
-
-- Create `src/app/api/v1/lessons/[id]/route.ts`.
-- Apply `publicRateLimit`.
-- Parse `id` — must be a positive integer. Return 400 if not.
-- Fetch `lessons.json`, find lesson by id. Return 404 if not found.
-- Return 200 with `{ data: { lesson }, meta: { requestId, timestamp } }`.
-- Integration test: `tests/integration/lessons.test.ts` — known ID → 200 correct lesson; unknown ID → 404; string ID → 400; GitHub down → 502.
+- File: `src/app/api/v1/lessons/[id]/route.ts`
+- Validate `id` is positive integer.
+- Call `getLessonById(id)`. Return 404 if not found.
+- Apply rate limit.
+- Integration test: 200 on valid id, 404 on missing, 400 on non-integer id.
 
 ### Checkpoint P2
 
-- [ ] GET /api/v1/lessons: filters work, pagination works, Cache-Control header present.
-- [ ] GET /api/v1/lessons/[id]: correct lesson returned or 404.
-- [ ] Both routes: rate limit returns 429 with Retry-After header.
-- [ ] Both routes: GitHub down → 502.
-- [ ] All integration tests pass: `vitest run tests/integration/lessons.test.ts`.
-- [ ] Contract test passes against Prism: `vitest run tests/contract/`.
+- [ ] `GET /api/v1/lessons` returns 200 with `meta.total` field populated.
+- [ ] Filters (volume, kitab, **fasl**, search) work correctly. _(fasl: Backend Freeze v1.2 §3 TASK 14)_
+- [ ] `GET /api/v1/lessons/1` returns 200 with full lesson object.
+- [ ] `GET /api/v1/lessons/99999` returns 404.
+- [ ] github.ts fetch calls all use `next: { tags: ['lessons'] }`.
+- [ ] Rate limiting returns 429 on excess requests.
 
 ---
 
 ## Phase 3 — Backend: Auth + Proxy
 
-**Ref:** Backend Freeze v1.1 Sections 3, 4, 6 · OpenAPI `POST /api/v1/admin/auth`
-**Estimated time:** 0.5 days
+**Ref:** Backend Freeze v1.2 §3 (POST /api/v1/admin/auth) · §4 Auth flows · §8 proxy.ts · OpenAPI operationId: `adminAuth`
+**Estimated time:** 0.5 day
 **Blocker:** Phase 1 complete.
 
-### Tasks
+**P3-1 — POST /api/v1/admin/auth route**
 
-**P3-1 — POST /api/v1/admin/auth**
+- File: `src/app/api/v1/admin/auth/route.ts`
+- Parse body with Zod auth schema.
+- Check auth rate limit: 5 req/15min/IP via `checkAuthRateLimit`.
+- Compare with `crypto.timingSafeEqual`. Return 401 on mismatch.
+- Create iron-session with `{ authenticated: true, createdAt: Date.now() }`. Set cookie.
+- Return 200 `{ authenticated: true }`.
+- Integration test: correct password → 200 + Set-Cookie; wrong → 401; 6th attempt/15min → 429.
 
-- Create `src/app/api/v1/admin/auth/route.ts`.
-- Apply `authRateLimit` (5/15min/IP). Return 429 before any password processing if limit exceeded.
-- Parse body with `AuthSchema`. Return 422 on validation failure.
-- Compare password using `crypto.timingSafeEqual(Buffer.from(input), Buffer.from(ADMIN_PASSWORD))`. Both buffers must be padded to the same length to avoid length-based timing leak.
-- On failure: log attempt at WARN level (no password in log), return 401 `INVALID_CREDENTIALS`.
-- On success: create iron-session `{ authenticated: true, createdAt: Date.now() }`, save session, return 200 `{ data: { authenticated: true }, meta: { requestId, timestamp } }`. Cookie must be HttpOnly, Secure (production), SameSite=Strict, Max-Age=86400.
-- Integration test: `tests/integration/admin-auth.test.ts` — correct password → 200 + Set-Cookie; wrong password → 401; missing password → 422; 6th attempt within 15min → 429; cookie flags verified (HttpOnly, SameSite=Strict).
+**P3-2 — Rate limit helpers (`src/lib/rate-limit.ts`)**
 
-**P3-2 — proxy.ts (Next.js 16)**
+- `checkAuthRateLimit(headers)` — 5/15min/IP.
+- `checkPublicRateLimit(headers)` — 120/min/IP.
+- `checkAdminRateLimit(headers)` — 60/min/IP.
+- `checkPresignRateLimit(headers)` — 10/hour/IP. _(Vercel Upload Fix: Backend Freeze v1.2 TASK 9 — was checkUploadRateLimit)_
+- All return `{ success: boolean, retryAfter?: number }`.
+- **Call these functions directly in route handlers** — do not wrap in `typeof` guards. _(CR-001: audit finding)_
+- Unit test: `tests/unit/rate-limit.test.ts`.
 
-- Create `src/proxy.ts` (Next.js 16 — NOT middleware.ts).
-- Export function named `proxy` (Next.js 16 requirement).
-- Matcher config: `/admin/:path*` and `/api/v1/admin/:path*`.
-- For `/admin/*` routes (frontend UI): if `tuhfa_session` cookie absent → redirect to `/admin/login`. Exception: `/admin/login` itself — allow through.
-- For `/api/v1/admin/*` routes (except POST /api/v1/admin/auth): read iron-session cookie. If absent or invalid signature or session.authenticated !== true or session expired → return 401 JSON error using `buildError()`.
-- Session expiry check: `Date.now() - session.createdAt > SESSION_MAX_AGE_SECONDS * 1000`.
+**P3-3 — proxy.ts (Admin session + route guard)**
+
+- File: `src/proxy.ts`
+- **Both API routes and page routes must use full iron-session validation.** _(CR-001: Backend Freeze v1.2 §4 Auth flow, §9 Security)_
+- For `/api/v1/admin/*` (except POST auth): deserialize iron-session; check `session.authenticated === true` AND `Date.now() - session.createdAt ≤ SESSION_MAX_AGE_SECONDS * 1000`. Return 401 if either fails.
+- For `/admin/*` pages (except `/admin/login`): same iron-session deserialization and expiry check. Redirect to `/admin/login` if invalid.
+- **Cookie name presence alone is NOT sufficient for either path.** _(CR-001)_
+- Integration test: `tests/integration/admin-auth.test.ts` — fabricated cookie value rejected; expired session rejected; valid session passes; page route redirect on missing session.
+
+**P3-4 — POST /api/revalidate route**
+
+- File: `src/app/api/revalidate/route.ts`
+- **Method: POST only.** Return 405 on GET or any other method. _(CR-001: Backend Freeze v1.2 §3)_
+- **Auth: read `Authorization` header, expect `Bearer {REVALIDATION_SECRET}`.** Return 401 if missing or wrong. _(CR-001)_
+- **Nonce/replay protection:** read `X-Revalidate-Nonce` header (expected value: timestamp in ms as string). Reject if absent or if `Date.now() - parseInt(nonce) > 60000`. _(CR-001)_
+- On valid request: call `revalidateTag('lessons')` — single argument only.
+- Return 200 `{ revalidated: true }`.
+- Integration test: GET → 405; missing header → 401; stale nonce → 401; valid POST → 200 + revalidateTag called.
 
 ### Checkpoint P3
 
-- [ ] POST /api/v1/admin/auth: correct password → 200 + cookie with correct flags.
-- [ ] POST /api/v1/admin/auth: wrong password → 401 generic message (no hint of what was wrong).
-- [ ] POST /api/v1/admin/auth: 6th attempt in 15min → 429.
-- [ ] proxy.ts: unauthenticated GET /api/v1/admin/lessons → 401 JSON.
-- [ ] proxy.ts: unauthenticated /admin route → redirect to /admin/login.
-- [ ] All integration tests pass: `vitest run tests/integration/admin-auth.test.ts`.
+- [ ] POST /api/v1/admin/auth: correct → 200 + cookie; wrong → 401; 6th attempt → 429.
+- [ ] proxy.ts: fabricated cookie → 401 on API; page redirect to /admin/login.
+- [ ] proxy.ts: expired session (createdAt too old) → 401 on API; redirect on page.
+- [ ] POST /api/revalidate: GET → 405; no auth header → 401; valid POST → 200.
+- [ ] revalidateTag('lessons') called with single argument (no second arg).
 
 ---
 
 ## Phase 4 — Backend: Admin Lesson CRUD
 
-**Ref:** Backend Freeze v1.1 Sections 2, 2.1, 3, 4, 6 · OpenAPI `POST/PUT/DELETE /api/v1/admin/lessons/{id}`
+**Ref:** Backend Freeze v1.2 §3 (POST/PUT/DELETE /api/v1/admin/lessons) · §4 Create Lesson flow · OpenAPI operationIds: `createLesson`, `updateLesson`, `deleteLesson`
 **Estimated time:** 1 day
 **Blocker:** Phase 3 complete.
 
-### Tasks
-
 **P4-1 — POST /api/v1/admin/lessons**
 
-- Create `src/app/api/v1/admin/lessons/route.ts`.
-- Apply `adminWriteRateLimit` (60/min/IP). proxy.ts already verified session before this runs.
-- Validate request body with `LessonCreateSchema`. Return 422 on failure with field-level details.
-- Implement Create Lesson flow exactly as specified in Backend Freeze Section 4:
-  1. Fetch lessons.json + SHA from GitHub.
-  2. Check uniqueness: `volume` + `lesson_number`. Return 409 `DUPLICATE_LESSON_NUMBER` if duplicate found.
-  3. Assign `id = max(existing ids) + 1` (or 1 if empty). `id` is NEVER accepted from client body — strip if present.
-  4. Append lesson, sort array (volume ASC, lesson_number ASC), update `last_updated`.
-  5. PUT to GitHub using SHA. Return 409 `CONCURRENT_EDIT_CONFLICT` on GitHub 409. Return 502 on GitHub unreachable.
-  6. Fire-and-forget revalidation: `fetch('/api/revalidate?secret=...&path=/')` and `fetch('/api/revalidate?secret=...&path=/lessons/{id}')`.
-  7. Return 201 with new lesson object.
-- Audit log at INFO level: `action: 'lesson.create'`, `lessonId`, `volume`, `lesson_number`, `requestId`.
-- Integration test: `tests/integration/admin-lessons.test.ts` — valid body → 201 with auto-assigned id; duplicate lesson_number → 409 DUPLICATE; GitHub 409 → 409 CONCURRENT_EDIT_CONFLICT; GitHub down → 502; no cookie → 401; lessons sorted after creation.
+- File: `src/app/api/v1/admin/lessons/route.ts`
+- Validate body with LessonCreateSchema.
+- Check admin rate limit.
+- Execute Create Lesson flow from §4:
+  1. Fetch lessons.json + SHA via github.ts (uses `next: { tags: ['lessons'] }` — already set in P2-1).
+  2. Check uniqueness (volume + lesson_number).
+  3. Assign id = max(ids) + 1.
+  4. Append, sort, update last_updated.
+  5. PUT to GitHub with current SHA.
+  6. **Fire-and-forget revalidation: `POST /api/revalidate` with Authorization: Bearer {REVALIDATION_SECRET} and X-Revalidate-Nonce: Date.now().toString() header.** _(CR-001)_
+- Return 201 with new lesson.
+- Integration test: create → 201 → lesson in GitHub; duplicate lesson_number → 409.
 
 **P4-2 — PUT /api/v1/admin/lessons/[id]**
 
-- Add PUT handler to `src/app/api/v1/admin/lessons/[id]/route.ts`.
-- Apply `adminWriteRateLimit`.
-- Validate `id` param (positive integer). Return 400 if not.
-- Validate body with `LessonUpdateSchema` (all fields optional, minProperties: 1). Return 422 on failure.
-- Reject any attempt to update `id`, `volume`, `lesson_number` — these fields are immutable. Strip silently if present in body.
-- Fetch lessons.json + SHA. Return 404 if lesson not found.
-- Merge only provided fields onto existing lesson object.
-- PUT to GitHub using SHA. Return 409 on conflict. Return 502 on unreachable.
-- Fire-and-forget revalidation.
-- Return 200 with updated lesson object.
-- Audit log: `action: 'lesson.update'`.
-- Integration test: partial update returns 200 with merged lesson; unknown id → 404; GitHub conflict → 409; immutable fields ignored.
+- File: `src/app/api/v1/admin/lessons/[id]/route.ts`
+- Validate body with LessonUpdateSchema.
+- Fetch, find lesson (404 if missing), merge changed fields only, sort, PUT.
+- **Fire-and-forget revalidation via POST /api/revalidate** (same as P4-1). _(CR-001)_
+- Return 200 with updated lesson.
+- Integration test: partial update; 404 on missing; 409 on SHA conflict.
 
 **P4-3 — DELETE /api/v1/admin/lessons/[id]**
 
-- Add DELETE handler to `src/app/api/v1/admin/lessons/[id]/route.ts`.
-- Apply `adminWriteRateLimit`.
-- Validate `id` param. Return 400 if not integer.
-- Fetch lessons.json + SHA. Return 404 if lesson not found.
-- Filter lesson out of array. PUT to GitHub using SHA. Return 409 on conflict. Return 502 on unreachable.
-- Fire-and-forget revalidation.
-- Return 204 No Content.
-- Audit log: `action: 'lesson.delete'`.
-- Integration test: existing id → 204; subsequent GET /lessons/{id} → 404; unknown id → 404; SHA conflict → 409.
+- File: `src/app/api/v1/admin/lessons/[id]/route.ts` (same file as PUT)
+- Fetch, filter out lesson (404 if missing), PUT.
+- **Fire-and-forget revalidation via POST /api/revalidate.** _(CR-001)_
+- Return 204.
+- Integration test: delete → 204 → lesson gone; 404 on missing; 409 on SHA conflict.
 
-**P4-4 — ISR revalidation webhook**
+**P4-4 — Revalidation helper**
 
-- Create `src/app/api/revalidate/route.ts`.
-- GET handler: validate `secret` query param against `REVALIDATION_SECRET` using `crypto.timingSafeEqual`. Return 401 on mismatch.
-- Call `revalidateTag('lessons', 'minutes')` (Next.js 16 — two-argument form required).
-- Return 200 `{ revalidated: true }`.
+- Create `src/utils/revalidate.ts` — `triggerRevalidation()`:
+  ```
+  fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/revalidate`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.REVALIDATION_SECRET}`,
+      'X-Revalidate-Nonce': Date.now().toString(),
+    },
+  })
+  ```
+  Fire-and-forget (do not `await`, do not block the mutation response).
+- Import and call from P4-1, P4-2, P4-3 after successful GitHub PUT.
 
 ### Checkpoint P4
 
-- [ ] POST /api/v1/admin/lessons: creates lesson with auto-assigned id, commits to GitHub.
-- [ ] POST /api/v1/admin/lessons: duplicate lesson_number in same volume → 409.
-- [ ] PUT /api/v1/admin/lessons/[id]: partial update correct; unknown id → 404.
-- [ ] DELETE /api/v1/admin/lessons/[id]: 204 on success; unknown id → 404.
-- [ ] All routes: 401 if session cookie absent or invalid.
-- [ ] All routes: GitHub SHA conflict → 409 CONCURRENT_EDIT_CONFLICT.
-- [ ] Revalidation webhook: correct secret → 200; wrong secret → 401.
-- [ ] All integration tests pass: `vitest run tests/integration/admin-lessons.test.ts`.
+- [ ] POST /api/v1/admin/lessons → 201; duplicate → 409; no auth → 401.
+- [ ] PUT /api/v1/admin/lessons/[id] → 200 with only changed fields updated.
+- [ ] DELETE /api/v1/admin/lessons/[id] → 204; lesson absent from lessons.json.
+- [ ] All three mutation routes fire POST /api/revalidate (Authorization: Bearer header, not query string).
+- [ ] Without session cookie → 401 on all three routes.
 
 ---
 
-## Phase 5 — Backend: Internet Archive Upload
+## Phase 5 — Backend: IA Upload (Presign)
 
-**Ref:** Backend Freeze v1.1 Sections 3, 4, 5 · OpenAPI `POST /api/v1/admin/upload`
-**Estimated time:** 0.5 days
+**Ref:** Backend Freeze v1.2 §3 (POST /api/v1/admin/upload/presign) · §4 Generate Presigned Upload URL flow · §5 IA integration · OpenAPI v1.0.1 operationId: `presignUpload`
+**Estimated time:** 0.5 day
 **Blocker:** Phase 3 complete.
 
-### Tasks
+**P5-1 — Internet Archive presign client (`src/lib/internet-archive.ts`)**
 
-**P5-1 — Internet Archive client**
+- **DELETE** `uploadToIA()` function and all associated streaming/buffering code. _(Vercel Upload Fix: Backend Freeze v1.2 TASK 8)_
+- **DELETE** any `Buffer.concat` or chunk accumulation. _(Backend Freeze v1.2 §11 Forbidden)_
+- ADD `generatePresignedUrl(volume: number, lessonNumber: number, contentType: string, expiresIn: number)`:
+  - Create `S3Client` with endpoint `env.IA_S3_ENDPOINT`, credentials `env.IA_ACCESS_KEY` / `env.IA_SECRET_KEY`, region `"us-east-1"`.
+  - `filename = lesson-v{volume}-${String(lessonNumber).padStart(3,'0')}.mp3`
+  - Call `getSignedUrl(s3Client, new PutObjectCommand({ Bucket: env.IA_COLLECTION_IDENTIFIER, Key: filename, ContentType: contentType, Metadata: { volume: String(volume), lesson_number: String(lessonNumber) } }), { expiresIn })`.
+  - Returns `{ presigned_url, archive_url, filename, expires_in, method: 'PUT', required_headers: { 'Content-Type': contentType } }`.
+  - **NEVER** logs `presigned_url` (contains SigV4 signature). _(Backend Freeze v1.2 §6)_
+  - Presign timeout: 5,000ms. On S3 error: throw (caller returns 502).
+- Unit test: mocked `S3Client` — correct shape returned; `presigned_url` not logged; no real IA call.
 
-- Create `src/lib/internet-archive.ts`.
-- Initialize `S3Client` with `endpoint: IA_S3_ENDPOINT`, `credentials: { accessKeyId: IA_ACCESS_KEY, secretAccessKey: IA_SECRET_KEY }`, `region: 'us-east-1'` (required by SDK, ignored by IA).
-- Implement `uploadToIA(fileStream, filename, contentType, metadata)`: `PutObjectCommand` with `Bucket: IA_COLLECTION_IDENTIFIER`. Upload timeout: 300,000ms. Throws `UploadError` on failure.
-- Filename generation: `lesson-v{volume}-{String(lesson_number).padStart(3, '0')}.mp3`.
-- Unit test: `tests/unit/internet-archive.test.ts` — uploadToIA calls PutObject with correct Bucket/Key; timeout error throws UploadError; generates correct filename (lesson-v1-214.mp3 for volume=1, lesson_number=214). Use MSW or jest.spyOn to mock S3Client.
+**P5-2 — POST /api/v1/admin/upload/presign route**
 
-**P5-2 — POST /api/v1/admin/upload**
-
-- Create `src/app/api/v1/admin/upload/route.ts`.
-- Apply `uploadRateLimit` (10/hour/IP).
-- Parse multipart body with `formidable`. Max file size: 500MB. Return 413 `FILE_TOO_LARGE` if exceeded.
-- Validate form fields: `file` present, `volume` ∈ {"1","2","3","4"}, `lesson_number` matches pattern `^[1-9][0-9]*$`. Return 400 `MISSING_FILE` if file absent, 422 on field validation failure.
-- Generate filename using naming convention.
-- Call `uploadToIA()`. Return 502 `UPLOAD_FAILED` on failure.
-- Delete temp file from `/tmp` after upload (formidable temp storage).
-- Construct `archive_url`: `https://archive.org/download/{IA_COLLECTION_IDENTIFIER}/{filename}`.
-- Return 200 `{ data: { archive_url, filename, size_bytes }, meta: { requestId, timestamp } }`.
-- Audit log: `action: 'audio.upload'`.
-- Integration test: `tests/integration/admin-upload.test.ts` — valid upload → 200 with archive_url; missing file → 400; file > 500MB → 413; IA unreachable → 502; no session → 401; filename correct format.
+- **CREATE** `src/app/api/v1/admin/upload/presign/route.ts` _(new file)_
+- **DELETE** `src/app/api/v1/admin/upload/route.ts` _(old multipart file — Backend Freeze v1.2 TASK 10)_
+- POST handler only. No GET.
+- Parse body (Zod): `{ volume ∈ {1,2,3,4}, lesson_number > 0, content_type?: string }`.
+- Check presign rate limit via `checkPresignRateLimit(request.headers)` — 10/hr/IP → 429 if exceeded. _(Backend Freeze v1.2 TASK 9)_
+- Resolve `contentType = body.content_type ?? 'audio/mpeg'`. Validate ∈ `['audio/mpeg','audio/mp4','audio/ogg','audio/wav']` → 422 if invalid.
+- Call `generatePresignedUrl(volume, lesson_number, contentType, env.UPLOAD_PRESIGN_EXPIRY_SECONDS)`.
+- Log `{ action: 'upload.presign', volume, lesson_number, filename }` — **NOT `presigned_url`**.
+- Return 200 with presign data.
+- **The server never receives or buffers file bytes.** _(Vercel Upload Fix — Backend Freeze v1.2 §11)_
+- Integration test: 200 with correct shape; 401 without session; 429 after 10 calls/hr; 422 on invalid content_type.
 
 ### Backend Acceptance Checkpoint (end of Phase 5)
 
-**All items below must pass before frontend phases 10–12 connect to the real API.**
+All must pass before frontend Phases 10–12 connect to real API:
 
-- [ ] GET /api/v1/lessons: all filters work, pagination works, Cache-Control present.
-- [ ] GET /api/v1/lessons/[id]: correct lesson or 404.
-- [ ] POST /api/v1/admin/auth: correct → 200 + cookie; wrong → 401; brute-force → 429.
-- [ ] POST /api/v1/admin/lessons: create with auto-id; duplicate → 409; GitHub conflict → 409.
-- [ ] PUT /api/v1/admin/lessons/[id]: partial update; unknown → 404.
-- [ ] DELETE /api/v1/admin/lessons/[id]: 204; unknown → 404.
-- [ ] POST /api/v1/admin/upload: 200 with archive_url; 413; 502 on IA down.
-- [ ] All admin routes: 401 if session missing or invalid.
-- [ ] ADMIN_PASSWORD compared via `crypto.timingSafeEqual` (not `===`).
-- [ ] Session cookie: HttpOnly, Secure (production), SameSite=Strict.
-- [ ] No secrets, stack traces, or internal paths in any error response body.
-- [ ] Error shape on ALL responses matches the global error format from Backend Freeze Section 3.
-- [ ] Rate limiting enforced on all routes (public: 120/min, auth: 5/15min, admin: 60/min, upload: 10/hr).
-- [ ] Contract tests pass against all 7 OpenAPI endpoints: `vitest run tests/contract/`.
-- [ ] All unit + integration tests pass: `vitest run tests/unit/ tests/integration/`.
+- [ ] GET /api/v1/lessons returns 200 with `meta.total`.
+- [ ] POST /api/v1/admin/auth works with correct/wrong/rate-limited credentials.
+- [ ] POST /api/v1/admin/lessons creates lesson in GitHub lessons.json.
+- [ ] PUT and DELETE work and trigger revalidation via POST /api/revalidate.
+- [ ] **POST /api/v1/admin/upload/presign returns 200 with `presigned_url`, `archive_url`, `filename`.** _(Vercel Upload Fix — replaces old streaming upload check)_
+- [ ] **Presigned URL verified functional: `curl -X PUT {presigned_url} -H "Content-Type: audio/mpeg" --data-binary @test.mp3` → IA file present.** _(Vercel Upload Fix)_
+- [ ] **`src/app/api/v1/admin/upload/route.ts` does NOT exist** (old file deleted). _(Vercel Upload Fix)_
+- [ ] **`formidable` absent from package.json and node_modules.** _(Backend Freeze v1.2 §11)_
+- [ ] **Server never buffers file bytes** (no `Buffer.concat`, no streaming upload through Vercel). _(Vercel Upload Fix)_
+- [ ] POST /api/revalidate: GET → 405; no auth → 401; valid POST → 200.
+- [ ] All admin routes: fabricated or missing cookie → 401. Admin pages: redirect to /admin/login.
+- [ ] Rate limits: auth (5/15min), presign (10/hr) enforced. _(checkPresignRateLimit — not checkUploadRateLimit)_
+- [ ] No `as any` casts in any of the above. ESLint no-explicit-any passes.
 
 ---
 
 ## Phase 6 — Frontend: Design System + Foundation
 
-**Ref:** Frontend Freeze v1.1 Sections 1.6, 3, 4, 5, 6, 8, 11
+**Ref:** Frontend Freeze v1.2 §5, §6, §8, §11
 **Estimated time:** 1 day
-**Blocker:** Phase 1 complete. Can run in parallel with Phases 2–5 using Prism mock.
+**Blocker:** Phase 1 complete. (Can run in parallel with Phase 2 using Prism mock.)
 
-### Tasks
+**P6-1 — Prism mock server setup**
 
-**P6-1 — Root layout**
+- `npm install --save-dev @stoplight/prism-cli`.
+- Add script to package.json: `"mock": "prism mock docs/openapi.yaml --port 4010"`. _(path: docs/openapi.yaml — matches actual repo layout)_
+- Verify Prism starts and serves mock responses for all 7 endpoints.
 
-- Create `src/app/layout.tsx`.
-- Add Google Fonts `<link>` preconnect and stylesheet for Noto Naskh Arabic (weights 400, 700), Noto Sans Malayalam (weights 400, 600), Inter (weights 400, 500, 600). Use `font-display: swap`.
-- Wrap children in TanStack Query `QueryClientProvider`.
-- Set `<html lang="ar">` as default (visitor pages are Arabic-primary).
-- Add CSP and X-Frame-Options via `next.config.ts` headers (already done in P1-11 — verify here).
+**P6-2 — openapi-typescript type generation**
 
-**P6-2 — Utility: cn()**
+- `npm install --save-dev openapi-typescript`.
+- Add script: `"generate-types": "openapi-typescript docs/openapi.yaml -o src/types/api.ts"`. _(path: docs/openapi.yaml)_
+- Run and commit generated `src/types/api.ts`.
+- Verify `Lesson`, `Chapter`, `LessonCreateBody` etc. are present.
 
-- Create `src/utils/cn.ts` — `clsx` + `twMerge` utility for conditional classnames.
+**P6-3 — API client (`src/api/client.ts`)**
 
-**P6-3 — Utility: format helpers**
+- Create `openapi-fetch` client instance pointing to `NEXT_PUBLIC_API_BASE_URL`.
+- No raw `fetch()` calls in components — all API calls go through this client or typed functions in `src/api/endpoints.ts`.
 
-- Create `src/lib/format.ts`.
-- `formatDuration(seconds: number): string` — converts duration_seconds to `HH:MM:SS` or `MM:SS`.
-- `formatDate(dateStr: string): string` — formats YYYY-MM-DD to locale-appropriate display.
-- Unit test: `tests/unit/format.test.ts`.
+**P6-4 — UI components**
 
-**P6-4 — Progress types**
+Build all components from Frontend Freeze v1.2 §5 component inventory. Each must:
 
-- Create `src/types/progress.ts` — `LessonProgress`, `ProgressStore` types matching localStorage schema from Frontend Freeze Section 4.
-  ```ts
-  type LessonProgress = {
-    completed: boolean;
-    positionSeconds: number;
-    lastPlayedAt: string;
-  };
-  type ProgressStore = Record<number, LessonProgress>;
-  ```
+- Have no `any` types.
+- Have `aria-*` attributes per §6.
+- Use Tailwind color tokens only (no hardcoded hex values).
 
-**P6-5 — UI components**
-Build all components from Frontend Freeze Section 5 component inventory. Each must:
+Components (in dependency order):
 
-- Use design tokens from `tailwind.config.ts` only (no hardcoded hex values).
-- Have `focus-visible:ring-2` for keyboard focus.
-- Pass axe-core in development.
-- Have a component test in `tests/component/`.
+1. `Spinner` — CSS-only, centered.
+2. `Button` — primary, secondary, danger, ghost variants. `disabled` state with opacity.
+3. `Input` — text, password, number, date, file. Forwards ref. `aria-describedby` for errors.
+4. `Select` — controlled. `aria-label` or paired `<label>`.
+5. `Textarea` — controlled. RTL-aware.
+6. `Label` + `FieldError` — form field wrapper. Error renders `role="alert"`.
+7. `Toast` — success, error, warning. Top-right. Auto-dismiss 5s. Keyboard-dismissible.
+8. `Modal` — focus trap on open. Escape closes. `role="dialog"`, `aria-modal`, `aria-labelledby`.
+9. `ProgressBar` — `role="progressbar"`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`.
+10. `Badge` — completed status (success color).
+11. `Pagination` — Previous/Next + page numbers. `aria-label`, `aria-current="page"`. **Accepts `totalPages` as prop — no internal page computation.** _(CR-001)_
+12. `AudioPlayer` — thin wrapper on native `<audio preload="metadata">`. Tracks isPlaying, currentTime, playbackRate. Keyboard: Space = play/pause, arrows seek ±5s.
+13. `ChapterNav` — volume tabs → kitab → bab → fasl selects. All Arabic labels use `dir="rtl" lang="ar"`.
 
-Components (build in this order — simpler first):
+**P6-5 — `useProgress` hook**
 
-1. `Spinner` — CSS-only, no JS.
-2. `Badge` — completed status display.
-3. `Button` — primary, secondary, danger, ghost variants. `disabled` state. Loading state (shows Spinner, disables click).
-4. `Input` — text, password, number, date, file variants.
-5. `Select`
-6. `Textarea`
-7. `Label + FieldError` — form field wrapper, `role="alert"` on FieldError.
-8. `Pagination` — Previous/Next + page numbers. `aria-current="page"` on active. `aria-label` on buttons.
-9. `Toast` — success, error, warning variants. Top-right position. Auto-dismiss 5s. `role="status"` (success) or `role="alert"` (error).
-10. `Modal` — focus trap on open. `role="dialog"`, `aria-modal="true"`, `aria-labelledby`. Escape key closes. Focus returns to trigger on close.
-11. `ProgressBar` — for XHR upload. `role="progressbar"`, `aria-valuenow`, `aria-valuemin="0"`, `aria-valuemax="100"`.
+- `src/hooks/useProgress.ts` — read/write `localStorage['tuhfa_progress']`.
+- Typed `ProgressStore = Record<number, { completed: boolean; positionSeconds: number; lastPlayedAt: string }>`.
+- Unit test: `tests/unit/useProgress.test.ts`.
+
+**P6-6 — Lesson utilities**
+
+- `src/lib/lessons.ts` — `mergeAndDeduplicateLessons(responses)`, `buildChapterHierarchy(lessons)`.
+- `src/lib/format.ts` — `formatDuration(seconds)`, `formatDate(dateStr)`.
+- Unit tests: `tests/unit/lessons.test.ts`, `tests/unit/format.test.ts`.
 
 ### Checkpoint P6
 
-- [ ] `tsc --noEmit` passes.
-- [ ] All 11 UI components render without errors.
-- [ ] `axe-core` finds zero violations on each component.
-- [ ] All component tests pass: `vitest run tests/component/`.
-- [ ] Design tokens used consistently — no hardcoded hex values in component files.
+- [ ] Prism mock server starts and returns valid shapes for all endpoints.
+- [ ] All 13 UI components render without errors.
+- [ ] `Pagination` component accepts and uses `totalPages` prop.
+- [ ] No `any` type in any component.
+- [ ] axe-core passes on all component renders.
+- [ ] System fonts applied correctly (no Google Fonts request in network tab).
 
 ---
 
 ## Phase 7 — Frontend: Lesson Browser (`/`)
 
-**Ref:** Frontend Freeze v1.1 Section 2 (Lesson Browser screen) · OpenAPI `GET /api/v1/lessons`
+**Ref:** Frontend Freeze v1.2 §2 (Lesson Browser screen) · §3 (GET /api/v1/lessons) · OpenAPI operationId: `listLessons`
 **Estimated time:** 1 day
-**Blocker:** Phase 6 complete. Uses Prism mock until Phase 2 backend is verified.
+**Blocker:** Phase 6 complete. (Can use Prism mock until Phase 2 backend complete.)
 
-### Tasks
+**P7-1 — `useLessons` hook**
 
-**P7-1 — Lesson data utilities**
+- `src/hooks/useLessons.ts`.
+- `useAllLessons()`: fires 4 parallel TanStack Query calls (offsets 0, 200, 400, 600), merges results via `mergeAndDeduplicateLessons`. Cache key: `['lessons','all']`.
+- `useFilteredLessons(filters, page)`: single call with query params. Cache key: `['lessons','filtered', filters, page]`.
+- **`totalPages` computed from `meta.total` returned in response:** `Math.ceil(meta.total / limit)`. _(CR-001: Frontend Freeze v1.2 §2 Lesson Browser)_
+- **No hardcoded offset array cap.** _(CR-001)_
+- No `as any` casts.
 
-- Create `src/lib/lessons.ts`.
-- `mergeLessonPages(pages: Lesson[][]): Lesson[]` — merge 4-call results, deduplicate by id, sort volume ASC, lesson_number ASC.
-- `buildChapterHierarchy(lessons: Lesson[]): ChapterHierarchy` — extract unique kitab, bab, fasl values for ChapterNav.
-- Unit test: `tests/unit/lessons.test.ts` — merge deduplicates correctly; sort order correct; chapter hierarchy built from lesson array.
+**P7-2 — LessonCard component**
 
-**P7-2 — useLessons hook**
+- `src/features/lessons/LessonCard.tsx`.
+- Displays: title_ar (`dir="rtl" lang="ar"`), chapter info, duration, upload date, completed badge.
+- All Arabic strings: `dir="rtl" lang="ar"`. All UI labels (Duration, Volume, etc.): English.
 
-- Create `src/hooks/useLessons.ts`.
-- `useAllLessons()`: fires 4 parallel GET requests (`limit=200, offset=0/200/400/600`) via `Promise.all`. TanStack Query key: `['lessons','all']`. Stale time: 60,000ms. All 4 must succeed — partial failure is not acceptable (returns error state). On success: merge via `mergeLessonPages`.
-- `useFilteredLessons(filters, page)`: single GET with filter params. TanStack Query key: `['lessons','filtered', filters, page]`. Stale time: 60,000ms.
-- Unit test: `tests/unit/useLessons.test.ts` — 4 parallel calls fired; merge called on success; error state if any call fails.
+**P7-3 — LessonBrowser component**
 
-**P7-3 — ChapterNav component**
+- `src/features/lessons/LessonBrowser.tsx`.
+- `useReducer` for `{ activeVolume, activeKitab, activeBab, activeFasl, searchQuery, currentPage }`.
+- Chapter nav hidden until full dataset loaded.
+- Search blocked client-side if < 2 chars.
+- Empty state: "No matching lessons" (English) with Arabic sub-label `dir="rtl" lang="ar"`.
+- **No Malayalam strings anywhere.** _(CR-001)_
+- Error state: inline with retry button. English messages.
 
-- Create `src/features/lessons/ChapterNav.tsx`.
-- Props: `lessons: Lesson[]`, `onFilterChange: (filters) => void`.
-- Volume selector (tabs or select), kitab select, bab select, fasl select — cascaded (bab options depend on selected kitab, etc.).
-- `<nav aria-label="...">` landmark. All selects have `<label>`.
-- `dir="rtl"` on Arabic labels. `lang="ar"` on Arabic text.
-- Component test: `tests/component/ChapterNav.test.tsx` — selecting volume filters kitab options; bab options cascade from kitab.
+**P7-4 — `/` page**
 
-**P7-4 — LessonCard component**
+- `src/app/page.tsx`.
+- `export const revalidate = 60`.
+- Renders `<LessonBrowser />`.
 
-- Create `src/features/lessons/LessonCard.tsx`.
-- Displays: `lesson_number`, `title_ar` (RTL, `lang="ar"`), `chapter.kitab`, `duration_seconds` (formatted), completed badge.
-- Links to `/lessons/{id}`.
-- `<li>` element (used inside `<ul>` in LessonBrowser).
+**P7-5 — Component test + E2E**
 
-**P7-5 — Lesson Browser page**
-
-- Create `src/features/lessons/LessonBrowser.tsx` — client component.
-  - `useReducer` for `{ activeVolume, activeKitab, activeBab, activeFasl, searchQuery, currentPage }`.
-  - Search input: validates min 2 chars before firing API call. No submission if < 2 chars.
-  - Chapter nav filtering: uses `useAllLessons()` full dataset for nav hierarchy; `useFilteredLessons()` for paginated filtered results.
-  - Loading state: centered Spinner. Chapter nav hidden until full dataset loaded.
-  - Empty state: Arabic + Malayalam empty messages per freeze spec.
-  - Error states: 400/422 → inline error + reset filters; 429 → Toast with retryAfterSeconds; 500/502 → inline error + retry button.
-  - Lesson list: `<ul>` with `<li>` per lesson (LessonCard). Max 50 per page.
-  - Pagination: Previous/Next + page numbers. Focus moves to first lesson on page change.
-- Create `src/app/page.tsx` — ISR page. `export const revalidate = 60`. Renders LessonBrowser.
+- `tests/component/LessonBrowser.test.tsx` — chapter nav filters; search < 2 chars blocked; totalPages correct from meta.total.
+- `tests/e2e/lesson-browser.spec.ts` — browse, filter by volume, search.
 
 ### Checkpoint P7
 
-- [ ] Lesson Browser loads with Prism mock data.
+- [ ] `/` loads and displays lesson list against Prism mock.
 - [ ] Chapter nav filters lesson list correctly.
-- [ ] Search with ≥ 2 chars fires API call; < 2 chars blocked client-side.
-- [ ] Pagination Previous/Next works.
-- [ ] All error states render correctly (use Prism `Prefer: code=X` header in tests).
-- [ ] `axe-core` passes on `/` route.
-- [ ] All unit + component tests pass for Phase 7.
+- [ ] Search < 2 chars is blocked client-side.
+- [ ] `totalPages` computed from `meta.total` (not from currentPage).
+- [ ] Previous/Next pagination works.
+- [ ] No Malayalam strings in rendered output.
+- [ ] No Google Fonts network request.
+- [ ] `<html lang="en">` confirmed.
 
 ---
 
 ## Phase 8 — Frontend: Lesson Detail + Audio Player (`/lessons/[id]`)
 
-**Ref:** Frontend Freeze v1.1 Section 2 (Lesson Detail screen) · OpenAPI `GET /api/v1/lessons/{id}`
+**Ref:** Frontend Freeze v1.2 §2 (Lesson Detail screen) · §3 (GET /api/v1/lessons/{id}) · OpenAPI v1.0.1 operationId: `getLessonById` _(was `getLesson` — does not exist in OpenAPI v1.0.1)_
 **Estimated time:** 1 day
-**Blocker:** Phase 6 complete. Uses Prism mock until Phase 2 backend verified.
+**Blocker:** Phase 6 complete.
 
-### Tasks
+**P8-1 — LessonDetail component**
 
-**P8-1 — useProgress hook**
+- `src/features/lessons/LessonDetail.tsx`.
+- Fetches lesson via `['lesson', id]` TanStack Query key.
+- Renders: title_ar (`dir="rtl" lang="ar"`), chapter metadata (Arabic, `dir="rtl" lang="ar"`), duration/date (English formatted).
+- `<audio preload="metadata" src={archive_url} aria-label={title_ar}>`.
+- Audio error event → English message: "Audio could not be loaded — Internet Archive may be temporarily unavailable."
+- Wires `useProgress` for position restore and mark-complete.
 
-- Create `src/hooks/useProgress.ts`.
-- Reads/writes `localStorage['tuhfa_progress']` as `ProgressStore`.
-- `getProgress(id): LessonProgress | null`
-- `savePosition(id, positionSeconds)`: writes `{ positionSeconds, lastPlayedAt: new Date().toISOString() }`. Throttled to 5s intervals.
-- `markComplete(id)`: sets `completed: true`.
-- Does NOT throw if localStorage unavailable (SSR) — returns null gracefully.
-- Unit test: `tests/unit/useProgress.test.ts` — savePosition writes correct shape; markComplete sets flag; getProgress returns null for unknown id; throttle enforced (5s).
+**P8-2 — `/lessons/[id]` page**
 
-**P8-2 — AudioPlayer component**
+- `src/app/lessons/[id]/page.tsx`.
+- `export const revalidate = 60`.
+- 404 state: "Lesson not found" (English) with back link.
 
-- Create `src/components/audio/AudioPlayer.tsx`.
-- Thin wrapper on native `<audio>`. No custom audio library.
-- Props: `src: string` (archive_url), `lessonId: number`, `title: string`.
-- `preload="metadata"` — not `auto`.
-- `aria-label={title}`.
-- Playback rate `<select>`: options [0.75, 1, 1.25, 1.5, 2]. Has `<label>`.
-- Keyboard: Space = play/pause (when player focused), arrow left/right = seek ±5s.
-- On `timeupdate`: call `savePosition(lessonId, currentTime)` (throttled 5s via useProgress).
-- On mount: if `getProgress(lessonId).positionSeconds > 0`, set `audio.currentTime` before play.
-- On audio error (IA unreachable): show inline message: "تعذّر تحميل الصوت — قد يكون أرشيف الإنترنت غير متاح مؤقتاً".
-- Component test: `tests/component/AudioPlayer.test.tsx` — play/pause toggles; timeupdate writes progress; position restored on mount; audio error shows message.
+**P8-3 — Tests**
 
-**P8-3 — Progress components**
-
-- Create `src/features/progress/ProgressBadge.tsx` — shows completed/in-progress status using `useProgress`.
-- Create `src/features/progress/MarkCompleteButton.tsx` — calls `markComplete(id)` on click. `aria-pressed` state.
-
-**P8-4 — Lesson Detail page**
-
-- Create `src/features/lessons/LessonDetail.tsx` — client component.
-  - Fetches `GET /api/v1/lessons/{id}` on mount via TanStack Query key `['lesson', id]`. Stale time: 60,000ms.
-  - Renders: `title_ar` (RTL, `lang="ar"`), chapter breadcrumb, `upload_date` (formatted), `duration_seconds` (formatted), AudioPlayer, MarkCompleteButton, ProgressBadge.
-  - Loading: Spinner in content area. Metadata hidden until loaded.
-  - 404: "الدرس غير موجود" / "ക്ലാസ്സ് കണ്ടെത്തിയില്ല" + back link to `/`.
-  - 429: Toast with Retry-After countdown.
-  - 500/502: inline error + retry button.
-- Create `src/app/lessons/[id]/page.tsx` — ISR page. `export const revalidate = 60`. Renders LessonDetail.
+- `tests/component/AudioPlayer.test.tsx` — play/pause, seek, progress save.
+- `tests/e2e/lesson-player.spec.ts` — play, mark complete, progress restored on re-visit.
 
 ### Checkpoint P8
 
-- [ ] Lesson Detail loads with Prism mock data.
-- [ ] AudioPlayer plays/pauses, speed control works, keyboard controls work.
-- [ ] Progress saved to localStorage on timeupdate (5s throttle).
-- [ ] Position restored on re-visit to same lesson.
-- [ ] Mark Complete sets badge.
-- [ ] 404 lesson shows correct error + back link.
-- [ ] `axe-core` passes on `/lessons/[id]` route.
-- [ ] All unit + component tests pass for Phase 8.
+- [ ] `/lessons/1` loads lesson metadata and audio element.
+- [ ] Playback position written to localStorage on timeupdate.
+- [ ] Position restored on re-visit.
+- [ ] Mark complete updates badge.
+- [ ] `/lessons/99999` shows "Lesson not found" (English).
+- [ ] IA audio failure shows English error message.
 
 ---
 
 ## Phase 9 — Frontend: Admin Login (`/admin/login`)
 
-**Ref:** Frontend Freeze v1.1 Section 2 (Admin Login screen) · OpenAPI `POST /api/v1/admin/auth`
-**Estimated time:** 0.5 days
-**Blocker:** Phase 6 complete, Phase 3 complete (or use Prism mock for Phase 3).
+**Ref:** Frontend Freeze v1.2 §2 (Admin Login screen) · OpenAPI: `adminAuth`
+**Estimated time:** 0.5 day
+**Blocker:** Phase 6 complete, Phase 3 complete.
 
-### Tasks
+**P9-1 — `useAdminAuth` hook**
 
-**P9-1 — useAdminAuth hook**
-
-- Create `src/hooks/useAdminAuth.ts`.
-- TanStack Query mutation: POST /api/v1/admin/auth.
+- `src/hooks/useAdminAuth.ts` — TanStack Query mutation wrapping POST /api/v1/admin/auth.
 - On 200: `router.replace('/admin')`.
-- On 401: return field error "كلمة المرور غير صحيحة".
-- On 422: return field errors from `error.details`.
-- On 429: return inline rate-limit message "تم تجاوز الحد — حاول بعد 15 دقيقة".
-- On 500: Toast error.
-- No automatic retry (rate-limited endpoint).
+- On 401: return field error "Incorrect password".
+- On 429: return inline error "Rate limit exceeded — try again in 15 minutes".
 
-**P9-2 — Admin Login page**
+**P9-2 — `/admin/login` page**
 
-- Create `src/app/admin/login/page.tsx` — CSR (`'use client'`).
-- Single react-hook-form field: `password` (required, minLength 1, maxLength 128).
-- `type="password"` input with `<label>`. Focus placed on input on mount.
-- `aria-describedby` pointing to error message element when error is present.
-- Submit button: shows Spinner and is disabled during request.
-- If `tuhfa_session` cookie present (server-side proxy.ts already handles redirect — verify proxy.ts redirects to /admin on authenticated visit).
-- E2E test: `tests/e2e/admin-auth.spec.ts` — correct password → /admin; wrong → inline error; 429 → rate-limit message.
+- `src/app/admin/login/page.tsx`.
+- react-hook-form: single `password` field, type="password", minLength 1, maxLength 128.
+- Submit button disabled and shows spinner during request.
+- Focus on password input on mount.
+- If session cookie already valid (from proxy): redirect to `/admin`.
+
+**P9-3 — Tests**
+
+- `tests/e2e/admin-auth.spec.ts` — correct → redirect to /admin; wrong → inline English error; 429 → rate-limit message.
 
 ### Checkpoint P9
 
-- [ ] Login with correct password → redirect to /admin.
-- [ ] Wrong password → inline error (no page reload).
-- [ ] 429 → rate-limit message displayed (no redirect).
-- [ ] proxy.ts redirects unauthenticated visits to /admin/\* → /admin/login.
-- [ ] proxy.ts redirects authenticated visit to /admin/login → /admin.
-- [ ] Focus on password input on mount.
-- [ ] `axe-core` passes on `/admin/login`.
+- [ ] Correct password → session cookie set → redirect to `/admin`.
+- [ ] Wrong password → inline "Incorrect password".
+- [ ] 429 → "Rate limit exceeded — try again in 15 minutes".
+- [ ] Focus on password input on page load.
 
 ---
 
 ## Phase 10 — Frontend: Admin Lesson List + Delete (`/admin`)
 
-**Ref:** Frontend Freeze v1.1 Section 2 (Admin Lesson List screen) · OpenAPI `GET /api/v1/lessons`, `DELETE /api/v1/admin/lessons/{id}`
+**Ref:** Frontend Freeze v1.2 §2 (Admin Lesson List screen) · OpenAPI: `listLessons`, `deleteLesson`
 **Estimated time:** 1 day
-**Blocker:** Phases 6, 9 complete. Phase 4 backend (DELETE endpoint) must be complete.
-
-### Tasks
+**Blocker:** Phase 9 complete, Phase 4 complete (or Prism mock for read; real API needed for delete).
 
 **P10-1 — AdminLessonTable component**
 
-- Create `src/components/admin/AdminLessonTable.tsx`.
-- Props: `lessons: Lesson[]`, `onEdit: (id) => void`, `onDelete: (id) => void`.
-- `<table>` with `<caption>`. `<th scope="col">` on headers.
-- Columns: volume, lesson_number, title_ar (RTL), chapter.kitab, duration (formatted), upload_date, Edit button, Delete button.
-- Edit button: `aria-label="تعديل الدرس {id}"`. Delete button: `aria-label="حذف الدرس {id}"` (danger variant).
-- Sorted volume ASC, lesson_number ASC (matches backend sort — no client-side resort needed).
+- `src/components/admin/AdminLessonTable.tsx`.
+- 648-row table (no virtualization). Sorted volume ASC, lesson_number ASC.
+- Per-row: `aria-label="Edit lesson {id}"`, `aria-label="Delete lesson {id}"`.
+- `<caption>` on table. `<th scope="col">` on all headers.
+- Empty state: "No lessons yet" with link to `/admin/lessons/new`.
 
 **P10-2 — DeleteModal component**
 
-- Create `src/components/admin/DeleteModal.tsx`.
-- Props: `lessonId: number | null`, `isOpen: boolean`, `onConfirm: () => void`, `onCancel: () => void`.
-- `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing to modal title. Focus trap. Escape key closes. Focus returns to Delete button on close.
-- Confirm button: danger variant, shows Spinner when deleting.
-- Cancel button: secondary variant.
+- `src/components/admin/DeleteModal.tsx`.
+- `role="dialog"`, `aria-modal="true"`, focus trap, Escape closes.
+- Confirm triggers DELETE /api/v1/admin/lessons/{id}.
+- On 204: invalidate `['lessons','all']`, `['admin','lessons','all']`. Toast "Lesson deleted."
+- On 404: Toast "Lesson no longer exists."
+- On 409: Toast "Concurrent edit conflict — please retry."
+- All toast messages: English. _(CR-001)_
 
-**P10-3 — Admin Lesson List page**
+**P10-3 — `/admin` page**
 
-- Create `src/app/admin/page.tsx` — CSR (`'use client'`).
-- Fetches `GET /api/v1/lessons?limit=200&offset=0` × 4 parallel — same 4-call merge as visitor browser. TanStack Query key: `['admin','lessons','all']`.
-- `useState: { deleteTargetId, isDeleteModalOpen }`.
-- Delete mutation: DELETE /api/v1/admin/lessons/{id}. On 204: invalidate `['lessons','all']`, `['admin','lessons','all']`, `['lesson', id]`. Toast "تم الحذف بنجاح". On 404: Toast "الدرس غير موجود بالفعل" + refetch. On 409: Toast "تعارض تزامن — أعد المحاولة". On 429/500/502: Toast with appropriate message.
-- 401 on any call → `router.replace('/admin/login')`.
-- Loading state: Spinner in table area.
-- Empty state: "لا توجد دروس بعد" with link to /admin/lessons/new.
-- "New Lesson" button linking to /admin/lessons/new.
-- E2E test: `tests/e2e/admin-edit-delete.spec.ts` (delete scenarios) — confirm delete → 204 → list refreshes; cancel → modal closes; 401 → redirect.
+- `src/app/admin/page.tsx`. CSR only (no `revalidate`).
+- Uses `['admin','lessons','all']` query key.
+- Error state: inline "Failed to load lessons" with retry button (English).
 
-### Checkpoint P10
+**P10-4 — Tests**
 
-- [ ] Admin list loads all lessons (648 when data populated).
-- [ ] Delete modal opens on Delete button click; Escape closes; cancel closes.
-- [ ] Confirm delete → lesson removed from table.
-- [ ] 401 on load or delete → redirect to /admin/login.
-- [ ] `axe-core` passes on `/admin`.
+- `tests/component/AdminLessonTable.test.tsx`.
+- `tests/e2e/admin-edit-delete.spec.ts` — delete flow: modal → confirm → list refreshes; cancel → modal closes.
 
 ---
 
 ## Phase 11 — Frontend: Add Lesson Wizard (`/admin/lessons/new`)
 
-**Ref:** Frontend Freeze v1.1 Section 2 (Add Lesson Wizard screen) · OpenAPI `POST /api/v1/admin/upload`, `POST /api/v1/admin/lessons`
+**Ref:** Frontend Freeze v1.2 §2 (Add Lesson Wizard screen) · OpenAPI v1.0.1 operationIds: `presignUpload`, `createLesson` _(Vercel Upload Fix: was `uploadAudio` — operationId does not exist in OpenAPI v1.0.1)_
 **Estimated time:** 1 day
-**Blocker:** Phases 6, 9 complete. Phases 4 and 5 backend must be complete.
-
-### Tasks
+**Blocker:** Phase 9, Phase 4, Phase 5 complete.
 
 **P11-1 — AddLessonWizard component**
 
-- Create `src/components/admin/AddLessonWizard.tsx`.
-- `useReducer` state machine: `{ step: 'upload' | 'form' | 'submitting' | 'done', uploadProgress: number, archiveUrl: string | null }`.
+- `src/components/admin/AddLessonWizard.tsx`.
+- Wizard state machine (useReducer): `{ step: 'upload' | 'form' | 'submitting' | 'done', uploadProgress: number, archiveUrl: string | null, presignData: PresignUploadResponse['data'] | null }`.
+- **Step 1 — Presign & Upload:** _(Vercel Upload Fix — Backend Freeze v1.2 §4 · Frontend Freeze v1.2 §2)_
+  1. Client-side guard: reject file > 500MB before any API call (413 is client-only — server never receives file).
+  2. Call `POST /api/v1/admin/upload/presign` (`presignUpload`) with `{ volume, lesson_number, content_type }` → receive `{ presigned_url, archive_url, required_headers, expires_in }`.
+  3. XHR `PUT {presigned_url}` directly to Internet Archive. Set `Content-Type` from `required_headers['Content-Type']`. **Do NOT send presigned_url to server or log it.**
+  4. Track `xhr.upload.onprogress` → update `uploadProgress` → `ProgressBar` component.
+  5. On XHR status 200: store `archiveUrl`, advance to Step 2.
+  6. On XHR status 0 (CORS block): show curl fallback UI — pre-filled command, "Copy command" button, and "I uploaded successfully →" button (advances to Step 2 with `archive_url` from presign response, no backend callback needed).
+  7. On XHR status 403: presign URL expired — show "Request new upload link" button (re-calls presign).
+  8. On presign 429: show "Rate limit — try again in X minutes" (parse `Retry-After` header).
+  9. On presign 422: show field-level error from response.
+  10. On presign 502: show "Upload service unavailable — retry" prompt.
+- Step counter: "Step 1 of 2" / "Step 2 of 2" (`aria-current="step"`).
+- Step 2: react-hook-form, all fields from §2. Arabic inputs: `dir="rtl" lang="ar"`.
+- `archive_url`: pre-filled read-only input. English label: "Audio URL".
+- Back on Step 2: disabled (orphan accepted per §2).
+- All error messages: English. Field labels: English.
+- On 201: invalidate both query keys. Toast "Lesson created." Redirect to `/admin`.
 
-**Step 1 — Upload:**
+**P11-2 — Tests**
 
-- File input with accepted MIME types (audio/mpeg, audio/mp4, audio/ogg, audio/wav). Client-side size check < 500MB before XHR.
-- `volume` and `lesson_number` fields (required for filename generation).
-- XHR upload (NOT fetch) to POST /api/v1/admin/upload for `upload.onprogress` events.
-- ProgressBar: `role="progressbar"`, `aria-valuenow={uploadProgress}`.
-- Wizard step indicator: "الخطوة 1 من 2" with `aria-current="step"`.
-- On success: store `archive_url`, transition to `step: 'form'`.
-- Error states: 400 → inline; 401 → redirect /admin/login; 413 → inline "File exceeds 500MB"; 422 → inline; 429 → inline rate-limit; 500/502 → inline "Internet Archive unreachable — retry".
-
-**Step 2 — Form:**
-
-- react-hook-form with all fields from Frontend Freeze Section 2 (Add Lesson Wizard validation rules).
-- `archive_url` field: pre-filled from Step 1, read-only input, pattern validation `^https://archive\.org/download/`.
-- Submit: POST /api/v1/admin/lessons (JSON). On 201: toast success, invalidate `['lessons','all']` and `['admin','lessons','all']`, redirect /admin. On 401: redirect /admin/login. On 409 DUPLICATE_LESSON_NUMBER: inline `lesson_number` field error. On 409 CONCURRENT_EDIT_CONFLICT: inline toast "تعارض — أعد المحاولة". On 422: field errors from `error.details`. On 500/502: inline + retry (Step 2 only — do NOT re-upload).
-- Back button on Step 2: disabled (file already uploaded, re-upload would create orphan — per freeze spec).
-- Component test: `tests/component/AddLessonWizard.test.tsx` — progress bar renders during upload; Step 2 form pre-populated; submit button disabled after click; 422 shows field errors.
-
-**P11-2 — Add Lesson Wizard page**
-
-- Create `src/app/admin/lessons/new/page.tsx` — CSR. Renders AddLessonWizard.
-- E2E test: `tests/e2e/admin-add-lesson.spec.ts` — upload progress shown; Step 2 pre-populated; 201 → /admin redirect.
-
-### Checkpoint P11
-
-- [ ] Step 1 XHR upload shows real progress bar (0–100%).
-- [ ] Step 2 form pre-populated with archive_url (read-only).
-- [ ] Successful create → redirect to /admin.
-- [ ] Duplicate lesson_number → inline field error on lesson_number input.
-- [ ] Back button on Step 2 is disabled.
-- [ ] 401 on either step → redirect to /admin/login.
-- [ ] `axe-core` passes on `/admin/lessons/new`.
+- `tests/component/AddLessonWizard.test.tsx`:
+  - Step 1: file > 500MB → client-side error shown before presign call is made.
+  - Step 1: `presignUpload` 200 → XHR PUT to presigned_url → progress bar renders → Step 2 shown with archive_url pre-filled.
+  - Step 1: XHR status 0 (CORS) → curl fallback UI shown with copy button.
+  - Step 1: presign 429 → rate-limit message shown.
+  - Step 2: react-hook-form pre-populated with archive_url; 422 → field-level errors rendered; 502 → retry prompt shown.
+  - **No test for server-side 413** — 413 cannot be returned by presign endpoint; size guard is client-only. _(Vercel Upload Fix)_
+- `tests/e2e/admin-add-lesson.spec.ts`.
 
 ---
 
 ## Phase 12 — Frontend: Edit Lesson (`/admin/lessons/[id]/edit`)
 
-**Ref:** Frontend Freeze v1.1 Section 2 (Edit Lesson screen) · OpenAPI `GET /api/v1/lessons/{id}`, `PUT /api/v1/admin/lessons/{id}`
-**Estimated time:** 0.5 days
-**Blocker:** Phases 6, 9 complete. Phase 4 backend (PUT endpoint) must be complete.
-
-### Tasks
+**Ref:** Frontend Freeze v1.2 §2 (Edit Lesson screen) · OpenAPI v1.0.1 operationIds: `getLessonById`, `updateLesson` _(was `getLesson` — operationId does not exist in OpenAPI v1.0.1)_
+**Estimated time:** 0.5 day
+**Blocker:** Phase 9, Phase 4 complete.
 
 **P12-1 — EditLessonForm component**
 
-- Create `src/components/admin/EditLessonForm.tsx`.
-- Props: `lesson: Lesson`.
-- react-hook-form, all mutable fields editable. `id`, `volume`, `lesson_number` displayed as read-only text — NOT inputs — and NOT sent in PUT body.
-- `archive_url` is editable (unlike Step 2 of Add Wizard where it is read-only).
-- `aria-readonly="true"` on immutable display fields.
-- On submit: send only fields that differ from initial values (dirty fields only via react-hook-form `dirtyFields`).
-- PUT /api/v1/admin/lessons/{id}. On 200: toast "تم الحفظ", invalidate `['lesson', id]`, `['lessons','all']`, `['admin','lessons','all']`, `['lessons','filtered']` (all), redirect /admin. On 401: redirect. On 404: inline error "الدرس لم يعد موجوداً". On 409 CONCURRENT_EDIT_CONFLICT: inline toast "تعارض — أعد المحاولة". On 422: field errors. On 500/502: inline + retry.
+- `src/components/admin/EditLessonForm.tsx`.
+- On mount: GET /api/v1/lessons/{id} to pre-populate.
+- react-hook-form: `defaultValues` from GET response.
+- Immutable fields (id, volume, lesson_number): read-only text display. NOT in form. NOT sent in PUT body.
+- On submit: send only changed fields (react-hook-form `dirtyFields`).
+- On 200: toast "Saved". Redirect to `/admin`. Invalidate 3 query keys.
+- On 409: toast "Concurrent edit conflict — please retry." (English)
+- Arabic inputs: `dir="rtl" lang="ar"`.
 
-**P12-2 — Edit Lesson page**
+**P12-2 — `/admin/lessons/[id]/edit` page**
 
-- Create `src/app/admin/lessons/[id]/edit/page.tsx` — CSR.
-- Fetch GET /api/v1/lessons/{id} on mount to pre-populate. TanStack Query key `['lesson', id]`.
-- Loading: Spinner shown, form hidden until GET resolves.
-- 404: inline error + back link.
-- 401: redirect /admin/login.
-- Renders EditLessonForm once loaded.
-- E2E test: `tests/e2e/admin-edit-delete.spec.ts` (edit scenarios) — form pre-populated; partial update sends only changed fields; 409 conflict → toast.
+- `src/app/admin/lessons/[id]/edit/page.tsx`. CSR only.
 
-### Checkpoint P12
+**P12-3 — Tests**
 
-- [ ] Edit form pre-populated from GET /lessons/{id}.
-- [ ] Immutable fields (id, volume, lesson_number) displayed as text, not inputs.
-- [ ] Only dirty fields sent in PUT body.
-- [ ] 409 conflict → toast (not redirect).
-- [ ] 401 → redirect to /admin/login.
-- [ ] `axe-core` passes on `/admin/lessons/[id]/edit`.
+- `tests/e2e/admin-edit-delete.spec.ts` — edit flow: form pre-populated; partial update; 409 → English conflict toast.
 
 ---
 
 ## Phase 13 — CI + Quality Gates
 
-**Ref:** Backend Freeze v1.1 Section 7 Phase 4 · Frontend Freeze v1.1 Sections 7, 10, 12
-**Estimated time:** 0.5 days
-**Blocker:** All phases 2–12 complete.
+**Ref:** Backend Freeze v1.2 §7 Phase 3 · Frontend Freeze v1.2 §10
+**Estimated time:** 0.5 day
+**Blocker:** Phases 2–12 complete.
 
-### Tasks
+**P13-1 — GitHub Actions CI workflow**
 
-**P13-1 — GitHub Actions workflow**
-
-- Create `.github/workflows/ci.yml`.
-- Triggers: `push` and `pull_request` on all branches.
+- Create `.github/workflows/ci.yml`. Triggers: push and pull_request on all branches.
 - Jobs (in order):
 
 ```yaml
-1. type-check: npx tsc --noEmit
-2. lint: eslint src/   (NOT next lint — removed in Next.js 16)
-3. unit-tests: vitest run tests/unit/
-4. component-tests: vitest run tests/component/
+1. type-check:       npx tsc --noEmit
+2. lint:             eslint src/   (NOT next lint — removed in Next.js 16)
+3. unit-tests:       vitest run tests/unit/
+4. component-tests:  vitest run tests/component/
 5. integration-tests: vitest run tests/integration/
 6. contract-tests:
-  - start: prism mock ./openapi.yaml --port 4010 &
-  - wait: sleep 3
-  - run: vitest run tests/contract/
-7. build: next build    (Turbopack, default in Next.js 16)
+   - start: prism mock docs/openapi.yaml --port 4010 & _(path: docs/openapi.yaml)_
+   - wait:  sleep 3
+   - run:   vitest run tests/contract/
+7. build:            next build   (Turbopack, default in Next.js 16)
+8. lighthouse-ci:    @lhci/cli autorun (against Vercel preview deployment)
+9. bundle-check:     @next/bundle-analyzer
 ```
 
-- CI fails on: TypeScript error, lint error, any test failure.
+- CI fails on: TypeScript error, lint error (including no-explicit-any violations), any test failure, Lighthouse budget exceeded, bundle budget exceeded.
 
-**P13-2 — Smoke test documentation**
+**P13-2 — ESLint config (`eslint.config.mjs`)**
 
-- Create `README.md` with the smoke test checklist (7 checks from Backend Freeze Section 7 Phase 4 and Frontend Freeze Section 10 MVP test checklist).
-- Document: project setup steps, env vars required, `npm run mock` for local API mocking, how to add new lessons via admin panel.
+Re-enable rules per CR-001: _(CR-001: Backend Freeze v1.2 §9)_
 
-**P13-3 — Coverage thresholds**
+```js
+'@typescript-eslint/no-explicit-any': 'error',    // was 'off'
+'@typescript-eslint/no-unused-vars': 'error',     // was 'off'
+'no-empty': 'error',                              // was 'off'
+```
 
-- Configure Vitest coverage: `/src/lib/` ≥ 80%, `/src/schemas/` 100%.
-- Add `vitest run --coverage` to CI.
+Confirm zero violations across all source files. Fix any remaining `as any` casts before CI gates pass.
+
+**P13-3 — lighthouserc.js**
+
+- LCP < 2500ms, CLS < 0.1, INP < 200ms, a11y ≥ 90.
+- Target URLs: Vercel preview deployment.
+
+**P13-4 — Contract test**
+
+- `tests/contract/openapi-compliance.test.ts` — all 7 endpoint responses conform to OpenAPI schemas.
+
+**P13-5 — Coverage thresholds**
+
+- `src/lib/` ≥ 80%, `src/schemas/` 100%.
+- `vitest run --coverage` added to CI.
+
+**P13-6 — README sync**
+
+- README documents: project setup, env vars required, `npm run mock` for Prism, how to add lessons.
+- **No reference to `/api/docs` endpoint** (does not exist). _(CR-001)_
+- Smoke test checklist updated (7 items — no `/api/docs` item).
 
 ### Checkpoint P13
 
-- [ ] CI workflow passes on `main` branch with zero failures.
+- [ ] CI workflow passes on `main` with zero failures.
 - [ ] `tsc --noEmit` passes.
-- [ ] `eslint src/` passes (no `next lint`).
+- [ ] `eslint src/` passes — no-explicit-any: 0 violations.
 - [ ] All test suites pass.
+- [ ] Lighthouse LCP/CLS/INP/a11y budgets green.
+- [ ] Bundle budgets: `/` < 80KB, `/lessons/[id]` < 80KB, `/admin/*` < 120KB.
+- [ ] No Google Fonts requests detected by Lighthouse.
+- [ ] README has no `/api/docs` reference.
 
 ---
 
 ## Phase 14 — Deployment + Data Population
 
-**Ref:** Backend Freeze v1.1 Section 10 · Frontend Freeze v1.1 Section 12
-**Estimated time:** 0.5 days setup + ongoing data entry
+**Ref:** Backend Freeze v1.2 §10 · Frontend Freeze v1.2 §12
+**Estimated time:** 0.5 day setup + ~22 hours data entry
 **Blocker:** Phase 13 CI all green.
-
-### Tasks
 
 **P14-1 — Vercel environment variables**
 
-- Set all env vars from `.env.example` in Vercel dashboard for `production` environment:
-  - `ADMIN_PASSWORD` (≥16 chars)
-  - `SESSION_SECRET` (≥32 chars)
-  - `SESSION_MAX_AGE_SECONDS=86400`
-  - `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`, `GITHUB_FILE_PATH`, `GITHUB_BRANCH`
-  - `IA_ACCESS_KEY`, `IA_SECRET_KEY`, `IA_COLLECTION_IDENTIFIER`, `IA_S3_ENDPOINT`
-  - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
-  - `REVALIDATION_SECRET` (≥32 chars)
-  - `ALLOWED_ORIGINS` (production URL)
-  - `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_BASE_URL`
-- Set same vars for `preview` environment (can use same values except `ALLOWED_ORIGINS`).
+Set all env vars from `.env.example` in Vercel dashboard (production + preview):
+
+```
+ADMIN_PASSWORD               (≥16 chars)
+SESSION_SECRET               (≥32 chars)
+SESSION_MAX_AGE_SECONDS=86400
+GITHUB_TOKEN, GITHUB_REPO_OWNER, GITHUB_REPO_NAME, GITHUB_FILE_PATH, GITHUB_BRANCH
+IA_ACCESS_KEY, IA_SECRET_KEY, IA_COLLECTION_IDENTIFIER, IA_S3_ENDPOINT
+UPLOAD_PRESIGN_EXPIRY_SECONDS=900
+UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+REVALIDATION_SECRET          (≥32 chars)
+NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_API_BASE_URL
+NEXT_PUBLIC_VERCEL_ANALYTICS_ID  (optional)
+NODE_ENV=production
+```
+
+**ALLOWED_ORIGINS: do NOT set** (removed from env schema in v1.2). _(CR-001)_
 
 **P14-2 — Production deployment**
 
-- Push `main` branch — Vercel auto-deploys.
-- Confirm deployment succeeds in Vercel dashboard.
-- Note production URL (e.g., `tuhfa-learning-platform.vercel.app`).
+- Push `main` → Vercel auto-deploys. Confirm in Vercel dashboard.
 
 **P14-3 — Smoke test (production)**
-Run all 7 smoke test items from README.md against production URL:
 
-- [ ] `GET /api/v1/lessons` → 200, Cache-Control header present.
+Run all items against production URL:
+
+- [ ] `GET /api/v1/lessons` → 200, `meta.total` present, `Cache-Control: public, s-maxage=60, stale-while-revalidate=300` header present.
 - [ ] `GET /api/v1/lessons/1` → 200 or 404 (if not yet populated).
-- [ ] `GET /api/docs` → OpenAPI UI loads, all 7 endpoints visible.
-- [ ] `POST /api/v1/admin/auth` with wrong password → 401 INVALID_CREDENTIALS.
-- [ ] `POST /api/v1/admin/auth` with correct password → 200, Set-Cookie header present.
-- [ ] `GET /api/v1/admin/lessons` with no cookie → 401 UNAUTHORIZED.
+- [ ] `POST /api/v1/admin/auth` with wrong password → 401.
+- [ ] `POST /api/v1/admin/auth` with correct password → 200, Set-Cookie present.
+- [ ] `GET /api/v1/admin/lessons` with no cookie → 401.
 - [ ] Visit `/admin` without session → redirect to `/admin/login`.
+- [ ] Visit `/admin/login` with valid session → redirect to `/admin`.
+- [ ] `POST /api/v1/admin/upload/presign` with valid session + body → 200 with `presigned_url`, `archive_url`, `filename`. _(Vercel Upload Fix)_
+- [ ] `POST /api/v1/admin/upload/presign` with no session → 401. _(Vercel Upload Fix)_
+- [ ] `GET /api/v1/admin/upload` or `POST /api/v1/admin/upload` (old endpoint) → 404. _(Vercel Upload Fix — old route deleted)_
+- [ ] `GET /api/revalidate` → 405 (method not allowed). _(CR-001)_
+- [ ] `POST /api/revalidate` with no auth header → 401. _(CR-001)_
+- [ ] Network tab on `/`: no requests to fonts.googleapis.com or fonts.gstatic.com. _(CR-001)_
 
 **P14-4 — First lesson upload (end-to-end verification)**
 
 - Log into admin panel in production.
-- Upload one lesson audio file (smallest available, from Volume 1).
-- Complete Step 2 form with metadata.
+- Upload one audio file (smallest available, Volume 1).
+- Complete Step 2 form.
 - Verify lesson appears on site within 90 seconds (ISR revalidation).
-- This confirms the full admin workflow works in production against real IA and GitHub APIs.
 
-**P14-5 — Bulk data entry (operational task)**
+**P14-5 — Bulk data entry**
 
-- 648 lessons must be entered via the admin panel before launch.
-- Estimated time: ~2 min/lesson × 648 = ~22 hours of admin panel work.
-- Recommended approach: batch by volume (V1: 213 lessons, V2: 178, V3: 146, V4: 111).
-- Permission from Sheikh Dr. Abdul Hakim Al-Sa'di must be confirmed before this step.
-- Track progress externally (spreadsheet or GitHub issue).
+- 648 lessons via admin panel. Estimated ~22 hours (batch by volume: V1 213, V2 178, V3 146, V4 111).
+- Permission from Sheikh Dr. Abdul Hakim Al-Sa'di confirmed before this step.
 
 **P14-6 — Vercel Speed Insights**
 
-- Enable `@vercel/speed-insights/next` in `src/app/layout.tsx` (already in frontend freeze scope).
+- Confirm `@vercel/speed-insights/next` active in layout.tsx.
 - Verify Core Web Vitals appear in Vercel dashboard after first real user visit.
 
 ### Final Acceptance Checkpoint
 
-- [ ] All 7 smoke test items pass against production URL.
-- [ ] Admin can add, edit, and delete a lesson end-to-end in production.
+- [ ] All smoke test items pass against production URL.
+- [ ] Admin can add, edit, delete a lesson end-to-end in production.
 - [ ] Lesson appears on site within 90 seconds of creation.
 - [ ] Vercel Analytics shows p95 latency < 200ms on GET /api/v1/lessons.
-- [ ] Auth lockout triggers after 5 failed attempts (verified manually).
+- [ ] Auth lockout after 5 failed attempts (verified manually).
+- [ ] No Google Fonts requests in production network tab.
+- [ ] No `as any` in production build (ESLint CI gate confirmed it).
 - [ ] Permission from Sheikh confirmed (pre-launch gate).
 - [ ] All 648 lessons entered and browsable (launch gate).
 
@@ -919,53 +887,62 @@ Run all 7 smoke test items from README.md against production URL:
 
 ## Task Summary Table
 
-| Phase | What                            | Owned by  | Deps           | Est. Time        |
-| ----- | ------------------------------- | --------- | -------------- | ---------------- |
-| P0    | External accounts               | Developer | None           | 1–2h             |
-| P1    | Scaffold + foundation           | Developer | P0             | 1 day            |
-| P2    | Backend: public read API        | Developer | P1             | 1 day            |
-| P3    | Backend: auth + proxy           | Developer | P1             | 0.5 day          |
-| P4    | Backend: admin CRUD             | Developer | P3             | 1 day            |
-| P5    | Backend: IA upload              | Developer | P3             | 0.5 day          |
-| P6    | Frontend: design system         | Developer | P1             | 1 day            |
-| P7    | Frontend: lesson browser        | Developer | P6             | 1 day            |
-| P8    | Frontend: lesson detail + audio | Developer | P6             | 1 day            |
-| P9    | Frontend: admin login           | Developer | P6, P3         | 0.5 day          |
-| P10   | Frontend: admin list + delete   | Developer | P6, P9, P4     | 1 day            |
-| P11   | Frontend: add lesson wizard     | Developer | P6, P9, P4, P5 | 1 day            |
-| P12   | Frontend: edit lesson           | Developer | P6, P9, P4     | 0.5 day          |
-| P13   | CI + quality gates              | Developer | P2–P12         | 0.5 day          |
-| P14   | Deploy + data entry             | Developer | P13            | 0.5d + ~22h data |
+| Phase | What                            | Deps           | Est. Time        |
+| ----- | ------------------------------- | -------------- | ---------------- |
+| P0    | External accounts               | None           | 1–2h             |
+| P1    | Scaffold + foundation           | P0             | 1 day            |
+| P2    | Backend: public read API        | P1             | 1 day            |
+| P3    | Backend: auth + proxy           | P1             | 0.5 day          |
+| P4    | Backend: admin CRUD             | P3             | 1 day            |
+| P5    | Backend: IA upload              | P3             | 0.5 day          |
+| P6    | Frontend: design system         | P1             | 1 day            |
+| P7    | Frontend: lesson browser        | P6             | 1 day            |
+| P8    | Frontend: lesson detail + audio | P6             | 1 day            |
+| P9    | Frontend: admin login           | P6, P3         | 0.5 day          |
+| P10   | Frontend: admin list + delete   | P6, P9, P4     | 1 day            |
+| P11   | Frontend: add lesson wizard     | P6, P9, P4, P5 | 1 day            |
+| P12   | Frontend: edit lesson           | P6, P9, P4     | 0.5 day          |
+| P13   | CI + quality gates              | P2–P12         | 0.5 day          |
+| P14   | Deploy + data entry             | P13            | 0.5d + ~22h data |
 
 **Total code work: ~11 days**
-**Data entry: ~22 hours (parallel with other tasks if a helper assists)**
-**Total calendar time: 2–3 weeks (matches freeze estimate)**
+**Data entry: ~22 hours**
+**Total calendar time: 2–3 weeks**
 
 ---
 
 ## Blockers Register
 
-| ID  | Blocker                                   | Blocks                      | Resolution                                                       |
-| --- | ----------------------------------------- | --------------------------- | ---------------------------------------------------------------- |
-| B1  | IA collection not created                 | P5-2 upload (production)    | Create collection in IA account before P14                       |
-| B2  | Sheikh permission not confirmed           | P14-5 data entry            | Confirm permission before bulk upload                            |
-| B3  | GitHub PAT expired or wrong scope         | P2, P4                      | Rotate PAT with `repo` scope                                     |
-| B4  | Upstash free tier exhausted (10K req/day) | Rate limiting in production | Upgrade Upstash tier or reduce load                              |
-| B5  | Vercel free tier bandwidth exceeded       | Public site                 | Unlikely at <500 DAU; monitor Vercel dashboard                   |
-| B6  | Backend acceptance checkpoint failures    | Phases 10–12                | Do not connect frontend to real API until all backend tests pass |
+| ID  | Blocker                                | Blocks                 | Resolution                                           |
+| --- | -------------------------------------- | ---------------------- | ---------------------------------------------------- |
+| B1  | IA collection not created              | P5 upload (production) | Create collection before P14                         |
+| B2  | Sheikh permission not confirmed        | P14-5 data entry       | Confirm before bulk upload                           |
+| B3  | GitHub PAT expired or wrong scope      | P2, P4                 | Rotate PAT with `repo` scope                         |
+| B4  | Upstash free tier exhausted            | Rate limiting          | Upgrade tier or reduce load                          |
+| B5  | Vercel bandwidth exceeded              | Public site            | Monitor dashboard; unlikely at <500 DAU              |
+| B6  | Backend acceptance checkpoint failures | Phases 10–12           | Do not connect frontend until all backend tests pass |
+| B7  | React 19 breaking change in dependency | P1                     | Fix typing regression before proceeding              |
 
 ---
 
 ## Change Control Gate
 
-Any deviation from this build plan that implies a change to:
+Any deviation implying a change to:
 
-- the API contract (any endpoint, field, status code)
+- the API contract (endpoint, field, status code)
 - the data schema (`lessons.json` shape)
 - the authentication model
 - the scope (add or remove features)
 - the stack (swap libraries)
 
-**must be raised as a Change Request against Backend Freeze v1.1 and/or Frontend Freeze v1.1 before implementation begins.**
+**must be raised as a Change Request against Backend Freeze v1.2 and/or Frontend Freeze v1.2 before implementation begins.**
 
-Do not implement then ask for approval. Stop, document the change request, get approval, bump freeze version, then proceed.
+Do not implement then ask for approval. Stop → document the CR → get approval → bump freeze version → proceed.
+
+---
+
+## Version History
+
+- v1.2 (2026-05-10): Vercel Upload Fix applied. Phase 5 fully rewritten — `uploadToIA()` streaming deleted; `generatePresignedUrl()` presign-only architecture implemented; `POST /api/v1/admin/upload/route.ts` deleted; `POST /api/v1/admin/upload/presign/route.ts` created. P3-2 rate-limiter renamed `checkUploadRateLimit` → `checkPresignRateLimit` (matches Backend Freeze v1.2 TASK 9). Backend Acceptance Checkpoint updated: old streaming test replaced by presign functional test. Phase 11 (P11-1) Step 1 rewritten to presign → XHR PUT flow with CORS fallback and presign 429/422/502 handling. Phase 11 (P11-2) tests updated: 413 server response test removed (client-side guard only); presign and CORS fallback tests added. Phase 12 operationId corrected: `getLesson` → `getLessonById`. P14-1 Vercel env var list: `UPLOAD_PRESIGN_EXPIRY_SECONDS=900` added. P14-3 smoke tests: presign endpoint tests added; old multipart upload test removed. P1-11 CSP: `default-src 'self'` and `img-src 'self' data:'` added to production policy; `img-src 'self' data: blob:` added to development policy (aligns with Frontend Freeze v1.2 §8). P6-1 and P6-2: openapi.yaml path corrected `./openapi.yaml` → `docs/openapi.yaml`. P13-1 CI: same path correction. Phase 2 operationId corrected: `getLesson` → `getLessonById`. `stale-while-revalidate` corrected: 30 → 300. `fasl` filter added to Phase 2 task body and checkpoint.
+- v1.1 (2026-05-09): Updated to govern Backend Freeze v1.2 and Frontend Freeze v1.2 (CR-001). Key task changes: P1-1 React 19 upgrade; P1-2 tsconfig no allowJs/ignoreDeprecations; P1-3 ALLOWED_ORIGINS removed from env; P1-10 system fonts (no Google Fonts); P1-11 split CSP (nonce-based prod, relaxed dev); P1-13 layout.tsx lang="en" no Google Fonts link; P2-1 github.ts fetch with next tags; P2-2 meta.total in response; P3-3 proxy.ts full iron-session for page routes; P3-4 /api/revalidate POST+Authorization+nonce; P4-1/2/3 revalidation fire-and-forget via POST; P5-1 no Buffer.concat streaming; P5-2 req.formData() not formidable; P6-4 Pagination totalPages from meta.total; P7-1 totalPages from meta.total; P13-2 ESLint no-explicit-any re-enabled; P13-6 README no /api/docs; P14-1 ALLOWED_ORIGINS removed; P14-3 smoke tests updated.
+- v1.0 (2026-04-30): Initial build plan. Backend Freeze v1.1 · Frontend Freeze v1.1 · OpenAPI v1.0.0.

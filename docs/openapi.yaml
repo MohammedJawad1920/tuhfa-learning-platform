@@ -1,399 +1,88 @@
 openapi: 3.1.0
+
 info:
   title: Tuhfat al-Muhtaj Learning Platform API
-  version: 1.0.0
+  version: 1.0.1
   description: |
     REST API for the Tuhfat al-Muhtaj audio lesson platform.
-    Serves 648+ lessons by Sheikh Dr. Abdul Hakim Al-Sa'di.
-    Public read endpoints are unauthenticated.
-    Admin write endpoints require a session cookie obtained via POST /api/v1/admin/auth.
-  contact:
-    name: Platform Admin
+
+    **Base path:** `/api/v1`  
+    **Auth:** iron-session HttpOnly cookie `tuhfa_session` (set via POST /admin/auth).  
+    **Breaking changes from v1.0.0:**
+    - `POST /admin/upload` (multipart/form-data) **removed** — replaced by `POST /admin/upload/presign`
+    - `ResponseMeta.total` promoted from optional to **required** on list responses
+    - `fasl` query parameter added to `GET /lessons`
+  contact: {}
   license:
-    name: MIT
+    name: Private
 
 servers:
-  - url: https://tuhfa-learning-platform.vercel.app/api/v1
-    description: Production
+  - url: /api/v1
+    description: Production / Preview (relative — same-origin Vercel deployment)
   - url: http://localhost:3000/api/v1
     description: Local development
 
-tags:
-  - name: Lessons
-    description: Public lesson read endpoints
-  - name: Admin Auth
-    description: Admin authentication
-  - name: Admin Lessons
-    description: Admin lesson management (authenticated)
-  - name: Admin Upload
-    description: Admin audio upload to Internet Archive (authenticated)
-
-# ─────────────────────────────────────────────
-# SECURITY SCHEMES
-# ─────────────────────────────────────────────
-components:
-  securitySchemes:
-    sessionCookie:
-      type: apiKey
-      in: cookie
-      name: tuhfa_session
-      description: HttpOnly iron-session cookie. Obtained via POST /api/v1/admin/auth.
-
-  # ─────────────────────────────────────────────
-  # SHARED SCHEMAS
-  # ─────────────────────────────────────────────
-  schemas:
-    Chapter:
-      type: object
-      required: [kitab, bab, fasl]
-      properties:
-        kitab:
-          type: string
-          minLength: 1
-          maxLength: 200
-          example: "كتاب الطهارة"
-        bab:
-          type: [string, "null"]
-          maxLength: 200
-          example: "باب الماء"
-        fasl:
-          type: [string, "null"]
-          maxLength: 200
-          example: null
-
-    Lesson:
-      type: object
-      required:
-        - id
-        - volume
-        - lesson_number
-        - title_ar
-        - chapter
-        - duration_seconds
-        - upload_date
-        - archive_url
-        - telegram_post_id
-      properties:
-        id:
-          type: integer
-          minimum: 1
-          readOnly: true
-          example: 1
-        volume:
-          type: integer
-          enum: [1, 2, 3, 4]
-          example: 1
-        lesson_number:
-          type: integer
-          minimum: 1
-          example: 1
-        title_ar:
-          type: string
-          minLength: 1
-          maxLength: 500
-          example: "قول المصنف: باب في أحكام الطهارة"
-        chapter:
-          $ref: "#/components/schemas/Chapter"
-        duration_seconds:
-          type: integer
-          minimum: 1
-          example: 3720
-        upload_date:
-          type: string
-          format: date
-          example: "2023-01-15"
-        archive_url:
-          type: string
-          format: uri
-          pattern: "^https://archive\\.org/download/"
-          example: "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-001.mp3"
-        telegram_post_id:
-          type: integer
-          minimum: 1
-          example: 12
-
-    LessonCreateBody:
-      type: object
-      required:
-        - volume
-        - lesson_number
-        - title_ar
-        - chapter
-        - duration_seconds
-        - upload_date
-        - archive_url
-        - telegram_post_id
-      properties:
-        volume:
-          type: integer
-          enum: [1, 2, 3, 4]
-          example: 1
-        lesson_number:
-          type: integer
-          minimum: 1
-          example: 214
-        title_ar:
-          type: string
-          minLength: 1
-          maxLength: 500
-          example: "قول المصنف: فصل في أحكام الغسل"
-        chapter:
-          $ref: "#/components/schemas/Chapter"
-        duration_seconds:
-          type: integer
-          minimum: 1
-          example: 4200
-        upload_date:
-          type: string
-          format: date
-          example: "2026-04-01"
-        archive_url:
-          type: string
-          format: uri
-          pattern: "^https://archive\\.org/download/"
-          example: "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3"
-        telegram_post_id:
-          type: integer
-          minimum: 1
-          example: 679
-
-    LessonUpdateBody:
-      type: object
-      minProperties: 1
-      properties:
-        title_ar:
-          type: string
-          minLength: 1
-          maxLength: 500
-          example: "قول المصنف: فصل في أحكام الغسل — مراجعة"
-        chapter:
-          $ref: "#/components/schemas/Chapter"
-        duration_seconds:
-          type: integer
-          minimum: 1
-          example: 4350
-        upload_date:
-          type: string
-          format: date
-          example: "2026-04-01"
-        archive_url:
-          type: string
-          format: uri
-          pattern: "^https://archive\\.org/download/"
-          example: "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3"
-        telegram_post_id:
-          type: integer
-          minimum: 1
-          example: 679
-
-    ResponseMeta:
-      type: object
-      required: [requestId, timestamp]
-      properties:
-        requestId:
-          type: string
-          format: uuid
-          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-        timestamp:
-          type: string
-          format: date-time
-          example: "2026-04-20T10:00:00.000Z"
-        total:
-          type: integer
-          description: Total count (only present on list endpoints)
-          example: 648
-        limit:
-          type: integer
-          example: 50
-        offset:
-          type: integer
-          example: 0
-
-    ApiError:
-      type: object
-      required: [error, requestId, timestamp]
-      properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              example: "VALIDATION_ERROR"
-            message:
-              type: string
-              example: "Request validation failed"
-            details:
-              type: object
-              additionalProperties: true
-              example: { "lesson_number": "Must be a positive integer" }
-        requestId:
-          type: string
-          format: uuid
-          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-        timestamp:
-          type: string
-          format: date-time
-          example: "2026-04-20T10:00:00.000Z"
-
-  # ─────────────────────────────────────────────
-  # SHARED RESPONSES
-  # ─────────────────────────────────────────────
-  responses:
-    Unauthorized:
-      description: Session cookie missing, invalid, or expired
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-          example:
-            error:
-              code: "UNAUTHORIZED"
-              message: "Authentication required"
-              details: {}
-            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-            timestamp: "2026-04-20T10:00:00.000Z"
-
-    NotFound:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-          example:
-            error:
-              code: "NOT_FOUND"
-              message: "Lesson not found"
-              details: {}
-            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-            timestamp: "2026-04-20T10:00:00.000Z"
-
-    ValidationError:
-      description: Zod validation failure — field-level errors in details
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-          example:
-            error:
-              code: "VALIDATION_ERROR"
-              message: "Request validation failed"
-              details:
-                title_ar: "Required"
-                volume: "Must be one of: 1, 2, 3, 4"
-            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-            timestamp: "2026-04-20T10:00:00.000Z"
-
-    Conflict:
-      description: Duplicate lesson_number in volume OR GitHub SHA conflict
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-          example:
-            error:
-              code: "DUPLICATE_LESSON_NUMBER"
-              message: "A lesson with this number already exists in volume 1"
-              details: {}
-            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-            timestamp: "2026-04-20T10:00:00.000Z"
-
-    RateLimited:
-      description: Rate limit exceeded
-      headers:
-        Retry-After:
-          schema:
-            type: integer
-          description: Seconds until the rate limit window resets
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-          example:
-            error:
-              code: "RATE_LIMITED"
-              message: "Too many requests. Please try again later."
-              details: { "retryAfterSeconds": 60 }
-            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-            timestamp: "2026-04-20T10:00:00.000Z"
-
-    InternalError:
-      description: Unexpected server error (no stack trace)
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-          example:
-            error:
-              code: "INTERNAL_ERROR"
-              message: "An unexpected error occurred"
-              details: {}
-            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-            timestamp: "2026-04-20T10:00:00.000Z"
-
-    UpstreamError:
-      description: GitHub API or Internet Archive unreachable
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-          example:
-            error:
-              code: "UPSTREAM_ERROR"
-              message: "External service unavailable. Please try again."
-              details: {}
-            requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-            timestamp: "2026-04-20T10:00:00.000Z"
-
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 # PATHS
-# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+
 paths:
+
+  # ── Public ──────────────────────────────────────────────────────────────────
+
   /lessons:
     get:
-      tags: [Lessons]
       operationId: listLessons
       summary: List lessons with optional filters and pagination
       description: |
         Returns lessons sorted by volume ASC, lesson_number ASC.
-        Supports filtering by volume, kitab, bab, and text search on title_ar.
-        Cached at CDN edge for 60 seconds.
+        Supports filtering by volume, kitab, bab, fasl, and substring search on title_ar.
+        Cached at CDN edge for 60 seconds (s-maxage=60, stale-while-revalidate=300).
+        `meta.total` is the count of matching records **before** the limit/offset slice —
+        use it to compute `totalPages = Math.ceil(meta.total / limit)`.
+      tags: [Lessons]
       parameters:
         - name: volume
           in: query
+          description: Filter by volume number
           required: false
           schema:
             type: integer
             enum: [1, 2, 3, 4]
-          description: Filter by volume number
           example: 1
         - name: kitab
           in: query
+          description: Exact match on chapter.kitab
           required: false
           schema:
             type: string
-            maxLength: 200
-          description: Exact match on chapter.kitab
-          example: "كتاب الطهارة"
+          example: كتاب الطهارة
         - name: bab
           in: query
+          description: Exact match on chapter.bab
           required: false
           schema:
             type: string
-            maxLength: 200
-          description: Exact match on chapter.bab
-          example: "باب الماء"
+          example: باب الماء
+        - name: fasl
+          in: query
+          description: Exact match on chapter.fasl
+          required: false
+          schema:
+            type: string
+          example: فصل في المياه
         - name: search
           in: query
+          description: Substring match on title_ar (min 2 chars, max 100 chars)
           required: false
           schema:
             type: string
             minLength: 2
             maxLength: 100
-          description: Substring match on title_ar
-          example: "الطهارة"
+          example: الطهارة
         - name: limit
           in: query
+          description: Maximum lessons to return (1–200)
           required: false
           schema:
             type: integer
@@ -403,6 +92,7 @@ paths:
           example: 50
         - name: offset
           in: query
+          description: Number of lessons to skip (for pagination)
           required: false
           schema:
             type: integer
@@ -416,7 +106,7 @@ paths:
             Cache-Control:
               schema:
                 type: string
-              example: "public, s-maxage=60, stale-while-revalidate=300"
+              example: public, s-maxage=60, stale-while-revalidate=300
             X-Request-Id:
               schema:
                 type: string
@@ -436,9 +126,30 @@ paths:
                         items:
                           $ref: "#/components/schemas/Lesson"
                   meta:
-                    $ref: "#/components/schemas/ResponseMeta"
+                    $ref: "#/components/schemas/ListResponseMeta"
+              example:
+                data:
+                  lessons:
+                    - id: 1
+                      volume: 1
+                      lesson_number: 1
+                      title_ar: قول المصنف باب في أحكام الطهارة
+                      chapter:
+                        kitab: كتاب الطهارة
+                        bab: باب الماء
+                        fasl: null
+                      duration_seconds: 3720
+                      upload_date: "2023-01-15"
+                      archive_url: https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-001.mp3
+                      telegram_post_id: 12
+                meta:
+                  total: 648
+                  limit: 50
+                  offset: 0
+                  requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                  timestamp: "2026-04-20T10:00:00.000Z"
         "400":
-          description: Invalid query parameter type
+          description: Invalid query parameter type or value
           content:
             application/json:
               schema:
@@ -454,13 +165,14 @@ paths:
 
   /lessons/{id}:
     get:
-      tags: [Lessons]
       operationId: getLessonById
       summary: Get a single lesson by ID
+      tags: [Lessons]
       parameters:
         - name: id
           in: path
           required: true
+          description: Lesson ID (positive integer)
           schema:
             type: integer
             minimum: 1
@@ -497,15 +209,17 @@ paths:
         "502":
           $ref: "#/components/responses/UpstreamError"
 
+  # ── Admin: Auth ──────────────────────────────────────────────────────────────
+
   /admin/auth:
     post:
-      tags: [Admin Auth]
       operationId: adminAuth
       summary: Authenticate as admin — returns session cookie
       description: |
-        Validates admin password. On success, sets HttpOnly iron-session cookie.
-        Rate limited to 5 requests per 15 minutes per IP.
-        Wrong password always returns 401 with generic message (no enumeration).
+        Validates admin password. On success, sets an HttpOnly iron-session cookie
+        (`tuhfa_session`). Rate limited to 5 requests per 15 minutes per IP.
+        Wrong password always returns 401 with a generic message (no enumeration).
+      tags: [Admin]
       requestBody:
         required: true
         content:
@@ -518,7 +232,8 @@ paths:
                   type: string
                   minLength: 1
                   maxLength: 128
-                  example: "your_admin_password"
+            example:
+              password: your_admin_password
       responses:
         "200":
           description: Authentication successful. Session cookie set.
@@ -550,10 +265,10 @@ paths:
                 $ref: "#/components/schemas/ApiError"
               example:
                 error:
-                  code: "INVALID_CREDENTIALS"
-                  message: "Invalid credentials"
+                  code: INVALID_CREDENTIALS
+                  message: Invalid credentials
                   details: {}
-                requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
                 timestamp: "2026-04-20T10:00:00.000Z"
         "422":
           $ref: "#/components/responses/ValidationError"
@@ -562,11 +277,122 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
+  # ── Admin: Upload Presign (replaces POST /admin/upload) ─────────────────────
+
+  /admin/upload/presign:
+    post:
+      operationId: presignUpload
+      summary: Generate a presigned PUT URL for direct browser-to-IA audio upload
+      description: |
+        Returns a time-limited presigned S3 PUT URL pointing to Internet Archive.
+        The client uploads the audio file **directly to IA** using the returned URL
+        via XHR (or curl as fallback). Vercel never handles the file bytes,
+        bypassing the 6MB free-tier payload limit.
+
+        **Client upload flow:**
+        1. POST this endpoint to get `presigned_url`, `archive_url`, `required_headers`.
+        2. XHR `PUT {presigned_url}` with the file as body and `Content-Type` from `required_headers`.
+        3. Monitor `xhr.upload.onprogress` for progress.
+        4. On XHR 200 → use `archive_url` in the lesson create form.
+        5. On XHR CORS error (status 0) → show curl fallback UI (see frontend freeze §4).
+        6. On XHR 403 → presign URL expired; re-call this endpoint.
+
+        **Security:** `IA_ACCESS_KEY` and `IA_SECRET_KEY` are never exposed.
+        The presigned URL embeds a time-limited SigV4 signature only.
+
+        Rate limited to 10 requests per hour per IP.
+      tags: [Admin]
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [volume, lesson_number]
+              properties:
+                volume:
+                  type: integer
+                  enum: [1, 2, 3, 4]
+                  description: Volume number (1–4)
+                  example: 1
+                lesson_number:
+                  type: integer
+                  minimum: 1
+                  description: Lesson number within the volume (positive integer)
+                  example: 214
+                content_type:
+                  type: string
+                  enum: [audio/mpeg, audio/mp4, audio/ogg, audio/wav]
+                  default: audio/mpeg
+                  description: MIME type of the audio file. Defaults to audio/mpeg.
+                  example: audio/mpeg
+      responses:
+        "200":
+          description: Presigned URL generated successfully. No file has been uploaded yet.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PresignResponse"
+                  meta:
+                    $ref: "#/components/schemas/ResponseMeta"
+              example:
+                data:
+                  presigned_url: https://s3.us.archive.org/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=abc123
+                  archive_url: https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3
+                  filename: lesson-v1-214.mp3
+                  expires_in: 900
+                  method: PUT
+                  required_headers:
+                    Content-Type: audio/mpeg
+                meta:
+                  requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                  timestamp: "2026-04-20T10:00:00.000Z"
+        "400":
+          description: Invalid volume or lesson_number value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "502":
+          description: Internet Archive S3 endpoint unreachable at presign time
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+              example:
+                error:
+                  code: UPSTREAM_ERROR
+                  message: Internet Archive is temporarily unavailable. Please try again.
+                  details: {}
+                requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                timestamp: "2026-04-20T10:00:00.000Z"
+
+  # ── Admin: Lesson CRUD ───────────────────────────────────────────────────────
+
   /admin/lessons:
     post:
-      tags: [Admin Lessons]
       operationId: createLesson
       summary: Create a new lesson record
+      description: |
+        Appends a new lesson to lessons.json in GitHub and commits.
+        `id` is assigned server-side as max(existing ids) + 1.
+        `archive_url` must be the value returned from POST /admin/upload/presign.
+        Fires ISR revalidation after successful commit.
+      tags: [Admin]
       security:
         - sessionCookie: []
       requestBody:
@@ -607,12 +433,12 @@ paths:
 
   /admin/lessons/{id}:
     put:
-      tags: [Admin Lessons]
       operationId: updateLesson
       summary: Update lesson metadata (partial update — only provided fields change)
       description: |
-        id, volume, and lesson_number are immutable and cannot be updated.
-        Provide only the fields that should change.
+        `id`, `volume`, and `lesson_number` are immutable and will be ignored if provided.
+        Provide only the fields that should change. Commits to GitHub and fires revalidation.
+      tags: [Admin]
       security:
         - sessionCookie: []
       parameters:
@@ -668,10 +494,13 @@ paths:
           $ref: "#/components/responses/UpstreamError"
 
     delete:
-      tags: [Admin Lessons]
       operationId: deleteLesson
       summary: Permanently delete a lesson
-      description: Hard delete. Removes lesson from lessons.json. Cannot be undone via API — only via GitHub history revert.
+      description: |
+        Hard delete. Removes lesson from lessons.json and commits to GitHub.
+        Cannot be undone via API — only via GitHub history revert.
+        Fires ISR revalidation after successful commit.
+      tags: [Admin]
       security:
         - sessionCookie: []
       parameters:
@@ -704,89 +533,431 @@ paths:
         "502":
           $ref: "#/components/responses/UpstreamError"
 
-  /admin/upload:
-    post:
-      tags: [Admin Upload]
-      operationId: uploadAudio
-      summary: Upload audio file to Internet Archive via backend proxy
-      description: |
-        Accepts multipart/form-data. Streams file to Internet Archive S3.
-        Returns the archive_url to use when creating the lesson record.
-        Filename generated as: lesson-v{volume}-{lesson_number_padded3}.mp3
-        Max file size: 500MB.
-      security:
-        - sessionCookie: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+components:
+
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: tuhfa_session
+      description: >
+        HttpOnly iron-session cookie. Set by POST /admin/auth.
+        Secure, SameSite=Strict, Max-Age=86400.
+
+  # ── Schemas ─────────────────────────────────────────────────────────────────
+
+  schemas:
+
+    Chapter:
+      type: object
+      required: [kitab, bab, fasl]
+      properties:
+        kitab:
+          type: string
+          minLength: 1
+          description: Top-level book chapter (Arabic)
+          example: كتاب الطهارة
+        bab:
+          type: [string, "null"]
+          description: Sub-chapter (Arabic) or null
+          example: باب الماء
+        fasl:
+          type: [string, "null"]
+          description: Sub-sub-chapter (Arabic) or null
+          example: null
+
+    Lesson:
+      type: object
+      required:
+        - id
+        - volume
+        - lesson_number
+        - title_ar
+        - chapter
+        - duration_seconds
+        - upload_date
+        - archive_url
+        - telegram_post_id
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          readOnly: true
+          description: Globally unique auto-assigned integer ID. Never reused.
+          example: 1
+        volume:
+          type: integer
+          enum: [1, 2, 3, 4]
+          description: Volume number
+          example: 1
+        lesson_number:
+          type: integer
+          minimum: 1
+          description: Lesson number, unique within volume
+          example: 1
+        title_ar:
+          type: string
+          minLength: 1
+          description: Arabic lesson title as posted on Telegram
+          example: قول المصنف باب في أحكام الطهارة
+        chapter:
+          $ref: "#/components/schemas/Chapter"
+        duration_seconds:
+          type: integer
+          minimum: 1
+          description: Audio duration in seconds
+          example: 3720
+        upload_date:
+          type: string
+          format: date
+          description: Date posted to Telegram (YYYY-MM-DD)
+          example: "2023-01-15"
+        archive_url:
+          type: string
+          format: uri
+          pattern: "^https://archive\\.org/download/"
+          description: Public Internet Archive streaming URL
+          example: https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-001.mp3
+        telegram_post_id:
+          type: integer
+          minimum: 1
+          description: Telegram message ID for reference
+          example: 12
+
+    LessonCreateBody:
+      type: object
+      required:
+        - volume
+        - lesson_number
+        - title_ar
+        - chapter
+        - duration_seconds
+        - upload_date
+        - archive_url
+        - telegram_post_id
+      properties:
+        volume:
+          type: integer
+          enum: [1, 2, 3, 4]
+          example: 1
+        lesson_number:
+          type: integer
+          minimum: 1
+          example: 214
+        title_ar:
+          type: string
+          minLength: 1
+          example: قول المصنف فصل في أحكام الغسل
+        chapter:
+          $ref: "#/components/schemas/Chapter"
+        duration_seconds:
+          type: integer
+          minimum: 1
+          example: 4200
+        upload_date:
+          type: string
+          format: date
+          example: "2026-04-01"
+        archive_url:
+          type: string
+          format: uri
+          pattern: "^https://archive\\.org/download/"
+          description: >
+            Must be the `archive_url` value returned from POST /admin/upload/presign,
+            confirming the file has been uploaded to Internet Archive.
+          example: https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3
+        telegram_post_id:
+          type: integer
+          minimum: 1
+          example: 679
+
+    LessonUpdateBody:
+      type: object
+      description: >
+        All fields optional. Only provided fields are updated.
+        `id`, `volume`, and `lesson_number` are immutable — omit them.
+      minProperties: 1
+      properties:
+        title_ar:
+          type: string
+          minLength: 1
+          example: قول المصنف فصل في أحكام الغسل مراجعة
+        chapter:
+          $ref: "#/components/schemas/Chapter"
+        duration_seconds:
+          type: integer
+          minimum: 1
+          example: 4350
+        upload_date:
+          type: string
+          format: date
+          example: "2026-04-01"
+        archive_url:
+          type: string
+          format: uri
+          pattern: "^https://archive\\.org/download/"
+          example: https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3
+        telegram_post_id:
+          type: integer
+          minimum: 1
+          example: 679
+
+    PresignResponse:
+      type: object
+      required: [presigned_url, archive_url, filename, expires_in, method, required_headers]
+      description: >
+        Presigned PUT URL for direct browser-to-IA upload.
+        Use `presigned_url` as the XHR PUT target.
+        Use `archive_url` in the lesson create form after upload succeeds.
+        The presigned URL embeds a time-limited SigV4 signature — not raw IA credentials.
+      properties:
+        presigned_url:
+          type: string
+          format: uri
+          description: >
+            Signed S3 PUT URL. Valid for `expires_in` seconds.
+            PUT the audio file binary directly to this URL.
+            Do not log or expose this value — it contains a SigV4 signature.
+          example: https://s3.us.archive.org/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=abc123
+        archive_url:
+          type: string
+          format: uri
+          description: >
+            The public Internet Archive URL the file will be accessible at after upload.
+            Use this as `archive_url` in the lesson create form.
+            Known deterministically at presign time — no callback needed.
+          example: https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3
+        filename:
+          type: string
+          description: Generated IA object key / filename
+          example: lesson-v1-214.mp3
+        expires_in:
+          type: integer
+          description: Seconds until the presigned_url expires
+          example: 900
+        method:
+          type: string
+          enum: [PUT]
+          description: HTTP method to use when calling presigned_url
+          example: PUT
+        required_headers:
+          type: object
+          description: Headers that MUST be set on the XHR/curl PUT request
+          required: [Content-Type]
+          properties:
+            Content-Type:
+              type: string
+              description: Must match the content_type sent in the presign request
+              example: audio/mpeg
+
+    ResponseMeta:
+      type: object
+      required: [requestId, timestamp]
+      description: Present on all responses. Pagination fields only on single-item responses.
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: Unique request identifier for tracing
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        timestamp:
+          type: string
+          format: date-time
+          description: Server-side ISO 8601 UTC timestamp
+          example: "2026-04-20T10:00:00.000Z"
+
+    ListResponseMeta:
+      allOf:
+        - $ref: "#/components/schemas/ResponseMeta"
+        - type: object
+          required: [total, limit, offset]
+          description: >
+            Extended meta for list endpoints. `total` is the count of matching records
+            **before** the limit/offset slice. Use it to compute pagination:
+            `totalPages = Math.ceil(total / limit)`.
+          properties:
+            total:
+              type: integer
+              minimum: 0
+              description: Total matching records before pagination
+              example: 648
+            limit:
+              type: integer
+              minimum: 1
+              maximum: 200
+              description: Page size used in this response
+              example: 50
+            offset:
+              type: integer
+              minimum: 0
+              description: Number of records skipped
+              example: 0
+
+    ApiError:
+      type: object
+      required: [error, requestId, timestamp]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              description: Human-readable English error message
+              example: Request validation failed
+            details:
               type: object
-              required: [file, volume, lesson_number]
-              properties:
-                file:
-                  type: string
-                  format: binary
-                  description: Audio file. Max 500MB. Accepted types — audio/mpeg, audio/mp4, audio/ogg, audio/wav.
-                volume:
-                  type: string
-                  enum: ["1", "2", "3", "4"]
-                  example: "1"
-                lesson_number:
-                  type: string
-                  pattern: "^[1-9][0-9]*$"
-                  example: "214"
-      responses:
-        "200":
-          description: File uploaded to Internet Archive
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [data, meta]
-                properties:
-                  data:
-                    type: object
-                    required: [archive_url, filename, size_bytes]
-                    properties:
-                      archive_url:
-                        type: string
-                        format: uri
-                        example: "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3"
-                      filename:
-                        type: string
-                        example: "lesson-v1-214.mp3"
-                      size_bytes:
-                        type: integer
-                        example: 104857600
-                  meta:
-                    $ref: "#/components/schemas/ResponseMeta"
-        "400":
-          description: Missing file or invalid form fields
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "413":
-          description: File exceeds 500MB limit
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
+              additionalProperties: true
+              description: Field-level error details (present on 422)
               example:
+                title_ar: Required
+                volume: "Must be one of: 1, 2, 3, 4"
+        requestId:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-04-20T10:00:00.000Z"
+
+  # ── Reusable Responses ───────────────────────────────────────────────────────
+
+  responses:
+
+    Unauthorized:
+      description: Session cookie missing, invalid, or expired
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Authentication required
+              details: {}
+            requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: NOT_FOUND
+              message: Lesson not found
+              details: {}
+            requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    ValidationError:
+      description: Zod validation failure — field-level errors in details
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: Request validation failed
+              details:
+                title_ar: Required
+                volume: "Must be one of: 1, 2, 3, 4"
+            requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    Conflict:
+      description: Duplicate lesson_number in volume OR GitHub SHA conflict (concurrent edit)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          examples:
+            duplicate_lesson:
+              summary: Duplicate lesson_number
+              value:
                 error:
-                  code: "FILE_TOO_LARGE"
-                  message: "File exceeds maximum size of 500MB"
+                  code: DUPLICATE_LESSON_NUMBER
+                  message: A lesson with this number already exists in volume 1
                   details: {}
-                requestId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
                 timestamp: "2026-04-20T10:00:00.000Z"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-        "429":
-          $ref: "#/components/responses/RateLimited"
-        "500":
-          $ref: "#/components/responses/InternalError"
-        "502":
-          $ref: "#/components/responses/UpstreamError"
+            sha_conflict:
+              summary: GitHub SHA conflict (concurrent edit)
+              value:
+                error:
+                  code: CONCURRENT_EDIT_CONFLICT
+                  message: Concurrent edit conflict — please retry
+                  details: {}
+                requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                timestamp: "2026-04-20T10:00:00.000Z"
+
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds until the rate limit window resets
+          schema:
+            type: integer
+          example: 60
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: RATE_LIMITED
+              message: Too many requests. Please try again later.
+              details:
+                retryAfterSeconds: 60
+            requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    InternalError:
+      description: Unexpected server error (no stack trace in response)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: INTERNAL_ERROR
+              message: An unexpected error occurred
+              details: {}
+            requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+    UpstreamError:
+      description: GitHub API or Internet Archive unreachable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+          example:
+            error:
+              code: UPSTREAM_ERROR
+              message: External service unavailable. Please try again.
+              details: {}
+            requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+            timestamp: "2026-04-20T10:00:00.000Z"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TAGS
+# ─────────────────────────────────────────────────────────────────────────────
+
+tags:
+  - name: Lessons
+    description: Public lesson read endpoints (no auth required)
+  - name: Admin
+    description: Admin-only endpoints (require tuhfa_session cookie)

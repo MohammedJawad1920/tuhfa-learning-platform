@@ -1,8 +1,10 @@
 # BACKEND PROJECT FREEZE: Tuhfat al-Muhtaj Learning Platform
 
-**Version:** 1.1 (IMMUTABLE)
-**Date:** 2026-04-30
+**Version:** 1.2 (IMMUTABLE)
+**Date:** 2026-05-09
 **Status:** APPROVED FOR EXECUTION
+**Supersedes:** v1.1 (2026-04-30)
+**Amending documents:** CR-001 (2026-05-09) · Vercel Upload Fix (2026-05-09)
 
 > **CRITICAL INSTRUCTION FOR EXECUTION (HUMAN OR AI):**
 > This document is the Absolute Source of Truth. You have NO authority to modify schema, API
@@ -11,115 +13,97 @@
 
 ---
 
-## 0. Commercials (Accept-and-price)
+## 0. Commercials
 
 **Engagement Type:** Fixed-scope (self-built, no commercial engagement)
-**Chosen Package:** Basic (free public educational service)
-**Price & Payment Schedule:**
+**Price:** $0 · **Timeline:** 2–3 weeks
 
-- Total price: $0 (volunteer/personal project)
-- Milestone payments: N/A
+**Assumptions (must be true before execution):**
 
-**Timeline Range (weeks):** 2–3 weeks
-
-**Assumptions (must be true):**
-
-- Permission from Sheikh Dr. Abdul Hakim Al-Sa'di obtained before launch.
-- Internet Archive account created and S3 keys obtained before audio upload begins.
-- GitHub repository created under builder's account before development starts.
-- Upstash account created (free tier) before deployment.
+- Permission from Sheikh Dr. Abdul Hakim Al-Sa'di confirmed before data entry.
+- Internet Archive account + S3 keys obtained before upload testing begins.
+- GitHub repository created with GITHUB_TOKEN (`repo` scope) before development.
+- Upstash Redis free tier instance live before deployment.
 - Vercel account linked to GitHub repo before deployment.
-
-**Support Window (post-delivery):**
-
-- Bugfix support: indefinite (self-maintained)
-- Enhancements: billed as Change Requests (scope additions only)
 
 ---
 
-## 1. The "Iron Scope" (Backend only)
+## 1. The "Iron Scope"
 
-**Core Value Proposition (One Sentence):**
+**Core Value Proposition:**
 
-> A zero-cost, publicly accessible Arabic/Malayalam web platform that organizes and streams 648+ Tuhfat al-Muhtaj audio lessons by Sheikh Dr. Abdul Hakim Al-Sa'di, with chapter navigation, fuzzy search, and browser-persisted study progress.
+> A zero-cost, publicly accessible English/Arabic web platform that organizes and streams 648+ Tuhfat al-Muhtaj audio lessons by Sheikh Dr. Abdul Hakim Al-Sa'di, with chapter navigation, fuzzy search, and browser-persisted study progress. _(CR-001)_
 
-**The 8 Backend User Stories (COMPLETE SCOPE):**
+**The 8 Backend User Stories:**
 
-1. As a **visitor**, I can retrieve all lessons filtered by volume, kitab, bab, or fasl, so that I can navigate the text systematically.
-2. As a **visitor**, I can retrieve a single lesson by ID including its full metadata and streaming URL, so that I can play and study it.
-3. As a **visitor**, I can search lessons by Arabic title keyword (server-side filtered), so that I can find specific passages quickly.
-4. As a **visitor**, my GET /api/lessons responses are cached at the CDN edge for 60 seconds, so that page loads are fast under concurrent use.
-5. As an **admin**, I can authenticate with a password to receive a signed HttpOnly session cookie, so that content management routes are protected.
-6. As an **admin**, I can upload an audio file directly to Internet Archive via the backend proxy endpoint, so that I never manually handle IA credentials on the frontend.
-7. As an **admin**, I can create, update, or delete a lesson record (committing to GitHub lessons.json), so that the site reflects current content without touching code.
-8. As an **admin**, I am blocked after 5 consecutive failed auth attempts for 15 minutes per IP, so that brute-force attacks on the admin password are mitigated.
+1. As a **visitor**, I can retrieve all lessons filtered by volume, kitab, bab, or fasl.
+2. As a **visitor**, I can retrieve a single lesson by ID including its streaming URL.
+3. As a **visitor**, I can search lessons by Arabic title keyword (server-side filtered).
+4. As a **visitor**, GET /api/v1/lessons responses are cached at the CDN edge for 60 seconds.
+5. As an **admin**, I can authenticate with a password to receive a signed HttpOnly session cookie.
+6. As an **admin**, I can obtain a time-limited presigned PUT URL from the backend, then upload audio directly to Internet Archive from my browser — bypassing Vercel's payload limit entirely. _(Vercel Upload Fix)_
+7. As an **admin**, I can create, update, or delete a lesson record (committing to GitHub lessons.json).
+8. As an **admin**, I am rate-limited after 5 failed auth attempts per 15 minutes per IP.
 
-**The "NO" List (Explicitly Out of Scope):**
+**The "NO" List:**
 
-- No user accounts, registration, or login for visitors
-- No cross-device progress sync (progress is localStorage only)
-- No comments, discussion, or social features
-- No PDF text of Tuhfat al-Muhtaj
-- No video content
-- No email/SMS notifications of any kind
-- No payment or donation processing
-- No multi-language beyond Arabic + Malayalam UI
-- No mobile app (web only)
-- No offline mode or PWA service workers
-- No analytics dashboard or usage reporting
-- No automated Telegram scraping or bot integration
-- No real-time features or WebSockets
-- No multi-tenancy
-- No data warehouse or analytics pipeline
-- No volumes 5–10 until content exists (Change Request required)
-- No GraphQL
-- No microservices
+- No user accounts, registration, or visitor login
+- No cross-device progress sync (localStorage only)
+- No comments, ratings, or social features
+- No PDF text, video, or Telegram scraping
+- No email/SMS/payment
+- No multi-language beyond English (UI) + Arabic (lesson content). Malayalam removed. _(CR-001)_
+- No mobile app, offline mode, PWA, or service workers
+- No analytics dashboard, real-time features, WebSockets, multi-tenancy, or data warehouse
+- No volumes 5–10 without content (Change Request required)
+- No GraphQL, microservices
+- No CORS — deployment is same-origin on Vercel. ALLOWED_ORIGINS removed. _(CR-001)_
+- No `/api/docs` UI endpoint _(CR-001)_
+- No server-proxied file upload through any Vercel route (6MB free-tier hard limit). _(Vercel Upload Fix)_
+- No chunked/resumable upload protocol (presigned single-PUT is sufficient for single-admin use). _(Vercel Upload Fix)_
 
-**User Roles (Backend authorization truth):**
+**Success Definition:**
 
-- **Visitor (unauthenticated):** Read-only access to GET /api/lessons and GET /api/lessons/[id]. No write access. No session required.
-- **Admin (password-authenticated):** Full access to all /api/admin/\* routes after successful auth. Session cookie required. Single admin only — no role hierarchy.
-
-**Success Definition (measurable):**
-
-- All 648 existing lessons browsable and streamable at launch
-- p95 API response latency < 200ms on Vercel serverless (measured via Vercel Analytics)
-- Admin panel: lesson add/edit/delete completes and reflects on site within 90 seconds (GitHub commit + Vercel ISR revalidation)
-- Zero 5xx errors on public read routes under 50 concurrent users
-- Admin auth lockout triggers correctly after 5 failed attempts within 15 minutes per IP
+- All 648 lessons browsable and streamable at launch
+- p95 API latency < 200ms on Vercel serverless
+- Lesson visible on site within 90 seconds of admin create/edit/delete (ISR revalidation)
+- Zero 5xx on public GET routes under 50 concurrent users
+- Auth lockout fires after 5 failed attempts per 15 min per IP
+- Admin can upload 100MB+ audio without Vercel 413 errors _(Vercel Upload Fix)_
 
 ---
 
 ## 1.2 Assumptions & External Dependencies
 
-**External Systems (2):**
+**Dependency 1: Internet Archive (archive.org) S3-compatible API**
 
-- **Dependency 1:** Internet Archive (archive.org) S3-compatible API
-  - Purpose: Permanent free audio file storage and streaming (64.5GB total)
-  - Auth: AWS S3-compatible keys (IA_ACCESS_KEY + IA_SECRET_KEY)
-  - Failure mode: If IA is unreachable, audio streams fail but the site remains browsable (metadata still loads). No fallback storage. Admin upload fails with 502 and must be retried.
-- **Dependency 2:** GitHub Contents API (api.github.com)
-  - Purpose: lessons.json read/write (the CMS data layer)
-  - Auth: GitHub Personal Access Token (GITHUB_TOKEN) with `repo` scope
-  - Failure mode: If GitHub API is unreachable, GET /api/lessons falls back to the last Vercel build-time cached version. Admin write operations fail with 502 and must be retried. No data loss as Vercel serves stale cache.
+- Purpose: Audio file storage and CDN streaming (64.5GB total)
+- Auth: AWS SigV4 via IA_ACCESS_KEY + IA_SECRET_KEY — **server-side only, never exposed to browser**
+- Upload model: Backend generates presigned PUT URL. Client uploads directly to IA. Vercel never handles file bytes. _(Vercel Upload Fix)_
+- **Known CORS risk:** `s3.us.archive.org` may not respond with `Access-Control-Allow-Origin` for browser PUT requests. If browser CORS blocks the XHR, a `curl`-based fallback UI is required — see §4 Fallback Upload Pattern.
+- Failure (presign): If IA unreachable → backend 502. Admin retries.
+- Failure (streaming): Browser shows native audio error. Site metadata remains functional. No fallback storage.
+
+**Dependency 2: GitHub Contents API (api.github.com)**
+
+- Purpose: lessons.json read/write (CMS data layer)
+- Auth: GITHUB_TOKEN (Bearer, `repo` scope)
+- Failure: GET /lessons falls back to ISR cached version. Admin writes → 502, retry required. No data loss.
 
 **Operational Assumptions:**
 
-- Hosting: Vercel free tier (serverless functions, Edge Middleware, CDN)
-- Audio storage: Internet Archive (no cost, no retention limit)
-- Lessons data: GitHub repository JSON file (`/data/lessons.json`)
-- Data retention: Indefinite (no purge policy — educational archive)
-- Expected user scale: ~500 DAU peak, <5 RPS sustained, <20 RPS burst
-- Admin/support operations: Single admin (project owner) manages all content additions
+- Hosting: Vercel free tier. Audio: Internet Archive. Data: GitHub JSON. Rate-limiting: Upstash Redis.
+- Scale: ~500 DAU, <5 RPS sustained, <20 RPS burst. Single admin operator.
 
 ---
 
-## 1.5 System Configuration (The Environment)
+## 1.5 System Configuration
 
 ```bash
-# .env.example — Tuhfat al-Muhtaj Platform
+# .env.example — single canonical copy (no duplication)
 # Next.js
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_API_BASE_URL="http://localhost:3000/api/v1"
 NODE_ENV="development"
 
 # Admin Auth (iron-session)
@@ -139,837 +123,893 @@ IA_ACCESS_KEY="your_ia_access_key"
 IA_SECRET_KEY="your_ia_secret_key"
 IA_COLLECTION_IDENTIFIER="tuhfat-al-muhtaj-abdulhakim-saadi"
 IA_S3_ENDPOINT="https://s3.us.archive.org"
+UPLOAD_PRESIGN_EXPIRY_SECONDS=900
 
-# Rate Limiting (Upstash Redis free tier)
+# Rate Limiting (Upstash Redis)
 UPSTASH_REDIS_REST_URL="https://your-instance.upstash.io"
 UPSTASH_REDIS_REST_TOKEN="your_upstash_token"
 
-# CORS
-ALLOWED_ORIGINS="http://localhost:3000"
-
-# ISR Revalidation
+# ISR Revalidation (server-side only — NEVER in NEXT_PUBLIC_* vars)
 REVALIDATION_SECRET="min_32_chars_revalidation_token"
+
+# Vercel Speed Insights (optional)
+NEXT_PUBLIC_VERCEL_ANALYTICS_ID=""
 ```
 
-**Configuration Rules:**
+**Rules:**
 
-- `ADMIN_PASSWORD` >= 16 characters. Enforced at startup via Zod config validation.
-- `SESSION_SECRET` >= 32 characters. Enforced at startup via Zod config validation.
-- `NODE_ENV` ∈ {development, test, production}.
-- `GITHUB_TOKEN` must have `repo` scope (read + write to target repository).
-- `IA_ACCESS_KEY` and `IA_SECRET_KEY` must be valid Internet Archive S3 keys.
-- `UPSTASH_REDIS_REST_URL` must be a valid HTTPS URL.
-- All secrets must never be committed to version control. `.env.local` is gitignored.
-- API request timeout: 10,000ms. IA upload timeout: 300,000ms (large files).
+- `ADMIN_PASSWORD` ≥ 16 chars · `SESSION_SECRET` ≥ 32 chars · `REVALIDATION_SECRET` ≥ 32 chars — all Zod-enforced at startup.
+- `IA_ACCESS_KEY`, `IA_SECRET_KEY`: server-side only. The presigned URL contains a time-limited SigV4 signature — not the raw keys.
+- `UPLOAD_PRESIGN_EXPIRY_SECONDS`: default 900 (15 min). Admin must complete upload before expiry.
+- `ALLOWED_ORIGINS`: **not present** — removed entirely. _(CR-001)_
+- No secrets committed to version control. `.env.local` gitignored.
+- API timeout: 10,000ms. Presign timeout: 5,000ms (no file I/O involved).
 
 ---
 
-## 1.6 Tech Stack & Key Libraries (Backend toolbelt)
+## 1.6 Tech Stack & Key Libraries
 
-**Core Stack:**
+**Core Stack (LOCKED):**
 
-- **Language/Runtime:** TypeScript 5.x + Node.js 22 LTS
-- **Framework:** Next.js 16 (App Router) — API routes as serverless functions
-- **Data Store:** GitHub JSON file (`data/lessons.json`) via GitHub Contents API
-- **Validation:** `zod` (all API input/output schemas)
-- **Auth:** `iron-session` (HttpOnly cookie sessions) + bcrypt-free (plain constant-time comparison via `crypto.timingSafeEqual`)
-- **Rate Limiting:** `@upstash/ratelimit` + `@upstash/redis`
-- **File Upload:** `@aws-sdk/client-s3` (IA is S3-compatible) + `formidable` for multipart parsing
-- **OpenAPI:** `zod-to-openapi` + `swagger-ui-react` at `/api/docs`
+| Layer | Choice |
+|---|---|
+| Language | TypeScript 5.x |
+| Runtime | Node.js 22 LTS |
+| React | **19.x** (required by Next.js 16) _(CR-001)_ |
+| Framework | Next.js 16 (App Router, serverless functions) |
+| Data store | GitHub JSON file via GitHub Contents API |
+| Validation | `zod` |
+| Auth | `iron-session` + `crypto.timingSafeEqual` |
+| Rate limiting | `@upstash/ratelimit` + `@upstash/redis` |
+| Upload | `@aws-sdk/client-s3` + `@aws-sdk/s3-request-presigner` (presign only — no file transfer) _(Vercel Upload Fix)_ |
+| Logging | `pino` |
+| Testing | `vitest` + `@testing-library/react` |
 
-**Critical Packages (exact names):**
+**Explicitly Banned:**
 
-- Config validation: `zod`
-- Session: `iron-session`
-- Rate limiting: `@upstash/ratelimit`, `@upstash/redis`
-- S3 upload: `@aws-sdk/client-s3`
-- Multipart: `formidable`
-- Logging: `pino` (structured JSON logs via Pino)
-- Testing: `vitest` + `@testing-library/react` + `msw` (mock service worker for API mocking)
-- Linting: `eslint` + `@typescript-eslint/eslint-plugin`
-- Type checking: `tsc --noEmit` (strict mode)
-
-**Explicitly Banned Libraries/Patterns:**
-
-- No Prisma, Drizzle, TypeORM, or any ORM (no SQL database exists)
-- No GraphQL (REST only)
-- No microservices (single Next.js monorepo)
-- No DB triggers (no database)
-- No `any` TypeScript type (strict mode enforced)
-- No `console.log` in production (use pino logger only)
-- No storing admin password in plain text (use `crypto.timingSafeEqual` for comparison)
-- No committing `.env.local` or any secrets file
-- No `next lint` command (removed in Next.js 16 — use `eslint` CLI directly: `eslint src/`)
-- No `middleware.ts` (renamed to `proxy.ts` in Next.js 16 — see Section 8)
+- No Prisma/Drizzle/TypeORM (no database)
+- No GraphQL
+- No `any` TypeScript type — ESLint `no-explicit-any: error` _(CR-001)_
+- No `console.log` in production
+- No plain-text password storage
+- No committing `.env.local`
+- No `next lint` (removed in Next.js 16 — use `eslint src/`)
+- No `middleware.ts` (renamed to `proxy.ts` in Next.js 16)
+- No `formidable` — banned entirely _(CR-001 + Vercel Upload Fix)_
+- No `allowJs: true` in tsconfig _(CR-001)_
+- No `ignoreDeprecations` in tsconfig _(CR-001)_
+- No server-proxied file upload route _(Vercel Upload Fix)_
+- No `Buffer.concat` accumulation of upload bytes _(CR-001)_
+- No revalidation secret in URL query strings _(CR-001)_
 
 ---
 
-## 2. Data Layer (Schema Truth)
+## 2. Data Layer
 
-**Data Store Type:** GitHub-hosted JSON file (no SQL database)
-**File path in repo:** `data/lessons.json`
-**Access method:** GitHub Contents API (REST) with GITHUB_TOKEN
+**Data Store:** GitHub-hosted JSON file — `data/lessons.json`
 
 ```typescript
-// RULES:
-// 1) This is the ONLY data schema. No other persistent storage exists.
-// 2) No placeholders. Every field is required unless explicitly marked optional.
-// 3) Uniqueness: id is globally unique. lesson_number is unique per volume.
-// 4) All timestamps are ISO 8601 UTC strings.
-// 5) The root object MUST contain version, last_updated, and lessons array.
-
-// Root schema (lessons.json)
+// Root (lessons.json)
 {
-  "version": 1,                          // Integer. Increment on breaking schema changes.
-  "last_updated": "2026-04-20T00:00:00Z", // ISO 8601 UTC. Updated on every write.
-  "lessons": [Lesson]                    // Array of Lesson objects. May be empty.
+  "version": 1,
+  "last_updated": "2026-04-20T00:00:00Z",  // ISO 8601 UTC — updated on every write
+  "lessons": [Lesson]
 }
 
-// Lesson object schema
+// Lesson
 {
-  "id": 1,                               // Integer. Auto-incremented. Globally unique. Never reused.
-  "volume": 1,                           // Integer. ∈ {1, 2, 3, 4}.
-  "lesson_number": 1,                    // Integer > 0. Unique within volume.
-  "title_ar": "قول المصنف: ...",          // String. Non-empty. Arabic passage title as posted on Telegram.
+  "id": 1,                    // integer, auto-incremented, globally unique, never reused
+  "volume": 1,                // integer ∈ {1,2,3,4}
+  "lesson_number": 1,         // integer > 0, unique within volume
+  "title_ar": "...",          // string, non-empty, Arabic lesson title
   "chapter": {
-    "kitab": "كتاب الطهارة",              // String. Non-empty. Top-level book chapter.
-    "bab": "باب الماء",                  // String or null. Sub-chapter.
-    "fasl": null                          // String or null. Sub-sub-chapter.
+    "kitab": "...",           // string, non-empty
+    "bab": "..." | null,
+    "fasl": null | "..."
   },
-  "duration_seconds": 3720,              // Integer > 0. Audio duration in seconds.
-  "upload_date": "2023-01-15",           // String. ISO 8601 date (YYYY-MM-DD). Date posted to Telegram.
-  "archive_url": "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-001.mp3",
-                                         // String. Valid HTTPS URL. Must be reachable before lesson is saved.
-  "telegram_post_id": 12                 // Integer > 0. Telegram message ID for reference.
+  "duration_seconds": 3720,   // integer > 0
+  "upload_date": "2023-01-15",// ISO 8601 date string (YYYY-MM-DD)
+  "archive_url": "https://archive.org/download/{IA_COLLECTION_IDENTIFIER}/{filename}",
+  "telegram_post_id": 12      // integer > 0
 }
 ```
 
-**Data Invariants (application-enforced):**
+**Invariants (all application-enforced):**
 
-- `id` is assigned by the backend as `max(existing ids) + 1`. Never client-supplied.
-- `lesson_number` must be unique within its `volume`. Enforced before GitHub commit.
-- `archive_url` must begin with `https://archive.org/download/`. Enforced by Zod.
-- `volume` must be ∈ {1, 2, 3, 4}. Enforced by Zod.
-- `duration_seconds` must be > 0. Enforced by Zod.
-- `title_ar` must be non-empty string after trim. Enforced by Zod.
-- `chapter.kitab` must be non-empty string after trim. Enforced by Zod.
-- The `lessons` array is always sorted by `volume ASC, lesson_number ASC` after every write.
-- The GitHub file is updated atomically using the SHA-based optimistic lock (GitHub Contents API requires current file SHA for PUT — this is the built-in concurrency mechanism).
+- `id` = `max(existing ids) + 1`. Never client-supplied.
+- `lesson_number` unique per `volume`. Checked before GitHub commit.
+- `archive_url` must begin with `https://archive.org/download/`. Zod-enforced.
+- `volume` ∈ {1,2,3,4}. Zod-enforced.
+- `lessons` always sorted `volume ASC, lesson_number ASC` after every write.
+- GitHub PUT always uses current SHA (optimistic lock → 409 on conflict).
 
-**Soft & Hard Delete Rules (explicit):**
-
-- Lesson: soft delete — NO. Hard delete — YES. Retention window — none (permanent deletion). Restore rules — none (admin must re-add manually). Rationale: educational archive, lessons are never "suspended" — they either exist or don't.
-- Deletion removes the lesson object from the array and recommits the full JSON file to GitHub.
+**Delete:** Hard delete only. No soft delete. No restore.
 
 ---
 
 ## 2.1 Transactions, Concurrency, Idempotency
 
-**Transaction boundaries (by workflow):**
+**Transactions by flow:**
 
-- **Add lesson:** (1) Validate input, (2) Upload audio to IA, (3) Fetch current lessons.json + SHA from GitHub, (4) Append new lesson, (5) PUT updated file to GitHub using SHA. If step 5 fails with 409 (SHA conflict), return 409 to admin and require retry. Audio file already uploaded to IA is left as-is (orphaned file — acceptable).
-- **Update lesson:** (1) Validate input, (2) Fetch current lessons.json + SHA, (3) Replace lesson object, (4) PUT to GitHub using SHA. No file upload involved.
-- **Delete lesson:** (1) Fetch current lessons.json + SHA, (2) Filter out lesson, (3) PUT to GitHub using SHA.
+- **Add lesson:** Validate → (audio already on IA via presign) → Fetch JSON + SHA → Check uniqueness → Append → Sort → PUT to GitHub.
+- **Update lesson:** Validate → Fetch + SHA → Replace → PUT.
+- **Delete lesson:** Fetch + SHA → Filter → PUT.
+- SHA conflict (409 from GitHub) → return 409 `CONCURRENT_EDIT_CONFLICT` → admin retries.
 
-**Concurrency strategy:**
+**Presign idempotency:** Same `volume` + `lesson_number` → same IA filename. Re-presigning generates a fresh URL for the same key. IA PUT by key = idempotent overwrite.
 
-- GitHub Contents API PUT requires the current file's SHA. If two admin writes occur simultaneously, the second will receive a 409 conflict from GitHub. The backend forwards this as a 409 to the admin client with message "Concurrent edit conflict — please retry." This is optimistic concurrency via GitHub's native SHA mechanism.
-- No advisory locks needed (single admin, low write frequency).
-
-**Idempotency strategy:**
-
-- Audio upload to Internet Archive: IA S3 PUT is idempotent by key (filename). Re-uploading the same filename overwrites silently. Admin is responsible for unique filenames (enforced by naming convention: `lesson-v{volume}-{lesson_number_padded}.mp3`).
-- Lesson metadata writes: Not idempotent (each POST /api/admin/lessons creates a new record). Admin must not double-submit — frontend disables submit button after first click until response received.
-- No Idempotency-Key header needed (single admin, no distributed clients).
+**Lesson writes:** Not idempotent. Frontend disables submit after first click.
 
 ---
 
-## 3. API Contract (Backend truth)
+## 3. API Contract
 
-**Protocol:** REST
-**Base Path:** `/api`
-**Versioning:** URI-based (`/api/v1`) — all routes prefixed `/api/v1`
-**Auth Mechanism:** `iron-session` HttpOnly cookie (`tuhfa_session`). Set on POST /api/v1/admin/auth. Required for all /api/v1/admin/\* routes.
-**Request Content-Type:** `application/json` (except POST /api/v1/admin/upload which is `multipart/form-data`)
-**Response Content-Type:** `application/json`
+**Protocol:** REST · **Base:** `/api/v1` · **Auth:** `iron-session` HttpOnly cookie `tuhfa_session`
+**All request/response bodies:** `application/json` _(multipart/form-data removed — Vercel Upload Fix)_
 
-**Global Error Response Format (LOCKED):**
+**Global Error Format (LOCKED):**
 
 ```json
 {
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Human-readable message in English",
-    "details": {}
-  },
+  "error": { "code": "ERROR_CODE", "message": "Human-readable English message", "details": {} },
   "requestId": "uuid-v4",
-  "timestamp": "2026-04-20T10:00:00.000Z"
+  "timestamp": "ISO8601"
 }
 ```
 
-**Common Status Codes (allowed):**
+**Status codes:** 200, 201, 204, 400, 401, 404, 409, 413 (client-enforced only), 422, 429, 500, 502.
 
-- 200 (success with body), 201 (created), 204 (success no body)
-- 400 (bad request / validation failure), 401 (unauthenticated), 403 (forbidden)
-- 404 (not found), 409 (conflict — SHA race or duplicate lesson_number in volume)
-- 422 (unprocessable — Zod validation failure with field details)
-- 429 (rate limited)
-- 500 (internal server error — no stack traces in response)
-- 502 (upstream dependency failure — GitHub API or Internet Archive unreachable)
-
-**Pagination Standard:**
-
-- GET /api/v1/lessons supports `limit` (default: 50, max: 200) and `offset` (default: 0) query params.
-- Cursor-based pagination: NOT used (dataset is static JSON, offset is sufficient).
+**Pagination:** `limit` (1–200, default 50), `offset` (≥0, default 0). `meta.total` = total matching records before slice. Frontend uses `Math.ceil(meta.total / limit)` for `totalPages`. _(CR-001)_
 
 **Rate limits:**
 
-- Public endpoints (GET /api/v1/lessons, GET /api/v1/lessons/[id]): 120 requests/minute/IP
-- Admin auth endpoint (POST /api/v1/admin/auth): 5 requests/15 minutes/IP
-- Admin write endpoints (POST/PUT/DELETE /api/v1/admin/\*): 60 requests/minute/IP
-- Upload endpoint (POST /api/v1/admin/upload): 10 requests/hour/IP
+| Endpoint group | Limit |
+|---|---|
+| Public (GET /lessons, GET /lessons/[id]) | 120 req/min/IP |
+| Admin auth (POST /admin/auth) | 5 req/15min/IP |
+| Admin writes (CRUD) | 60 req/min/IP |
+| Upload presign | 10 req/hour/IP _(Vercel Upload Fix)_ |
 
 ---
 
-### Endpoints (MVP only — ALL listed)
+### Endpoints (ALL — MVP)
 
 ---
 
 #### GET /api/v1/lessons
 
-- **Purpose:** List all lessons with optional filtering and pagination.
-- **Auth required:** No
-- **Query params:**
-  - `volume`: Integer (1–4) | Optional — filter by volume
-  - `kitab`: String | Optional — exact match on chapter.kitab
-  - `bab`: String | Optional — exact match on chapter.bab
-  - `search`: String (min 2 chars, max 100 chars) | Optional — substring match on title_ar
-  - `limit`: Integer (1–200, default 50) | Optional
-  - `offset`: Integer (≥0, default 0) | Optional
-- **Request body:** None
-- **Response 200:**
+**Auth:** No | **Query params:** `volume`, `kitab`, `bab`, `fasl`, `search` (min 2/max 100), `limit`, `offset`
 
+**Response 200:**
 ```json
 {
-  "data": {
-    "lessons": [
-      {
-        "id": 1,
-        "volume": 1,
-        "lesson_number": 1,
-        "title_ar": "قول المصنف: باب في أحكام الطهارة",
-        "chapter": {
-          "kitab": "كتاب الطهارة",
-          "bab": "باب الماء",
-          "fasl": null
-        },
-        "duration_seconds": 3720,
-        "upload_date": "2023-01-15",
-        "archive_url": "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-001.mp3",
-        "telegram_post_id": 12
-      }
-    ]
-  },
-  "meta": {
-    "total": 648,
-    "limit": 50,
-    "offset": 0,
-    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "timestamp": "2026-04-20T10:00:00.000Z"
-  }
+  "data": { "lessons": [Lesson] },
+  "meta": { "total": 648, "limit": 50, "offset": 0, "requestId": "...", "timestamp": "..." }
 }
 ```
 
-- **Errors:** 400 (invalid query param), 422 (validation failure), 429 (rate limited), 500, 502
+**Caching:** `Cache-Control: public, s-maxage=60, stale-while-revalidate=300`.
+`github.ts` fetch uses `{ next: { tags: ['lessons'] } }` on every call. _(CR-001)_
+**Errors:** 400, 422, 429, 500, 502
 
 ---
 
 #### GET /api/v1/lessons/[id]
 
-- **Purpose:** Retrieve a single lesson by its integer ID.
-- **Auth required:** No
-- **Path params:** `id` — positive integer
-- **Query params:** None
-- **Request body:** None
-- **Response 200:**
-
-```json
-{
-  "data": {
-    "lesson": {
-      "id": 1,
-      "volume": 1,
-      "lesson_number": 1,
-      "title_ar": "قول المصنف: باب في أحكام الطهارة",
-      "chapter": {
-        "kitab": "كتاب الطهارة",
-        "bab": "باب الماء",
-        "fasl": null
-      },
-      "duration_seconds": 3720,
-      "upload_date": "2023-01-15",
-      "archive_url": "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-001.mp3",
-      "telegram_post_id": 12
-    }
-  },
-  "meta": {
-    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "timestamp": "2026-04-20T10:00:00.000Z"
-  }
-}
-```
-
-- **Errors:** 400 (id not integer), 404 (lesson not found), 429, 500, 502
+**Auth:** No | **Response 200:** `{ "data": { "lesson": Lesson }, "meta": { ... } }`
+**Errors:** 400 (non-integer id), 404, 429, 500, 502
 
 ---
 
 #### POST /api/v1/admin/auth
 
-- **Purpose:** Authenticate admin with password. Sets HttpOnly session cookie on success.
-- **Auth required:** No (this IS the auth endpoint)
-- **Query params:** None
-- **Request body schema (strict):**
-  - `password`: String | Required | min 1 char | max 128 chars
+**Auth:** No | **Body:** `{ "password": string }` (min 1, max 128)
+**Response 200:** `{ "data": { "authenticated": true }, "meta": { ... } }`
+**Side effect:** Sets `tuhfa_session` cookie (HttpOnly, Secure, SameSite=Strict, Max-Age=86400)
+**Errors:** 401, 422, 429 (5/15min/IP), 500
 
+---
+
+#### POST /api/v1/admin/upload/presign _(new — replaces POST /api/v1/admin/upload — Vercel Upload Fix)_
+
+**Auth:** Yes | **Body:**
 ```json
-{ "password": "your_admin_password" }
+{ "volume": 1, "lesson_number": 214, "content_type": "audio/mpeg" }
 ```
+- `volume`: integer ∈ {1,2,3,4} — required
+- `lesson_number`: integer > 0 — required
+- `content_type`: string — optional, default `"audio/mpeg"`, must be one of `audio/mpeg | audio/mp4 | audio/ogg | audio/wav`
 
-- **Response 200:**
-
+**Response 200:**
 ```json
 {
   "data": {
-    "authenticated": true
+    "presigned_url": "https://s3.us.archive.org/{bucket}/{filename}?X-Amz-Algorithm=...&X-Amz-Signature=...",
+    "archive_url": "https://archive.org/download/{IA_COLLECTION_IDENTIFIER}/{filename}",
+    "filename": "lesson-v1-214.mp3",
+    "expires_in": 900,
+    "method": "PUT",
+    "required_headers": { "Content-Type": "audio/mpeg" }
   },
-  "meta": {
-    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "timestamp": "2026-04-20T10:00:00.000Z"
-  }
+  "meta": { "requestId": "...", "timestamp": "..." }
 }
 ```
 
-- **Side effect:** Sets `Set-Cookie: tuhfa_session=<iron-session-token>; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`
-- **Errors:** 401 (wrong password), 422 (missing password field), 429 (rate limited — 5 attempts/15min/IP), 500
+**Implementation:** `getSignedUrl(s3Client, new PutObjectCommand({ Bucket, Key, ContentType, Metadata }), { expiresIn })` from `@aws-sdk/s3-request-presigner`. Backend never touches the file.
+**Client usage:**
+1. XHR `PUT presigned_url` with body = file binary and header `Content-Type` from `required_headers`.
+2. `xhr.upload.onprogress` → progress bar.
+3. XHR 200 → advance to lesson form with `archive_url` pre-filled.
+4. XHR CORS error (status 0) → show fallback UI (see §4).
+
+> ⚠️ **CORS Risk:** `s3.us.archive.org` may not respond with `Access-Control-Allow-Origin` for browser XHR PUT. If this occurs the fallback pattern in §4 must be presented to the admin.
+
+**Errors:** 400 (invalid body), 401, 422, 429 (10/hr/IP), 502 (IA unreachable at presign time)
 
 ---
 
 #### POST /api/v1/admin/lessons
 
-- **Purpose:** Create a new lesson record in lessons.json via GitHub API.
-- **Auth required:** Yes (Admin session cookie)
-- **Query params:** None
-- **Request body schema (strict):**
-  - `volume`: Integer ∈ {1,2,3,4} | Required
-  - `lesson_number`: Integer > 0 | Required | must be unique within volume
-  - `title_ar`: String | Required | non-empty after trim | max 500 chars
-  - `chapter.kitab`: String | Required | non-empty after trim | max 200 chars
-  - `chapter.bab`: String or null | Required (nullable)
-  - `chapter.fasl`: String or null | Required (nullable)
-  - `duration_seconds`: Integer > 0 | Required
-  - `upload_date`: String | Required | format YYYY-MM-DD
-  - `archive_url`: String | Required | must start with `https://archive.org/download/`
-  - `telegram_post_id`: Integer > 0 | Required
-
-```json
-{
-  "volume": 1,
-  "lesson_number": 214,
-  "title_ar": "قول المصنف: فصل في أحكام الغسل",
-  "chapter": {
-    "kitab": "كتاب الطهارة",
-    "bab": "باب الغسل",
-    "fasl": "فصل في موجبات الغسل"
-  },
-  "duration_seconds": 4200,
-  "upload_date": "2026-04-01",
-  "archive_url": "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3",
-  "telegram_post_id": 679
-}
-```
-
-- **Response 201:**
-
-```json
-{
-  "data": {
-    "lesson": {
-      "id": 649,
-      "volume": 1,
-      "lesson_number": 214,
-      "title_ar": "قول المصنف: فصل في أحكام الغسل",
-      "chapter": {
-        "kitab": "كتاب الطهارة",
-        "bab": "باب الغسل",
-        "fasl": "فصل في موجبات الغسل"
-      },
-      "duration_seconds": 4200,
-      "upload_date": "2026-04-01",
-      "archive_url": "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3",
-      "telegram_post_id": 679
-    }
-  },
-  "meta": {
-    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "timestamp": "2026-04-20T10:00:00.000Z"
-  }
-}
-```
-
-- **Errors:** 401, 409 (duplicate lesson_number in volume OR GitHub SHA conflict), 422 (Zod validation — field-level details in error.details), 429, 500, 502
+**Auth:** Yes | **Body:** All lesson fields except `id` (server-assigned).
+**Response 201:** `{ "data": { "lesson": Lesson }, "meta": { ... } }`
+**Side effects:** GitHub commit → `triggerRevalidation()` (fire-and-forget POST /api/revalidate)
+**Errors:** 401, 409 (duplicate lesson_number OR SHA conflict), 422, 429, 500, 502
 
 ---
 
 #### PUT /api/v1/admin/lessons/[id]
 
-- **Purpose:** Update metadata of an existing lesson in lessons.json.
-- **Auth required:** Yes (Admin session cookie)
-- **Path params:** `id` — positive integer
-- **Query params:** None
-- **Request body schema (strict):** Same fields as POST but ALL are Optional. Only provided fields are updated. `id`, `volume`, `lesson_number` cannot be changed (immutable identifiers). Submit only the fields that changed.
-
-```json
-{
-  "title_ar": "قول المصنف: فصل في أحكام الغسل — مراجعة",
-  "duration_seconds": 4350
-}
-```
-
-- **Response 200:**
-
-```json
-{
-  "data": {
-    "lesson": {
-      "id": 649,
-      "volume": 1,
-      "lesson_number": 214,
-      "title_ar": "قول المصنف: فصل في أحكام الغسل — مراجعة",
-      "chapter": {
-        "kitab": "كتاب الطهارة",
-        "bab": "باب الغسل",
-        "fasl": "فصل في موجبات الغسل"
-      },
-      "duration_seconds": 4350,
-      "upload_date": "2026-04-01",
-      "archive_url": "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3",
-      "telegram_post_id": 679
-    }
-  },
-  "meta": {
-    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "timestamp": "2026-04-20T10:00:00.000Z"
-  }
-}
-```
-
-- **Errors:** 400 (id not integer), 401, 404 (lesson not found), 409 (GitHub SHA conflict — retry), 422, 429, 500, 502
+**Auth:** Yes | **Body:** Any subset of mutable fields. `id`, `volume`, `lesson_number` immutable.
+**Response 200:** `{ "data": { "lesson": Lesson }, "meta": { ... } }`
+**Side effects:** GitHub commit → `triggerRevalidation()`
+**Errors:** 400, 401, 404, 409, 422, 429, 500, 502
 
 ---
 
 #### DELETE /api/v1/admin/lessons/[id]
 
-- **Purpose:** Permanently remove a lesson from lessons.json.
-- **Auth required:** Yes (Admin session cookie)
-- **Path params:** `id` — positive integer
-- **Query params:** None
-- **Request body:** None
-- **Response 204:** No body
-- **Errors:** 400, 401, 404, 409 (GitHub SHA conflict), 429, 500, 502
+**Auth:** Yes | **Response 204:** No body.
+**Side effects:** GitHub commit → `triggerRevalidation()`
+**Errors:** 400, 401, 404, 409, 429, 500, 502
 
 ---
 
-#### POST /api/v1/admin/upload
+#### POST /api/revalidate _(internal — not in public OpenAPI)_
 
-- **Purpose:** Upload an audio file to Internet Archive via backend proxy. Returns the archive_url for use in lesson creation.
-- **Auth required:** Yes (Admin session cookie)
-- **Content-Type:** `multipart/form-data`
-- **Request body (form fields):**
-  - `file`: Binary audio file | Required | max 500MB | accepted MIME: audio/mpeg, audio/mp4, audio/ogg, audio/wav
-  - `volume`: String (integer string) ∈ {"1","2","3","4"} | Required
-  - `lesson_number`: String (integer string) > 0 | Required — used to generate filename `lesson-v{volume}-{lesson_number_padded3}.mp3`
-- **Response 200:**
-
-```json
-{
-  "data": {
-    "archive_url": "https://archive.org/download/tuhfat-al-muhtaj-abdulhakim-saadi/lesson-v1-214.mp3",
-    "filename": "lesson-v1-214.mp3",
-    "size_bytes": 104857600
-  },
-  "meta": {
-    "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "timestamp": "2026-04-20T10:00:00.000Z"
-  }
-}
-```
-
-- **Errors:** 400 (missing file or invalid fields), 401, 413 (file too large >500MB), 422, 429, 500, 502 (IA unreachable)
+**Method:** POST only → 405 on any other method. _(CR-001)_
+**Auth:** `Authorization: Bearer {REVALIDATION_SECRET}` header → 401 if missing/wrong. _(CR-001)_
+**Replay protection:** `X-Revalidate-Nonce` header (timestamp ms as string) → 401 if absent or `Date.now() - parseInt(nonce) > 60000`. _(CR-001)_
+**Effect:** `revalidateTag('lessons')` — **single string argument only.** _(CR-001)_
+**Response 200:** `{ "data": { "revalidated": true }, "meta": { ... } }`
+**Caller:** `triggerRevalidation()` in `src/utils/revalidate.ts` — fire-and-forget, never awaited.
 
 ---
 
-## 4. Critical Business Logic (Pseudocode only)
+## 4. Critical Business Logic
 
 ### Flow: Admin Authentication
 
 ```
-1. Parse request body with Zod: { password: string }
-2. Check Upstash rate limit: key="auth:IP", limit=5, window=15min
-   → If rate limit exceeded: return 429
-3. Load ADMIN_PASSWORD from env
-4. Use crypto.timingSafeEqual(Buffer.from(input), Buffer.from(ADMIN_PASSWORD))
-   → If false: increment failure counter in Upstash (for logging)
-   → Return 401 with generic message "Invalid credentials"
-5. If true: create iron-session with { authenticated: true, createdAt: Date.now() }
-6. Set session cookie: HttpOnly, Secure, SameSite=Strict, Max-Age=86400
-7. Return 200 { authenticated: true }
+1. Parse body (Zod): { password: string }
+2. Check auth rate limit: 5/15min/IP → 429 if exceeded
+3. crypto.timingSafeEqual(Buffer.from(input), Buffer.from(ADMIN_PASSWORD)) → 401 if false
+4. Create iron-session: { authenticated: true, createdAt: Date.now() }
+5. Set tuhfa_session cookie: HttpOnly, Secure, SameSite=Strict, Max-Age=86400
+6. Return 200
 ```
 
-### Flow: Admin Authorization (Middleware)
+### Flow: Admin Authorization (proxy.ts)
 
 ```
-1. For every request to /api/v1/admin/* (except POST /api/v1/admin/auth):
-2. Read iron-session cookie from request
-3. If no cookie or invalid signature: return 401
-4. If session.authenticated !== true: return 401
-5. If Date.now() - session.createdAt > SESSION_MAX_AGE_SECONDS * 1000: return 401 (expired)
-6. Allow request to proceed
+For /api/v1/admin/* (except POST /api/v1/admin/auth):
+  1. Deserialize iron-session from request cookie
+  2. If absent or invalid signature → 401
+  3. If session.authenticated !== true → 401
+  4. If Date.now() - session.createdAt > SESSION_MAX_AGE_SECONDS * 1000 → 401 (expired)
+  5. Allow request
+
+For /admin/* page routes (except /admin/login):          [CR-001]
+  1. Same full iron-session deserialization + authenticated check + expiry check
+  2. If invalid or expired → redirect to /admin/login
+  PROHIBITED: Cookie name presence alone is NOT sufficient for page routes.
+
+applyCorsHeaders() / getAllowedOrigins(): REMOVED. CORS is not used.  [CR-001]
 ```
 
-### Flow: Create Lesson (Most failure-prone workflow)
+### Flow: Generate Presigned Upload URL _(Vercel Upload Fix)_
 
 ```
-1. Validate request body with Zod LessonCreateSchema
-   → On failure: return 422 with field-level error details
-2. Check admin session (middleware already ran)
-3. Fetch lessons.json from GitHub API:
-   GET /repos/{owner}/{repo}/contents/{path}
-   → Extract: content (base64), sha
-   → If GitHub unreachable: return 502
-4. Decode base64 → parse JSON → validate schema version matches expected version
-5. Check uniqueness: does any existing lesson have same volume + lesson_number?
-   → If yes: return 409 { code: "DUPLICATE_LESSON_NUMBER" }
-6. Assign new id = max(existing ids) + 1 (or 1 if empty)
-7. Build new lesson object with all validated fields
-8. Append to lessons array
-9. Sort lessons array: volume ASC, lesson_number ASC
-10. Update root: last_updated = now ISO string
-11. Serialize to JSON (2-space indent for readability)
-12. Base64-encode the JSON string
-13. PUT to GitHub Contents API:
-    { message: "Add lesson v{volume} #{lesson_number}", content: base64, sha: sha }
-    → If 409 from GitHub (SHA conflict): return 409 { code: "CONCURRENT_EDIT_CONFLICT" }
-    → If GitHub unreachable: return 502
-14. Trigger ISR revalidation via the revalidation route handler:
-    fetch(`/api/revalidate?secret={REVALIDATION_SECRET}&path=/lessons`)
-    (fire-and-forget — do not block response on this)
-    Note: The /api/revalidate handler must call revalidateTag with a cacheLife profile
-    (Next.js 16 requirement): revalidateTag('lessons', 'minutes')
-    Single-argument revalidateTag is deprecated and throws a TypeScript error in Next.js 16.
-15. Return 201 with new lesson object
+1. Parse body (Zod): { volume ∈ {1,2,3,4}, lesson_number > 0, content_type? }
+2. Check presign rate limit: 10/hr/IP → 429 if exceeded
+3. Resolve content_type = body.content_type || "audio/mpeg"
+4. Validate content_type ∈ allowed set → 422 if not
+5. filename = `lesson-v${volume}-${String(lesson_number).padStart(3, '0')}.mp3`
+6. presigned_url = getSignedUrl(s3Client,
+     new PutObjectCommand({
+       Bucket: env.IA_COLLECTION_IDENTIFIER,
+       Key: filename,
+       ContentType: content_type,
+       Metadata: { volume: String(volume), lesson_number: String(lesson_number) },
+     }),
+     { expiresIn: env.UPLOAD_PRESIGN_EXPIRY_SECONDS }
+   )
+   → If IA S3 unreachable: return 502
+7. archive_url = `https://archive.org/download/${env.IA_COLLECTION_IDENTIFIER}/${filename}`
+8. Log: { action: 'upload.presign', volume, lesson_number, filename, expires_in }
+   NEVER log: presigned_url (contains SigV4 signature)
+9. Return 200 { presigned_url, archive_url, filename, expires_in: env.UPLOAD_PRESIGN_EXPIRY_SECONDS,
+               method: 'PUT', required_headers: { 'Content-Type': content_type } }
 ```
 
-### Flow: Audio Upload to Internet Archive
+> The server never receives or buffers file bytes. The presigned URL embeds a
+> time-limited SigV4 signature. IA_ACCESS_KEY and IA_SECRET_KEY never leave the server.
+
+### Client Upload via Presigned URL (frontend contract — documented here for handoff clarity)
 
 ```
-1. Parse multipart form with formidable (max 500MB)
-   → On size exceeded: return 413
-2. Validate: file present, volume valid, lesson_number valid
-3. Generate filename: lesson-v{volume}-{padStart(lesson_number, 3, '0')}.mp3
-4. Initialize S3Client with:
-   endpoint: IA_S3_ENDPOINT
-   credentials: { accessKeyId: IA_ACCESS_KEY, secretAccessKey: IA_SECRET_KEY }
-   region: "us-east-1" (required by SDK, ignored by IA)
-5. PutObjectCommand:
-   Bucket: IA_COLLECTION_IDENTIFIER
-   Key: filename
-   Body: file stream
-   ContentType: "audio/mpeg"
-   Metadata: { volume, lesson_number }
-6. Set upload timeout: 300,000ms
-   → On timeout or IA error: return 502 { code: "UPLOAD_FAILED" }
-7. Construct archive_url:
-   "https://archive.org/download/{IA_COLLECTION_IDENTIFIER}/{filename}"
-8. Delete temp file from /tmp (formidable temp storage)
-9. Return 200 with { archive_url, filename, size_bytes }
+Step 1 — Request presign:
+  POST /api/v1/admin/upload/presign { volume, lesson_number, content_type }
+  ← { presigned_url, archive_url, required_headers, expires_in }
+
+Step 2 — Upload directly to IA via XHR:
+  xhr.open('PUT', presigned_url)
+  xhr.setRequestHeader('Content-Type', required_headers['Content-Type'])
+  xhr.upload.onprogress = (e) => updateProgressBar(e.loaded / e.total)
+  xhr.send(file)                   // file = File object from <input type="file">
+  xhr.timeout = expires_in * 1000  // abort if takes longer than presign window
+
+Step 3 — XHR status 200:
+  → Advance wizard to Step 2, archive_url pre-filled in form.
+
+Step 4 — XHR status 0 (CORS error — see Fallback Pattern below)
+
+Step 5 — XHR status 403 (presigned URL expired):
+  → Toast "Upload URL expired — please request a new one." → Reset to Step 1.
+```
+
+### Fallback Upload Pattern (IA CORS failure) _(Vercel Upload Fix)_
+
+> If `xhr.onerror` fires with `xhr.status === 0`, the IA S3 endpoint rejected the
+> browser request via CORS. Display the following admin UI:
+
+```
+1. Show inline warning (English):
+   "Direct upload is blocked by your browser's security policy.
+    Use the command below in your terminal instead."
+
+2. Show a "Copy command" button that copies to clipboard:
+   curl -X PUT "{presigned_url}" \
+     -H "Content-Type: audio/mpeg" \
+     --data-binary @/path/to/your-file.mp3
+
+3. Show a "I uploaded successfully" button.
+   When clicked → advance wizard to Step 2 with archive_url pre-populated.
+   (archive_url was already returned in the presign response — no server callback needed.)
+
+4. Show a "Request new upload URL" link in case the presign expires during curl.
+```
+
+> This fallback requires zero backend changes. archive_url is deterministic and
+> known at presign time regardless of whether the upload used XHR or curl.
+
+### Flow: Create Lesson
+
+```
+1. Validate body (Zod LessonCreateSchema)
+2. Check admin write rate limit (60/min/IP)
+3. Fetch lessons.json + SHA from GitHub
+   (fetch call includes: next: { tags: ['lessons'] })    [CR-001]
+   → 502 if GitHub unreachable
+4. Check uniqueness: volume + lesson_number → 409 DUPLICATE_LESSON_NUMBER if found
+5. id = max(existing ids) + 1
+6. Append new lesson, sort (volume ASC, lesson_number ASC), update last_updated
+7. PUT to GitHub with current SHA
+   → 409 CONCURRENT_EDIT_CONFLICT if SHA stale
+   → 502 if GitHub unreachable
+8. triggerRevalidation()          // fire-and-forget — never await
+9. Return 201 with new lesson
+```
+
+### Revalidation Helper _(CR-001)_
+
+```typescript
+// src/utils/revalidate.ts
+export function triggerRevalidation(): void {
+  fetch(`${env.NEXT_PUBLIC_APP_URL}/api/revalidate`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.REVALIDATION_SECRET}`,
+      'X-Revalidate-Nonce': Date.now().toString(),
+    },
+  }).catch(() => {});  // fire-and-forget — errors silently discarded
+}
 ```
 
 ---
 
 ## 5. Integrations & Failure Behavior
 
-**Integration: Internet Archive S3 API**
+**Internet Archive S3 API**
 
-- Purpose: Audio file storage and streaming (permanent, free, 64.5GB+)
-- Auth method: AWS S3 Signature V4 (via @aws-sdk/client-s3)
-- Endpoint: `https://s3.us.archive.org`
-- Upload timeout: 300,000ms (5 minutes — large files)
-- Read timeout: 10,000ms
-- Retries/backoff: No automatic retry (upload is too large). Admin retries manually if 502.
-- Circuit breaker: OFF (low write frequency — single admin, manual process)
-- Idempotency: S3 PUT is idempotent by key. Same filename = overwrite. Guaranteed by IA.
-- Webhook verification: N/A
-- Data reconciliation job: N/A (IA is write-once archive storage)
+- Backend role: presign generation only — never file transfer.
+- Presign timeout: 5,000ms. No retry on presign failure (admin retries manually).
+- CORS status for browser PUT: unverified at freeze time. Fallback pattern defined in §4.
+- IA PUT is idempotent by key. Same filename = overwrite.
 
-**Integration: GitHub Contents API**
+**GitHub Contents API**
 
-- Purpose: lessons.json read/write (CMS data layer)
-- Auth method: Bearer token (GITHUB_TOKEN in Authorization header)
-- Base URL: `https://api.github.com`
-- Request timeout: 10,000ms
-- Retries/backoff: 1 retry after 1,000ms delay on 5xx from GitHub. No retry on 409.
-- Circuit breaker: OFF (admin writes are infrequent, manual retry is acceptable)
-- Idempotency: Guaranteed by GitHub SHA-based optimistic lock
-- Rate limit: 5,000 requests/hour for authenticated requests (PAT). Well within limits at <10 writes/day.
+- Timeout: 10,000ms. Retry: 1× after 1,000ms on 5xx. No retry on 409.
+- Rate: 5,000 req/hr authenticated (well within limits at <10 admin writes/day).
 
 ---
 
 ## 6. Observability, Audit, Safety
 
-**Logging (structured JSON via pino):**
+**Logging (pino, structured JSON):**
 
-- Required fields on every log line: `requestId`, `route`, `method`, `statusCode`, `latencyMs`, `timestamp`
-- On authenticated admin routes: also log `action` (e.g., "lesson.create", "lesson.delete")
-- PII rules: **NEVER log** ADMIN_PASSWORD, SESSION_SECRET, GITHUB_TOKEN, IA_ACCESS_KEY, IA_SECRET_KEY, REVALIDATION_SECRET, cookie values, or any env variable value.
+Required fields: `requestId`, `route`, `method`, `statusCode`, `latencyMs`, `timestamp`.
+Admin routes also log: `action` (e.g. `lesson.create`, `upload.presign`).
 
-**Audit log:**
+**PII / Secret rules — NEVER log:**
+`ADMIN_PASSWORD`, `SESSION_SECRET`, `GITHUB_TOKEN`, `IA_ACCESS_KEY`, `IA_SECRET_KEY`,
+`REVALIDATION_SECRET`, `presigned_url` (contains SigV4 signature), cookie values.
 
-- All admin write operations (POST/PUT/DELETE /api/v1/admin/lessons, POST /api/v1/admin/upload) are logged to pino at INFO level with fields: `action`, `lessonId` (if applicable), `volume`, `lesson_number`, `requestId`, `timestamp`.
-- GitHub commit history serves as immutable audit trail for all lessons.json changes.
-- Immutable: YES (GitHub commit history cannot be silently altered)
-- Retention: indefinite (GitHub history)
-
-**Metrics (via Vercel Analytics — free tier):**
-
-- RPS per route (Vercel built-in)
-- p95 latency per route (Vercel built-in)
-- Error rate per route (Vercel built-in)
-- Rate limit trigger count (logged to pino, visible in Vercel log drain)
-
-**Alerts:**
-
-- 5xx error rate > 1% over 5 minutes → Admin reviews Vercel function logs manually
-- GitHub API 401 (token expired) → Pino ERROR log → Admin rotates GITHUB_TOKEN in Vercel env
-- IA upload 502 repeated → Admin checks archive.org status page
+**Audit:** GitHub commit history is the immutable lesson audit trail.
 
 ---
 
-## 7. Acceptance Criteria (Backend)
+## 7. Acceptance Criteria
 
 ### Phase 1 — Foundation
 
-- [ ] `data/lessons.json` committed to repo with correct schema (version, last_updated, lessons array)
-- [ ] `.env.example` complete; app boots locally with `next dev`
-- [ ] All env vars validated at startup via Zod — app refuses to start if invalid
-- [ ] POST /api/v1/admin/auth works: correct password → 200 + cookie; wrong password → 401; 6th attempt in 15 min → 429
-- [ ] Standard error format includes `requestId` and `timestamp` on all error responses
+- [ ] `data/lessons.json` committed with correct root schema
+- [ ] `.env.example`: single canonical block, ALLOWED_ORIGINS absent, `UPLOAD_PRESIGN_EXPIRY_SECONDS` present _(CR-001 + Vercel Upload Fix)_
+- [ ] App boots; all env vars validated at startup (Zod)
+- [ ] POST /api/v1/admin/auth: correct → 200 + cookie; wrong → 401; 6th attempt/15min → 429
 
 ### Phase 2 — Core API
 
-- [ ] GET /api/v1/lessons returns all 648 lessons; filters (volume, kitab, search) work correctly
-- [ ] GET /api/v1/lessons/[id] returns correct lesson or 404
-- [ ] POST /api/v1/admin/lessons creates lesson, commits to GitHub, returns 201 with new lesson
-- [ ] PUT /api/v1/admin/lessons/[id] updates metadata correctly; returns 404 for missing lesson
-- [ ] DELETE /api/v1/admin/lessons/[id] removes lesson from JSON, returns 204
-- [ ] POST /api/v1/admin/upload streams file to Internet Archive, returns archive_url
-- [ ] All admin routes return 401 if session cookie missing or invalid
-- [ ] Duplicate lesson_number within volume returns 409
+- [ ] GET /api/v1/lessons: 200, `meta.total` present and correct, all filters work (volume, kitab, bab, fasl, search) _(CR-001)_
+- [ ] GET /api/v1/lessons/[id]: 200 or 404
+- [ ] POST /api/v1/admin/upload/presign: 200 with `presigned_url`, `archive_url`, `filename` _(Vercel Upload Fix)_
+- [ ] Presigned URL verified functional: `curl -X PUT {presigned_url} --data-binary @test.mp3` → IA file present
+- [ ] XHR browser upload to presigned_url succeeds (if IA CORS allows) _(Vercel Upload Fix)_
+- [ ] CORS fallback UI displays correctly on `xhr.status === 0` _(Vercel Upload Fix)_
+- [ ] POST /api/v1/admin/lessons → 201; GitHub lessons.json updated; ISR revalidation triggered
+- [ ] PUT /api/v1/admin/lessons/[id] → 200; revalidation triggered
+- [ ] DELETE /api/v1/admin/lessons/[id] → 204; revalidation triggered
+- [ ] All admin routes: missing/invalid/expired cookie → 401
+- [ ] Duplicate lesson_number within volume → 409
 
 ### Phase 3 — Reliability & Security
 
-- [ ] Rate limiting enforced: 120/min on public routes, 5/15min on auth route
-- [ ] Input validation on all endpoints: invalid body → 422 with field-level details
-- [ ] No secrets, stack traces, or internal paths in any error response
-- [ ] ADMIN_PASSWORD compared using `crypto.timingSafeEqual` (not `===`)
-- [ ] Session cookie is HttpOnly, Secure, SameSite=Strict in production
-- [ ] GitHub SHA conflict (409) handled gracefully — returns 409 to admin, no data corruption
+- [ ] Rate limits enforced on all routes including presign (10/hr/IP) _(Vercel Upload Fix)_
+- [ ] POST /api/revalidate: GET → 405; no Bearer → 401; stale nonce → 401; valid → 200 _(CR-001)_
+- [ ] `revalidateTag('lessons')` single argument; github.ts fetch uses `next: { tags: ['lessons'] }` _(CR-001)_
+- [ ] proxy.ts page-route guard: full iron-session validation (not cookie-presence) _(CR-001)_
+- [ ] Production CSP: no `unsafe-inline`, no `unsafe-eval`, no Google Fonts domains _(CR-001)_
+- [ ] IA_ACCESS_KEY, IA_SECRET_KEY absent from all client-readable responses and logs _(Vercel Upload Fix)_
+- [ ] presigned_url absent from server logs _(Vercel Upload Fix)_
+- [ ] No secrets or stack traces in any error response
+- [ ] Session cookie: HttpOnly, Secure, SameSite=Strict in production
+- [ ] ESLint `no-explicit-any: error` — zero violations _(CR-001)_
+- [ ] tsconfig: `allowJs` absent, `ignoreDeprecations` absent _(CR-001)_
+- [ ] No `formidable` in package.json or node_modules _(CR-001 + Vercel Upload Fix)_
 
 ### Phase 4 — Deployment Proof
 
-- [ ] Vercel deployment URL responds to GET /api/v1/lessons with 200
-- [ ] OpenAPI docs accessible at /api/docs
-- [ ] All 7 endpoints verified against OpenAPI spec via contract test
-- [ ] Smoke test checklist documented in README.md
+- [ ] Vercel production: GET /api/v1/lessons → 200
+- [ ] Admin uploads 100MB+ file to production via presigned URL — no Vercel 413 error _(Vercel Upload Fix)_
+- [ ] Lesson visible on site within 90 seconds of create/edit/delete
+- [ ] README: no `/api/docs` reference; smoke test list updated _(CR-001)_
 
 ---
 
-## 8. Project Structure (Backend skeleton)
+## 8. Project Structure
 
 ```text
 /
-├── .env.example
-├── .env.local                  ← gitignored
-├── .gitignore
-├── package.json
-├── tsconfig.json               ← strict mode enabled
-├── next.config.ts
-├── README.md
+├── .env.example                  ← single canonical copy; ALLOWED_ORIGINS absent;
+│                                    UPLOAD_PRESIGN_EXPIRY_SECONDS present
+├── .env.local                    ← gitignored
+├── package.json                  ← react@^19, react-dom@^19, @types/react@^19
+│                                    @aws-sdk/client-s3, @aws-sdk/s3-request-presigner
+│                                    formidable: ABSENT
+├── tsconfig.json                 ← strict; allowJs: absent; ignoreDeprecations: absent
+├── next.config.js                ← split CSP (nonce prod / relaxed dev); no font CDN domains
+├── eslint.config.mjs             ← no-explicit-any: error, no-unused-vars: error, no-empty: error
+├── README.md                     ← no /api/docs reference
 ├── /data
-│   └── lessons.json            ← THE CMS DATA FILE
+│   └── lessons.json
 ├── /src
+│   ├── proxy.ts                  ← full iron-session validation: /api/v1/admin/* AND /admin/* pages
+│   │                                applyCorsHeaders() REMOVED; ALLOWED_ORIGINS REMOVED
 │   ├── /app
-│   │   ├── /api
-│   │   │   └── /v1
-│   │   │       ├── /lessons
-│   │   │       │   ├── route.ts            ← GET /api/v1/lessons
-│   │   │       │   └── /[id]
-│   │   │       │       └── route.ts        ← GET /api/v1/lessons/[id]
-│   │   │       └── /admin
-│   │   │           ├── /auth
-│   │   │           │   └── route.ts        ← POST /api/v1/admin/auth
-│   │   │           ├── /lessons
-│   │   │           │   ├── route.ts        ← POST /api/v1/admin/lessons
-│   │   │           │   └── /[id]
-│   │   │           │       └── route.ts    ← PUT, DELETE /api/v1/admin/lessons/[id]
-│   │   │           └── /upload
-│   │   │               └── route.ts        ← POST /api/v1/admin/upload
-│   │   └── /revalidate
-│   │       └── route.ts                    ← ISR revalidation webhook
+│   │   ├── layout.tsx            ← lang="en"; system fonts; NO Google Fonts link or preconnect
+│   │   └── /api
+│   │       ├── /revalidate
+│   │       │   └── route.ts     ← POST only; Authorization: Bearer; X-Revalidate-Nonce;
+│   │       │                       revalidateTag('lessons') — single argument
+│   │       └── /v1
+│   │           ├── /lessons
+│   │           │   ├── route.ts ← GET; meta.total; fasl filter supported
+│   │           │   └── /[id]/route.ts
+│   │           └── /admin
+│   │               ├── /auth/route.ts
+│   │               ├── /lessons
+│   │               │   ├── route.ts     ← POST; triggerRevalidation()
+│   │               │   └── /[id]/route.ts ← PUT, DELETE; triggerRevalidation()
+│   │               └── /upload
+│   │                   └── /presign
+│   │                       └── route.ts ← POST only; no file bytes; getSignedUrl()
+│   │                                       (old /upload/route.ts: DELETED)
 │   ├── /config
-│   │   ├── env.ts              ← Zod env validation (fails fast at startup)
-│   │   └── session.ts          ← iron-session config
+│   │   ├── env.ts               ← Zod; ALLOWED_ORIGINS ABSENT; UPLOAD_PRESIGN_EXPIRY_SECONDS present
+│   │   └── session.ts
 │   ├── /lib
-│   │   ├── github.ts           ← GitHub Contents API client
-│   │   ├── internet-archive.ts ← IA S3 upload client
-│   │   ├── rate-limit.ts       ← Upstash ratelimit helpers
-│   │   └── logger.ts           ← pino instance
-│   ├── /proxy.ts               ← Admin session check + rate limiting (Next.js 16 proxy — replaces middleware.ts)
+│   │   ├── github.ts            ← all fetch() calls: next: { tags: ['lessons'] }
+│   │   ├── internet-archive.ts  ← generatePresignedUrl() ONLY; uploadToIA() DELETED; no Buffer.concat
+│   │   ├── rate-limit.ts        ← checkPresignRateLimit (10/hr) + auth + public + admin helpers
+│   │   └── logger.ts
 │   ├── /schemas
-│   │   ├── lesson.schema.ts    ← Zod schemas for lesson CRUD
-│   │   └── auth.schema.ts      ← Zod schema for auth
+│   │   ├── lesson.schema.ts
+│   │   ├── lesson-query.schema.ts  ← includes fasl field
+│   │   └── auth.schema.ts
 │   ├── /types
 │   │   ├── lesson.ts
-│   │   └── api.ts              ← ApiResponse<T>, ApiError types
+│   │   └── api.ts
 │   └── /utils
-│       ├── response.ts         ← buildSuccess(), buildError() response helpers
-│       └── request-id.ts       ← UUID v4 requestId generator
+│       ├── response.ts
+│       ├── request-id.ts
+│       └── revalidate.ts        ← triggerRevalidation(): POST + Bearer + Nonce; fire-and-forget
 └── /tests
     ├── /unit
-    │   ├── github.test.ts
-    │   ├── lesson-schema.test.ts
-    │   └── rate-limit.test.ts
     ├── /integration
-    │   ├── lessons.test.ts
-    │   ├── admin-auth.test.ts
-    │   └── admin-lessons.test.ts
     └── /contract
-        └── openapi-compliance.test.ts
 ```
 
-**Naming convention:** camelCase for variables/functions, PascalCase for types/interfaces, kebab-case for filenames.
-**Import alias:** `@/` maps to `/src/`
+---
+
+## 9. Non-Functional Constraints
+
+**Performance:**
+
+- p95 API latency: < 200ms
+- Error rate: < 1% on public GET routes
+- Presign endpoint: < 1s (no file I/O)
+- Upload: No Vercel timeout — Vercel never handles the bytes _(Vercel Upload Fix)_
+
+**Security (LOCKED):**
+
+- Password: `crypto.timingSafeEqual` (constant-time comparison)
+- Session: `iron-session` — HttpOnly, Secure, SameSite=Strict
+- Upload credentials: IA_ACCESS_KEY and IA_SECRET_KEY server-side only. Presigned URL contains time-limited SigV4 signature — NOT the raw keys. _(Vercel Upload Fix)_
+- CORS: Same-origin only. ALLOWED_ORIGINS removed. No CORS headers. _(CR-001)_
+- CSP (production): No `unsafe-inline`, no `unsafe-eval`. Nonce-based `script-src` + `strict-dynamic`. No Google Fonts domains. Dev policy relaxed for HMR. _(CR-001)_
+- Admin proxy: Full iron-session validation (authenticated + createdAt + expiry) for both API and page routes. _(CR-001)_
+- Revalidation: `Authorization: Bearer` header + nonce only. Never in URL. _(CR-001)_
+- ESLint `no-explicit-any: error`. _(CR-001)_
+
+**Budget:** $0 total — Vercel free, Upstash free, Internet Archive free, GitHub free.
 
 ---
 
-## 9. Constraints (Non-Functional)
+## 10. Deployment, Rollback, DR
 
-**Performance Targets (LOCKED):**
-
-- p95 latency: < 200ms for all API routes (Vercel serverless cold start included)
-- Error rate: < 1% on public GET routes under normal load
-- Sustained RPS: 20 RPS for 5 minutes (well within Vercel free tier)
-- Admin upload: Completes within 5 minutes for a 500MB file (IA S3 write speed)
-- ISR revalidation: Site reflects new lesson within 90 seconds of GitHub commit
-
-**Security Baseline (LOCKED):**
-
-- Password comparison: `crypto.timingSafeEqual` (constant-time, no timing attacks)
-- Session: `iron-session` (signed + encrypted, HttpOnly, Secure, SameSite=Strict)
-- HTTPS in production: Enforced by Vercel (automatic TLS)
-- Secrets: Never committed. All in Vercel environment variables.
-- CORS: `ALLOWED_ORIGINS` env var. Only listed origins receive CORS headers.
-- No CSRF token needed: API is JSON-only (no HTML form submissions). SameSite=Strict on session cookie provides CSRF protection.
-- Input validation: Zod on every endpoint. Unknown fields stripped (`.strip()` mode).
-- Error messages: Generic messages only on auth failures (no user enumeration risk).
-- No SQL (no SQL injection risk). No eval/exec usage.
-
-**Hosting/Budget Constraints:**
-
-- Monthly hosting budget: $0
-- Vercel: free tier (serverless functions, 100GB bandwidth/month, 6,000 function invocations/day)
-- Upstash Redis: free tier (10,000 requests/day — sufficient for rate limiting at this scale)
-- Internet Archive: free (unlimited storage and bandwidth for educational content)
-- GitHub: free (public or private repo — public recommended for transparency)
-- Single-region: Vercel free tier (no multi-region — acceptable for audience size)
-
----
-
-## 10. Deployment, Rollback, Backups, DR
-
-**Deployment method:**
-
-- Git push to `main` branch → Vercel auto-deploys (CI/CD via Vercel GitHub integration)
-- Preview deployments on PRs (Vercel free tier includes this)
-- No Docker needed (Vercel manages serverless runtime)
-
-**Environments:**
-
-- `development`: local (`next dev`) with `.env.local`
-- `preview`: Vercel preview deployment (auto-created per PR/branch)
-- `production`: Vercel production deployment (from `main` branch)
-
-**Rollback strategy:**
-
-- Code rollback: Vercel dashboard → Deployments → click previous deployment → "Promote to Production" (instant, no downtime)
-- Data rollback: GitHub revert commit on `data/lessons.json` → Vercel auto-redeploys → data restored. GitHub commit history is the backup.
-- No database rollback needed (no SQL database).
-
-**Backup policy:**
-
-- `lessons.json`: GitHub history = continuous backup. Every commit is a snapshot. Retention: indefinite.
-- Audio files: Internet Archive = permanent storage. IA does not delete files. No additional backup needed.
-- Backup drill cadence: N/A (GitHub history is self-evident; IA is permanent)
-
-**DR (Disaster Recovery):**
-
-- RPO: 0 minutes (GitHub history = real-time backup of all lesson data)
-- RTO: < 5 minutes (Vercel rollback to last known good deployment via dashboard)
-- Failure scenarios:
-  - Vercel down: Site unreachable. No fallback. RTO = when Vercel recovers.
-  - GitHub API down: Admin writes fail (502). Site continues serving last cached build. No data loss.
-  - Internet Archive down: Audio streams fail. Site metadata/navigation fully functional. No data loss.
+**Deploy:** Push to `main` → Vercel auto-deploys.
+**Environments:** development (local), preview (Vercel per PR), production (main).
+**Rollback:** Code → Vercel dashboard → previous deployment → Promote. Data → GitHub revert on `data/lessons.json`.
+**RPO:** 0 min (GitHub history). **RTO:** < 5 min (Vercel rollback).
 
 ---
 
 ## 11. Forbidden Changes (Scope Lock)
 
-**BANNED without a new Freeze version + scope review:**
+**BANNED without a new Freeze version:**
 
-- Add any user account system or visitor authentication
-- Add cross-device progress sync or any database (SQL or NoSQL)
+- Add user accounts, visitor auth, or any database
 - Switch from GitHub JSON to any other data store
-- Add any external integrations beyond Internet Archive and GitHub
-- Add real-time features (WebSockets, SSE, polling)
-- Change auth mode (iron-session cookie is locked)
-- Change pagination standard (offset-based is locked)
-- Add volumes 5–10 (requires content to exist first)
-- Add any analytics, tracking, or telemetry beyond Vercel Analytics
-- Add Malayalam-language lesson metadata (currently Arabic-only titles)
-
-If requested:
-→ Create Change Request → review scope/cost impact → approve/reject → bump Freeze version.
-
----
-
-## 12. Change Control (Accept-and-price rules)
-
-**Change Request Format:**
-
-- Requested change:
-- Reason:
-- Scope impact:
-- Timeline impact:
-- Cost impact (hosting/services):
-- Risk impact:
-- Decision: Approved / Rejected
-- New Freeze version: v1.1 / v2.0
-
-**Billing rule:** N/A (personal project — time cost only)
-**Response SLA for change requests:** Self-imposed: review within 7 days
+- Add integrations beyond Internet Archive and GitHub
+- Change auth model (iron-session is locked)
+- Change pagination model (offset-based is locked)
+- Add volumes 5–10 without existing content
+- Add real-time features, WebSockets, analytics dashboard
+- Re-add `formidable` or any server-side multipart parsing _(CR-001 + Vercel Upload Fix)_
+- Re-add server-proxied upload route through Vercel _(Vercel Upload Fix)_
+- Re-add `ALLOWED_ORIGINS` or cross-origin CORS _(CR-001)_
+- Re-add revalidation secret in URL query string _(CR-001)_
+- Revert admin page guard to cookie-presence check _(CR-001)_
+- Re-add `unsafe-inline` or `unsafe-eval` to production CSP _(CR-001)_
+- Add Malayalam content or strings _(CR-001)_
+- Re-add chunked/resumable upload protocol (out of scope — single presigned PUT only) _(Vercel Upload Fix)_
 
 ---
 
-## 13. Version History
+## 12. OpenAPI Impact _(version bump required)_
 
-- v1.1 (2026-04-30): Stack version corrections before implementation start. Node.js 20 → 22 LTS (Node 20 EOL 2026-04-30). Next.js 14 → 16. Added `proxy.ts` (replaces `middleware.ts`). Banned `next lint` (removed in Next.js 16). Updated `revalidateTag` call to require cacheLife second argument. No scope, API contract, or architecture changes.
-- v1.0 (2026-04-20): Initial backend freeze approved for execution. 8 user stories, 7 API endpoints, GitHub JSON CMS, Internet Archive audio storage, Vercel hosting. Zero cost.
+The upload change requires **OpenAPI v1.0.1**:
+
+| Change | v1.0.0 | v1.0.1 |
+|---|---|---|
+| `POST /api/v1/admin/upload` | `multipart/form-data` | **Removed** |
+| `POST /api/v1/admin/upload/presign` | Does not exist | **Added** (JSON in, presign response out) |
+| GET /lessons `meta` | `requestId`, `timestamp` | + `meta.total` (required integer) _(CR-001)_ |
+
+Frontend Freeze and build-plan must reference **OpenAPI v1.0.1** after this document is applied.
+
+---
+
+## 13. Change Control
+
+**Format:** Requested change / Reason / Scope impact / Timeline impact / Cost impact / Risk impact / Decision / New Freeze version.
+**Response SLA:** 7 days.
+
+---
+
+## 14. Copilot Handoff
+
+**Execute tasks in this exact order. Do not proceed until current task checkpoint passes.**
+
+---
+
+**TASK 1 — React 19 upgrade + formidable removal**
+```
+Files: package.json
+Set:   react@^19.0.0, react-dom@^19.0.0, @types/react@^19.0.0, @types/react-dom@^19.0.0
+Add:   @aws-sdk/s3-request-presigner
+Remove: formidable (and @types/formidable if present)
+Delete: src/types/formidable.d.ts (if exists)
+Run:   npm install
+Check: package.json shows react@19.x; formidable absent from dependencies and node_modules
+```
+
+---
+
+**TASK 2 — tsconfig**
+```
+File:   tsconfig.json
+Remove: "allowJs": true
+Remove: "ignoreDeprecations": "5.0" (or any value)
+Run:    npx tsc --noEmit
+Check:  Zero errors
+```
+
+---
+
+**TASK 3 — ESLint**
+```
+File:  eslint.config.mjs
+Set:   "@typescript-eslint/no-explicit-any": "error"
+Set:   "@typescript-eslint/no-unused-vars": "error"
+Set:   "no-empty": "error"
+Run:   eslint src/
+Check: Zero violations (fix any as any casts revealed)
+```
+
+---
+
+**TASK 4 — env.ts**
+```
+File:   src/config/env.ts
+Remove: ALLOWED_ORIGINS from Zod schema and any getAllowedOrigins() export
+Add:    UPLOAD_PRESIGN_EXPIRY_SECONDS: z.coerce.number().int().positive().default(900)
+Check:  Unit test env.test.ts passes; ALLOWED_ORIGINS throws at import if accidentally set
+```
+
+---
+
+**TASK 5 — .env.example**
+```
+File:   .env.example
+Action: Replace entire file with the canonical single block from §1.5.
+        ALLOWED_ORIGINS line: ABSENT
+        UPLOAD_PRESIGN_EXPIRY_SECONDS=900: PRESENT
+Check:  Single block only; no duplicate headers
+```
+
+---
+
+**TASK 6 — proxy.ts**
+```
+File:   src/proxy.ts
+Action: Replace cookie-presence check for /admin/* page routes with:
+          const session = await getIronSession(request, response, sessionOptions)
+          if (!session.authenticated || Date.now() - session.createdAt > expiry) redirect
+        Remove getAllowedOrigins(), applyCorsHeaders(), and all call sites.
+        Confirm /api/v1/admin/* path already does full validation (it does per existing code).
+Check:  proxy.test.ts — fabricated cookie value → redirect; expired session → redirect;
+        valid session → pass; missing cookie → redirect
+```
+
+---
+
+**TASK 7 — github.ts (cache tags)**
+```
+File:   src/lib/github.ts
+Action: Add `next: { tags: ['lessons'] }` to every fetch() call inside fetchLessons()
+        and any other function that fetches lessons.json content.
+        Example: fetch(url, { headers, next: { tags: ['lessons'] } })
+Check:  Unit test — fetch mock called with next.tags containing 'lessons'
+```
+
+---
+
+**TASK 8 — internet-archive.ts (presign only)**
+```
+File:   src/lib/internet-archive.ts
+Action: DELETE uploadToIA() function and all Buffer.concat / chunk accumulation code.
+        ADD generatePresignedUrl(volume, lesson_number, contentType, expiresIn):
+          - Creates S3Client pointing to IA_S3_ENDPOINT with IA credentials
+          - Calls getSignedUrl(client, PutObjectCommand({Bucket, Key, ContentType, Metadata}), {expiresIn})
+          - Returns { presigned_url, archive_url, filename, expires_in, method: 'PUT',
+                      required_headers: { 'Content-Type': contentType } }
+Check:  Unit test with mocked s3Client — returns correct shape; no real IA call
+```
+
+---
+
+**TASK 9 — rate-limit.ts (presign limiter)**
+```
+File:   src/lib/rate-limit.ts
+Action: Add checkPresignRateLimit(headers): 10 requests / 1 hour / IP
+        (same pattern as existing checkAuthRateLimit)
+Check:  Unit test — 10 requests pass; 11th returns { success: false, retryAfter }
+```
+
+---
+
+**TASK 10 — upload/presign route (NEW)**
+```
+File:   src/app/api/v1/admin/upload/presign/route.ts  ← CREATE THIS FILE
+Delete: src/app/api/v1/admin/upload/route.ts          ← DELETE OLD FILE
+Action: POST handler only.
+        Parse body (Zod): { volume, lesson_number, content_type? }
+        Call checkPresignRateLimit(request.headers) → 429 if exceeded
+        Resolve contentType = body.content_type ?? 'audio/mpeg'
+        Validate contentType ∈ allowed set → 422 if invalid
+        Call generatePresignedUrl(volume, lesson_number, contentType, env.UPLOAD_PRESIGN_EXPIRY_SECONDS)
+        Log { action: 'upload.presign', volume, lesson_number, filename } — NOT presigned_url
+        Return 200 with presign data
+Check:  Integration test — 200 with correct shape; 401 without session; 429 after 10 calls/hr
+```
+
+---
+
+**TASK 11 — revalidate/route.ts**
+```
+File:   src/app/api/revalidate/route.ts
+Action: Change export function GET → export function POST.
+        Add: export function GET() { return NextResponse.json({error:{code:'METHOD_NOT_ALLOWED'}}, {status:405}) }
+        Read secret: const auth = request.headers.get('Authorization')
+                     if (auth !== `Bearer ${env.REVALIDATION_SECRET}`) return 401
+        Read nonce:  const nonce = request.headers.get('X-Revalidate-Nonce')
+                     if (!nonce || Date.now() - parseInt(nonce) > 60000) return 401
+        Call:        revalidateTag('lessons')   ← single argument only
+        Return 200 { revalidated: true }
+Check:  GET → 405; no auth → 401; stale nonce → 401; valid POST → 200
+```
+
+---
+
+**TASK 12 — revalidate.ts helper (NEW)**
+```
+File:   src/utils/revalidate.ts  ← CREATE
+Action: Export triggerRevalidation():
+          fetch(`${env.NEXT_PUBLIC_APP_URL}/api/revalidate`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${env.REVALIDATION_SECRET}`,
+              'X-Revalidate-Nonce': Date.now().toString(),
+            },
+          }).catch(() => {})      // fire-and-forget — never await
+Check:  Unit test — fetch called with POST method and correct headers
+```
+
+---
+
+**TASK 13 — Admin mutation routes (revalidation)**
+```
+Files:  src/app/api/v1/admin/lessons/route.ts
+        src/app/api/v1/admin/lessons/[id]/route.ts
+Action: Remove fireAndForgetRevalidate() function (builds GET URL with searchParams secret).
+        Import triggerRevalidation from '@/utils/revalidate'.
+        Call triggerRevalidation() after each successful GitHub PUT — fire-and-forget.
+Check:  Integration tests pass; confirm revalidation call uses POST (not GET)
+```
+
+---
+
+**TASK 14 — lesson-query.schema.ts (fasl filter)**
+```
+File:   src/schemas/lesson-query.schema.ts (or wherever LessonListQuerySchema is defined)
+Action: Add fasl: z.string().optional() to the schema.
+        Pass fasl through filterAndPaginate() for exact-match filtering on chapter.fasl.
+Check:  GET /api/v1/lessons?fasl=someValue filters correctly
+```
+
+---
+
+**TASK 15 — next.config.js (split CSP)**
+```
+File:   next.config.js
+Action: Generate nonce per-request (crypto.randomUUID() or equivalent).
+        Production CSP (NODE_ENV === 'production'):
+          script-src: 'self' 'nonce-{NONCE}' 'strict-dynamic'
+          style-src:  'self' 'nonce-{NONCE}'
+          font-src:   'self'
+          media-src:  https://archive.org
+          connect-src: 'self'
+          frame-ancestors: 'none'
+          NO: unsafe-inline, unsafe-eval, fonts.googleapis.com, fonts.gstatic.com
+        Development CSP:
+          script-src: 'self' 'unsafe-inline' 'unsafe-eval'
+          style-src:  'self' 'unsafe-inline'
+          connect-src: 'self' ws:
+          font-src:   'self'
+          media-src:  https://archive.org
+          frame-ancestors: 'none'
+        Keep: X-Frame-Options: DENY
+Check:  Production build response headers — no unsafe-inline in script-src.
+        Development — HMR works without CSP errors.
+```
+
+---
+
+**TASK 16 — layout.tsx + fonts**
+```
+File:   src/app/layout.tsx
+Action: Change <html lang="ar"> → <html lang="en">
+        Remove any <link rel="preconnect"> to fonts.googleapis.com or fonts.gstatic.com
+        Remove any Google Fonts stylesheet <link> elements
+File:   src/app/globals.css
+Action: Replace Inter or any named Google Font in font-family with system-ui stack
+File:   tailwind.config.ts
+Action: Set fontFamily.sans = ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+        Set fontFamily.arabic = ['Noto Naskh Arabic', 'Traditional Arabic', 'Arabic Typesetting', 'Geeza Pro', 'serif']
+        Remove: noto-sans-malayalam, inter, or any Google Font name
+Check:  Production build network tab — zero requests to fonts.googleapis.com or fonts.gstatic.com
+        <html> element has lang="en"
+```
+
+---
+
+**TASK 17 — LessonBrowser + useLessons (totalPages + Malayalam)**
+```
+File:   src/hooks/useLessons.ts
+Action: Expose meta.total from useFilteredLessons return value.
+File:   src/features/lessons/LessonBrowser.tsx
+Action: Compute totalPages = Math.ceil(meta.total / LIMIT) — from API meta.total, not currentPage.
+        Remove the Malayalam string from empty-state (line with ഉ...).
+        Replace with English: "No matching lessons" + Arabic sub-label dir="rtl" lang="ar".
+Check:  useLessons.test.tsx passes; LessonBrowser renders without Malayalam; totalPages correct.
+```
+
+---
+
+**TASK 18 — README**
+```
+File:   README.md
+Action: Remove all /api/docs references.
+        Update smoke test checklist to reflect POST /api/revalidate and presign endpoint.
+Check:  grep -r "/api/docs" README.md returns empty.
+```
+
+---
+
+**TASK 19 — Full gate**
+```
+Run:    npx tsc --noEmit
+Run:    eslint src/
+Run:    vitest run
+Run:    next build
+Check:  All pass. Zero TypeScript errors. Zero ESLint violations. Zero test failures.
+        Build completes without webpack/Turbopack errors.
+```
+
+---
+
+## 15. Version History
+
+- **v1.2 (2026-05-09):** CR-001 + Vercel Upload Fix applied simultaneously. Upload architecture rewritten: `POST /api/v1/admin/upload` (multipart, formidable, server proxy) → `POST /api/v1/admin/upload/presign` (JSON in, presigned PUT URL out; client uploads directly to IA; Vercel never handles bytes). `@aws-sdk/s3-request-presigner` added. `formidable` removed and banned. IA CORS fallback (curl command UI) defined in §4. `generatePresignedUrl()` replaces `uploadToIA()` in `internet-archive.ts`. `UPLOAD_PRESIGN_EXPIRY_SECONDS` env var added. Revalidation: GET+querystring → POST+`Authorization: Bearer`+`X-Revalidate-Nonce`. `revalidateTag('lessons')` single argument. Admin page proxy upgraded to full iron-session validation. `github.ts`: `next: { tags: ['lessons'] }` on all fetches. `meta.total` required in GET /lessons. `fasl` filter added to query schema. CSP: nonce-based prod / relaxed dev; Google Fonts domains removed. `ALLOWED_ORIGINS` and `applyCorsHeaders()` removed. React 18 → 19. ESLint `no-explicit-any: error`. tsconfig: `allowJs` and `ignoreDeprecations` removed. `.env.example`: single canonical copy. Language: English/Arabic, Malayalam removed. OpenAPI bump to v1.0.1 required (§12). 19 Copilot tasks defined.
+- **v1.1 (2026-04-30):** Stack corrections. Node.js 20 → 22 LTS. Next.js 14 → 16. proxy.ts added. next lint banned.
+- **v1.0 (2026-04-20):** Initial freeze.
