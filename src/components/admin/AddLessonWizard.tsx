@@ -61,11 +61,11 @@ function normalizeText(value: string | undefined | null): string {
   return value?.trim() ?? "";
 }
 
-function safeJsonParse(body: string | null): any {
+function safeJsonParse(body: string | null): Record<string, unknown> | null {
   if (!body) return null;
 
   try {
-    return JSON.parse(body);
+    return JSON.parse(body) as Record<string, unknown>;
   } catch {
     return null;
   }
@@ -259,7 +259,7 @@ export function AddLessonWizard() {
       }
     } catch (error) {
       const status = (error as { status?: number })?.status;
-      const bodyError = (error as { body?: any })?.body;
+      const bodyError = (error as { body?: Record<string, unknown> })?.body;
 
       if (status === 401) {
         router.replace("/admin/login");

@@ -21,12 +21,10 @@ function buildValidationDetails(
 }
 
 function sanitizeUpdatePayload(body: Record<string, unknown>) {
-  const {
-    id: _id,
-    volume: _volume,
-    lesson_number: _lessonNumber,
-    ...rest
-  } = body;
+  const { id, volume, lesson_number, ...rest } = body;
+  void id;
+  void volume;
+  void lesson_number;
   return rest;
 }
 

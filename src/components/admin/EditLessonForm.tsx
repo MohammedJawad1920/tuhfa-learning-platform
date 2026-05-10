@@ -112,7 +112,7 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
       router.replace("/admin");
     } catch (error) {
       const status = (error as { status?: number })?.status;
-      const body = (error as { body?: any })?.body;
+      const body = (error as { body?: Record<string, unknown> })?.body;
 
       if (status === 401) {
         router.replace("/admin/login");
