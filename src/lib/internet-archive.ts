@@ -1,5 +1,5 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { Readable } from "stream";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@/config/env";
 
 export class UploadError extends Error {}
@@ -12,12 +12,6 @@ const s3Client = new S3Client({
   },
   region: "us-east-1",
 });
-
-export interface IAMetadata {
-  volume: number;
-  lesson_number: number;
-  title_ar?: string;
-}
 
 /**
  * Generate filename for Internet Archive upload.
@@ -33,75 +27,66 @@ export function generateIAFilename(
 }
 
 /**
- * Upload an audio file to Internet Archive.
- * @param fileStream - Readable stream of the audio file
+ * Generate a presigned URL for uploading audio to Internet Archive.
+ * The client uses this URL to upload directly to IA via PUT request.
  * @param volume - Lesson volume number
  * @param lesson_number - Lesson number within volume
  * @param contentType - MIME type of the file (e.g., 'audio/mpeg')
- * @param metadata - Optional metadata object
- * @returns Object containing archive_url, filename, and size_bytes
- * @throws UploadError if upload fails or times out
+ * @param expiresIn - Presign expiry in seconds (default 900 = 15 minutes)
+ * @returns Object containing presigned_url, archive_url, filename, method, required_headers
+ * @throws UploadError if presign fails
  */
-export async function uploadToIA(
-  fileStream: Readable,
+export async function generatePresignedUrl(
   volume: number,
   lesson_number: number,
   contentType: string,
-  metadata?: IAMetadata,
-): Promise<{ archive_url: string; filename: string; size_bytes: number }> {
+  expiresIn: number = 900,
+): Promise<{
+  presigned_url: string;
+  archive_url: string;
+  filename: string;
+  expires_in: number;
+  method: "PUT";
+  required_headers: { "Content-Type": string };
+}> {
   const filename = generateIAFilename(volume, lesson_number);
 
-  // Collect the stream to get size and convert to Buffer
-  const chunks: Buffer[] = [];
-  let totalSize = 0;
-
-  for await (const chunk of fileStream) {
-    chunks.push(chunk);
-    totalSize += (chunk as Buffer).length;
-  }
-
-  const fileBuffer = Buffer.concat(chunks, totalSize);
-
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
     const command = new PutObjectCommand({
       Bucket: env.IA_COLLECTION_IDENTIFIER,
       Key: filename,
-      Body: fileBuffer,
       ContentType: contentType,
-      Metadata: metadata
-        ? {
-            volume: String(metadata.volume),
-            lesson_number: String(metadata.lesson_number),
-            ...(metadata.title_ar && { title_ar: metadata.title_ar }),
-          }
-        : undefined,
+      Metadata: {
+        volume: String(volume),
+        lesson_number: String(lesson_number),
+      },
     });
 
-    // Create a promise with timeout
-    const uploadPromise = s3Client.send(command);
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new UploadError("Upload to Internet Archive timed out")),
-        300000,
-      ),
-    );
+    const presigned_url = await getSignedUrl(s3Client, command, {
+      expiresIn,
+      signingDate: new Date(),
+    });
 
-    await Promise.race([uploadPromise, timeoutPromise]);
+    clearTimeout(timeoutId);
 
     const archive_url = `https://archive.org/download/${env.IA_COLLECTION_IDENTIFIER}/${filename}`;
 
     return {
+      presigned_url,
       archive_url,
       filename,
-      size_bytes: totalSize,
+      expires_in: expiresIn,
+      method: "PUT" as const,
+      required_headers: { "Content-Type": contentType },
     };
   } catch (err) {
-    if (err instanceof UploadError) {
-      throw err;
-    }
-
     const message =
-      err instanceof Error ? err.message : "Unknown error during upload";
-    throw new UploadError(`Failed to upload to Internet Archive: ${message}`);
+      err instanceof Error ? err.message : "Unknown error during presign";
+    throw new UploadError(
+      `Failed to generate presigned URL from Internet Archive: ${message}`,
+    );
   }
 }
