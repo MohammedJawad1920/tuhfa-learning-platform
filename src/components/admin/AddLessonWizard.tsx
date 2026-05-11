@@ -189,8 +189,9 @@ export function AddLessonWizard() {
     }
 
     if (status === 422) {
+      const errorBody = body as { error?: { message?: string } } | null;
       setInlineErrors({
-        file: body?.error?.message ?? "البيانات غير صالحة",
+        file: errorBody?.error?.message ?? "البيانات غير صالحة",
       });
       return;
     }
@@ -205,7 +206,8 @@ export function AddLessonWizard() {
       return;
     }
 
-    const nextArchiveUrl = body?.data?.archive_url as string | undefined;
+    const dataBody = body as { data?: { archive_url?: string } } | null;
+    const nextArchiveUrl = dataBody?.data?.archive_url;
     if (!nextArchiveUrl) {
       setInlineErrors({ file: "Internet Archive unreachable — retry" });
       return;

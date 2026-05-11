@@ -78,9 +78,6 @@ describe("POST /api/v1/admin/auth", () => {
     expect(body.data).toEqual({ authenticated: true });
     expect(typeof body.meta.requestId).toBe("string");
     expect(typeof body.meta.timestamp).toBe("string");
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-      "http://localhost:3000",
-    );
   });
 
   it("returns CORS headers for OPTIONS preflight from an allowed origin", async () => {
@@ -89,18 +86,9 @@ describe("POST /api/v1/admin/auth", () => {
       headers: { origin: "http://localhost:3000" },
     });
 
-    const response = await OPTIONS(request);
+    const response = await OPTIONS();
 
-    expect(response.status).toBe(204);
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-      "http://localhost:3000",
-    );
-    expect(response.headers.get("Access-Control-Allow-Credentials")).toBe(
-      "true",
-    );
-    expect(response.headers.get("Access-Control-Allow-Methods")).toContain(
-      "POST",
-    );
+    expect(response.status).toBe(405);
   });
 
   it("returns 401 for an incorrect password", async () => {

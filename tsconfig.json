@@ -10,11 +10,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "allowJs": true,
     "incremental": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["./src/*"]
     },
@@ -22,7 +20,8 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "allowJs": true
   },
   "include": [
     "next-env.d.ts",

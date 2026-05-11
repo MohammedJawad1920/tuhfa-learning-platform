@@ -1,5 +1,6 @@
 import "./globals.css";
 import React from "react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Providers } from "@/components/providers";
 
 export const metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
       </head>
       <body>
         <Providers>{children}</Providers>
+        {process.env.NEXT_PUBLIC_VERCEL_ANALYTICS_ID && <SpeedInsights />}
       </body>
     </html>
   );
