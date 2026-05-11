@@ -22,18 +22,51 @@ function compareSecret(input: string, expected: string): boolean {
   return timingSafeEqual(inputBuffer, expectedBuffer);
 }
 
-export async function GET(request: NextRequest) {
-  const secret = request.nextUrl.searchParams.get("secret");
+function isValidNonce(nonce: string | null): boolean {
+  if (!nonce) return false;
 
-  if (!secret || !compareSecret(secret, env.REVALIDATION_SECRET)) {
-    return NextResponse.json(
-      buildError("UNAUTHORIZED", "Invalid revalidation secret", {}),
-      { status: 401 },
-    );
+  const parsed = Number.parseInt(nonce, 10);
+  if (!Number.isFinite(parsed)) return false;
+
+  return Date.now() - parsed <= 60_000;
+}
+
+function unauthorized(message: string) {
+  return NextResponse.json(buildError("UNAUTHORIZED", message, {}), {
+    status: 401,
+  });
+}
+
+function methodNotAllowed() {
+  return NextResponse.json(
+    buildError("METHOD_NOT_ALLOWED", "Method not allowed", {}),
+    { status: 405 },
+  );
+}
+
+export async function GET() {
+  return methodNotAllowed();
+}
+
+export async function POST(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  const nonceHeader = request.headers.get("x-revalidate-nonce");
+
+  if (!authHeader?.startsWith("Bearer ")) {
+    return unauthorized("Missing authorization header");
+  }
+
+  const token = authHeader.slice("Bearer ".length);
+  if (!compareSecret(token, env.REVALIDATION_SECRET)) {
+    return unauthorized("Invalid revalidation secret");
+  }
+
+  if (!isValidNonce(nonceHeader)) {
+    return unauthorized("Invalid or expired revalidation nonce");
   }
 
   try {
-    revalidateTag("lessons", {});
+    (revalidateTag as unknown as (tag: string) => void)("lessons");
   } catch {
     // Silently ignore revalidation errors; the cache tag may not exist yet
   }

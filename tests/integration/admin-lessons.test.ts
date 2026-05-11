@@ -37,7 +37,7 @@ vi.mock("next/cache", () => ({
 }));
 
 import { POST } from "@/app/api/v1/admin/lessons/route";
-import { GET as GET_REVALIDATE } from "@/app/api/revalidate/route";
+import { POST as POST_REVALIDATE } from "@/app/api/revalidate/route";
 
 const mockLessons = [
   {
@@ -156,17 +156,21 @@ describe("Unit: /api/v1/admin/lessons POST", () => {
   });
 });
 
-describe("Unit: /api/revalidate GET", () => {
+describe("Unit: /api/revalidate POST", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("returns 200 with correct secret", async () => {
-    const request = new NextRequest(
-      "http://localhost/api/revalidate?secret=test-secret-for-revalidation-webhook",
-    );
+    const request = new NextRequest("http://localhost/api/revalidate", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${envMock.REVALIDATION_SECRET}`,
+        "x-revalidate-nonce": Date.now().toString(),
+      },
+    });
 
-    const response = await GET_REVALIDATE(request);
+    const response = await POST_REVALIDATE(request);
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -174,9 +178,12 @@ describe("Unit: /api/revalidate GET", () => {
   });
 
   it("returns 401 when secret is missing", async () => {
-    const request = new NextRequest("http://localhost/api/revalidate");
+    const request = new NextRequest("http://localhost/api/revalidate", {
+      method: "POST",
+      headers: { "x-revalidate-nonce": Date.now().toString() },
+    });
 
-    const response = await GET_REVALIDATE(request);
+    const response = await POST_REVALIDATE(request);
 
     expect(response.status).toBe(401);
     const body = await response.json();
@@ -184,11 +191,15 @@ describe("Unit: /api/revalidate GET", () => {
   });
 
   it("returns 401 when secret is incorrect", async () => {
-    const request = new NextRequest(
-      "http://localhost/api/revalidate?secret=wrong-secret",
-    );
+    const request = new NextRequest("http://localhost/api/revalidate", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer wrong-secret",
+        "x-revalidate-nonce": Date.now().toString(),
+      },
+    });
 
-    const response = await GET_REVALIDATE(request);
+    const response = await POST_REVALIDATE(request);
 
     expect(response.status).toBe(401);
   });

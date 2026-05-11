@@ -38,6 +38,13 @@ const { proxy } = await import("@/proxy");
 describe("proxy", () => {
   beforeEach(() => {
     getIronSessionMock.mockReset();
+    getIronSessionMock.mockResolvedValue({
+      authenticated: false,
+      createdAt: undefined,
+      save: vi.fn(),
+      destroy: vi.fn(),
+      updateConfig: vi.fn(),
+    });
   });
 
   it("redirects unauthenticated admin routes to /admin/login", async () => {
@@ -67,6 +74,48 @@ describe("proxy", () => {
     const response = await proxy(request);
 
     expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/admin/login",
+    );
+  });
+
+  it("redirects page routes with a fabricated cookie value", async () => {
+    getIronSessionMock.mockResolvedValue({
+      authenticated: false,
+      createdAt: undefined,
+      save: vi.fn(),
+      destroy: vi.fn(),
+      updateConfig: vi.fn(),
+    });
+
+    const request = new NextRequest("http://localhost/admin/lessons", {
+      headers: { cookie: "tuhfa_session=fake" },
+    });
+
+    const response = await proxy(request);
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost/admin/login",
+    );
+  });
+
+  it("redirects page routes with an expired session", async () => {
+    getIronSessionMock.mockResolvedValue({
+      authenticated: true,
+      createdAt: Date.now() - 86500_000,
+      save: vi.fn(),
+      destroy: vi.fn(),
+      updateConfig: vi.fn(),
+    });
+
+    const request = new NextRequest("http://localhost/admin/lessons", {
+      headers: { cookie: "tuhfa_session=real" },
+    });
+
+    const response = await proxy(request);
+
+    expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
       "http://localhost/admin/login",
     );
@@ -121,5 +170,23 @@ describe("proxy", () => {
     const response = await proxy(request);
 
     expect(response.status).toBe(200);
+  });
+
+  it("rejects expired admin API sessions", async () => {
+    getIronSessionMock.mockResolvedValue({
+      authenticated: true,
+      createdAt: Date.now() - 86500_000,
+      save: vi.fn(),
+      destroy: vi.fn(),
+      updateConfig: vi.fn(),
+    });
+
+    const request = new NextRequest("http://localhost/api/v1/admin/lessons", {
+      headers: { origin: "http://localhost:3000" },
+    });
+
+    const response = await proxy(request);
+
+    expect(response.status).toBe(401);
   });
 });

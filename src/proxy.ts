@@ -62,14 +62,23 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const sessionCookie = request.cookies.get("tuhfa_session");
+  const response = NextResponse.next();
+  const session = await getIronSession<AdminSession>(
+    request,
+    response,
+    sessionOptions,
+  );
 
-  if (!sessionCookie?.value) {
+  if (
+    session.authenticated !== true ||
+    typeof session.createdAt !== "number" ||
+    Date.now() - session.createdAt > getSessionExpiryMs()
+  ) {
     const loginUrl = new URL("/admin/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
