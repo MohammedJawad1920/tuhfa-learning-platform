@@ -32,6 +32,12 @@ const githubMock = vi.hoisted(() => ({
 
 vi.mock("@/lib/github", () => githubMock);
 
+const triggerRevalidationMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/utils/revalidate", () => ({
+  triggerRevalidation: triggerRevalidationMock,
+}));
+
 vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),
 }));
@@ -64,6 +70,7 @@ describe("Unit: /api/v1/admin/lessons POST", () => {
     });
     githubMock.fetchLessons.mockReset();
     githubMock.updateLessons.mockReset();
+    triggerRevalidationMock.mockReset();
     vi.clearAllMocks();
   });
 
@@ -95,6 +102,7 @@ describe("Unit: /api/v1/admin/lessons POST", () => {
     const body = await response.json();
     expect(body.data.lesson.id).toBe(2);
     expect(body.data.lesson.volume).toBe(2);
+    expect(triggerRevalidationMock).toHaveBeenCalledTimes(1);
   });
 
   it("returns 422 validation error for missing required field", async () => {

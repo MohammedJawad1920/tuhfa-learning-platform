@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import * as github from "@/lib/github";
-import { env } from "@/config/env";
 import { LessonUpdateSchema } from "@/schemas/lesson.schema";
 import { LessonsFile, Lesson } from "@/types/lesson";
 import { buildError, buildSuccess } from "@/utils/response";
 import { logger } from "@/lib/logger";
+import { triggerRevalidation } from "@/utils/revalidate";
 
 function getRetryAfterSeconds(reset: number): number {
   const resetMs = reset < 1_000_000_000_000 ? reset * 1000 : reset;
@@ -39,18 +39,6 @@ function mergeChapter(
     bab: patch.bab ?? current.bab,
     fasl: patch.fasl ?? current.fasl,
   };
-}
-
-async function fireAndForgetRevalidate(path: string): Promise<void> {
-  try {
-    const revalidateUrl = new URL("/api/revalidate", env.NEXT_PUBLIC_APP_URL);
-    revalidateUrl.searchParams.set("secret", env.REVALIDATION_SECRET);
-    revalidateUrl.searchParams.set("path", path);
-
-    fetch(revalidateUrl.toString()).catch(() => undefined);
-  } catch {
-    // Ignore revalidation failures for admin writes
-  }
 }
 
 export async function PUT(
@@ -168,7 +156,7 @@ export async function PUT(
       `Update lesson ${parsedId}`,
     );
 
-    fireAndForgetRevalidate(`/lessons/${parsedId}`);
+    triggerRevalidation();
 
     const responseBody = buildSuccess({ lesson: updatedLesson });
 
@@ -274,7 +262,7 @@ export async function DELETE(
       `Delete lesson ${parsedId}`,
     );
 
-    fireAndForgetRevalidate(`/lessons/${parsedId}`);
+    triggerRevalidation();
 
     logger.info(
       {

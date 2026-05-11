@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { env } from "@/config/env";
 import { LessonCreateSchema } from "@/schemas/lesson.schema";
 import { buildError, buildSuccess } from "@/utils/response";
 import { logger } from "@/lib/logger";
 import { Lesson, LessonsFile } from "@/types/lesson";
 import * as github from "@/lib/github";
+import { triggerRevalidation } from "@/utils/revalidate";
 
 function getRetryAfterSeconds(reset: number): number {
   const resetMs = reset < 1_000_000_000_000 ? reset * 1000 : reset;
@@ -30,23 +30,6 @@ function buildValidationDetails(
   return Object.fromEntries(
     issues.map((issue) => [issue.path.join("."), issue.message]),
   );
-}
-
-async function fireAndForgetRevalidate(paths: string[]): Promise<void> {
-  try {
-    const revalidateUrl = new URL(env.NEXT_PUBLIC_APP_URL);
-    revalidateUrl.pathname = "/api/revalidate";
-    revalidateUrl.search = new URLSearchParams({
-      secret: env.REVALIDATION_SECRET,
-      path: JSON.stringify(paths),
-    }).toString();
-
-    fetch(revalidateUrl.toString()).catch(() => {
-      // Silently ignore revalidation failures
-    });
-  } catch {
-    // Silently ignore revalidation errors
-  }
 }
 
 export async function POST(request: NextRequest) {
@@ -147,7 +130,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Fire-and-forget revalidation
-    fireAndForgetRevalidate(["/", `/lessons/${newId}`]);
+    triggerRevalidation();
 
     // Audit log
     logger.info(
