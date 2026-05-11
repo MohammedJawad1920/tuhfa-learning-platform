@@ -8,7 +8,7 @@ vi.mock("@/lib/github", async () => {
   class UpstreamError extends Error {}
 
   return {
-    fetchLessons: fetchLessonsMock,
+    getLessons: fetchLessonsMock,
     UpstreamError,
   };
 });
@@ -33,12 +33,8 @@ describe("lessons route", () => {
 
   it("returns lessons from GitHub", async () => {
     fetchLessonsMock.mockResolvedValue({
-      data: {
-        version: 1,
-        last_updated: "2026-05-03T00:00:00.000Z",
-        lessons: [{ id: 1, title_ar: "درس" }],
-      },
-      sha: "abc123",
+      lessons: [{ id: 1, title_ar: "درس" }],
+      total: 1,
     });
 
     const request = new NextRequest("http://localhost/api/v1/lessons?limit=1");
@@ -48,6 +44,9 @@ describe("lessons route", () => {
     const body = await response.json();
 
     expect(body.data.lessons).toEqual([{ id: 1, title_ar: "درس" }]);
+    expect(body.meta.total).toBe(1);
+    expect(body.meta.limit).toBe(1);
+    expect(body.meta.offset).toBe(0);
     expect(typeof body.meta.requestId).toBe("string");
     expect(typeof body.meta.timestamp).toBe("string");
     expect(response.headers.get("Cache-Control")).toBe(

@@ -49,6 +49,10 @@ describe("github client", () => {
     expect(sha).toBe("abc123");
     expect(data).toEqual(contentObj);
     expect(fetchMock).toHaveBeenCalled();
+
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain("/repos/owner/repo/contents/");
+    expect(options.next).toEqual({ tags: ["lessons"] });
   });
 
   it("updateLessons PUTs encoded content and returns json", async () => {
@@ -78,6 +82,64 @@ describe("github client", () => {
     expect(body.message).toBe("commit-msg");
     expect(body.sha).toBe("oldsha");
     expect(typeof body.content).toBe("string");
+    expect(options.next).toEqual({ tags: ["lessons"] });
+  });
+
+  it("getLessons filters and paginates in memory", async () => {
+    const contentObj = {
+      version: 1,
+      last_updated: "2026-05-03T00:00:00Z",
+      lessons: [
+        {
+          id: 1,
+          volume: 1,
+          lesson_number: 1,
+          title_ar: "درس الطهارة",
+          chapter: {
+            kitab: "كتاب الطهارة",
+            bab: "باب الماء",
+            fasl: "فصل المياه",
+          },
+          duration_seconds: 3600,
+          upload_date: "2023-01-01",
+          archive_url: "https://archive.org/download/col/lesson-v1-001.mp3",
+          telegram_post_id: 1,
+        },
+        {
+          id: 2,
+          volume: 1,
+          lesson_number: 2,
+          title_ar: "درس الغسل",
+          chapter: { kitab: "كتاب الطهارة", bab: "باب الغسل", fasl: null },
+          duration_seconds: 3200,
+          upload_date: "2023-01-02",
+          archive_url: "https://archive.org/download/col/lesson-v1-002.mp3",
+          telegram_post_id: 2,
+        },
+      ],
+    };
+    const base64 = Buffer.from(JSON.stringify(contentObj), "utf8").toString(
+      "base64",
+    );
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ content: base64, sha: "abc123" }),
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const mod = await import("@/lib/github");
+
+    const result = await mod.getLessons(
+      { volume: 1, fasl: "فصل المياه" },
+      { limit: 1, offset: 0 },
+    );
+
+    expect(result.total).toBe(1);
+    expect(result.lessons).toHaveLength(1);
+    expect(result.lessons[0]?.id).toBe(1);
   });
 
   it("updateLessons throws ConflictError on 409", async () => {

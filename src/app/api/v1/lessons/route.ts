@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LessonListQuerySchema } from "@/schemas/lesson-query.schema";
 import { buildError, buildSuccess } from "@/utils/response";
-import { filterAndPaginate } from "@/lib/lessons";
-import { Lesson } from "@/types/lesson";
 
 function getRetryAfterSeconds(reset: number): number {
   const resetMs = reset < 1_000_000_000_000 ? reset * 1000 : reset;
@@ -10,7 +8,6 @@ function getRetryAfterSeconds(reset: number): number {
 }
 
 export async function GET(request: NextRequest) {
-  let githubModule: typeof import("@/lib/github") | undefined;
   const cacheHeaders = {
     "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
   };
@@ -66,22 +63,17 @@ export async function GET(request: NextRequest) {
   const { volume, kitab, bab, fasl, search, limit, offset } = parsed.data;
 
   try {
-    githubModule = await import("@/lib/github");
-    const lessonsFile = await githubModule.fetchLessons();
-    const lessons = ((lessonsFile.data as { lessons?: unknown[] }).lessons ??
-      []) as Lesson[];
-
-    const { filtered, paginated } = filterAndPaginate(
-      lessons,
+    const githubModule = await import("@/lib/github");
+    const { lessons, total } = await githubModule.getLessons(
       { volume, kitab, bab, fasl, search },
       { limit, offset },
     );
 
     return NextResponse.json(
       buildSuccess(
-        { lessons: paginated },
+        { lessons },
         {
-          total: filtered.length,
+          total,
           limit,
           offset,
         },
@@ -89,6 +81,7 @@ export async function GET(request: NextRequest) {
       { status: 200, headers: cacheHeaders },
     );
   } catch (error) {
+    const githubModule = await import("@/lib/github").catch(() => null);
     if (githubModule && error instanceof githubModule.UpstreamError) {
       return NextResponse.json(
         buildError("UPSTREAM_ERROR", "Unable to load lessons from GitHub"),

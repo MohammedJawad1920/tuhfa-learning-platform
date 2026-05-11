@@ -1,13 +1,21 @@
 import { env } from "@/config/env";
+import { filterLessons, paginateLessons } from "@/lib/lessons";
+import type { Lesson, LessonsFile } from "@/types/lesson";
 
 export class UpstreamError extends Error {}
 export class ConflictError extends Error {}
 
 const GITHUB_API_BASE = "https://api.github.com";
 
+type NextFetchInit = RequestInit & {
+  next?: {
+    tags?: string[];
+  };
+};
+
 async function timedFetch(
   input: RequestInfo,
-  init: RequestInit = {},
+  init: NextFetchInit = {},
   timeout = 10000,
   retries = 1,
 ): Promise<Response> {
@@ -50,7 +58,12 @@ export async function fetchLessons(): Promise<{ data: unknown; sha: string }> {
     "User-Agent": "tuhfa-backend",
   };
 
-  const res = await timedFetch(url, { method: "GET", headers }, 10000, 1);
+  const res = await timedFetch(
+    url,
+    { method: "GET", headers, next: { tags: ["lessons"] } },
+    10000,
+    1,
+  );
 
   if (res.status >= 500) {
     throw new UpstreamError(`GitHub upstream error: ${res.status}`);
@@ -103,7 +116,12 @@ export async function updateLessons(
     "Content-Type": "application/json",
   };
 
-  const res = await timedFetch(url, { method: "PUT", headers, body }, 10000, 1);
+  const res = await timedFetch(
+    url,
+    { method: "PUT", headers, body, next: { tags: ["lessons"] } },
+    10000,
+    1,
+  );
 
   if (res.status === 409) {
     throw new ConflictError("GitHub content conflict (409)");
@@ -117,4 +135,45 @@ export async function updateLessons(
   return res.json();
 }
 
-export default { fetchLessons, updateLessons, UpstreamError, ConflictError };
+export async function getLessons(
+  filters: {
+    volume?: number;
+    kitab?: string;
+    bab?: string;
+    fasl?: string;
+    search?: string;
+  } = {},
+  pagination?: {
+    limit: number;
+    offset: number;
+  },
+): Promise<{ lessons: Lesson[]; total: number }> {
+  const lessonsFile = (await fetchLessons()) as {
+    data: LessonsFile;
+    sha: string;
+  };
+  const lessons = lessonsFile.data.lessons ?? [];
+  const filtered = filterLessons(lessons, filters);
+
+  return {
+    lessons: pagination ? paginateLessons(filtered, pagination) : filtered,
+    total: filtered.length,
+  };
+}
+
+export async function getLessonById(id: number): Promise<Lesson | null> {
+  const lessonsFile = (await fetchLessons()) as {
+    data: LessonsFile;
+    sha: string;
+  };
+  return lessonsFile.data.lessons.find((lesson) => lesson.id === id) ?? null;
+}
+
+export default {
+  fetchLessons,
+  getLessons,
+  getLessonById,
+  updateLessons,
+  UpstreamError,
+  ConflictError,
+};

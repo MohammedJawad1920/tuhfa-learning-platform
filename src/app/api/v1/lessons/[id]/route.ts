@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LessonIdSchema } from "@/schemas/lesson-query.schema";
-import { buildError } from "@/utils/response";
-import { buildSuccess } from "@/utils/response";
-import { LessonsFile } from "@/types/lesson";
+import { buildError, buildSuccess } from "@/utils/response";
 
 function getRetryAfterSeconds(reset: number): number {
   const resetMs = reset < 1_000_000_000_000 ? reset * 1000 : reset;
@@ -46,17 +44,9 @@ export async function GET(
     );
   }
 
-  let githubModule: typeof import("@/lib/github") | undefined;
-
   try {
-    githubModule = await import("@/lib/github");
-    const lessonsFile = (await githubModule.fetchLessons()) as {
-      data: LessonsFile;
-      sha: string;
-    };
-    const lesson = lessonsFile.data.lessons.find(
-      (entry) => entry.id === parsed.data,
-    );
+    const githubModule = await import("@/lib/github");
+    const lesson = await githubModule.getLessonById(parsed.data);
 
     if (!lesson) {
       return NextResponse.json(
@@ -67,6 +57,7 @@ export async function GET(
 
     return NextResponse.json(buildSuccess({ lesson }), { status: 200 });
   } catch (error) {
+    const githubModule = await import("@/lib/github").catch(() => null);
     if (githubModule && error instanceof githubModule.UpstreamError) {
       return NextResponse.json(
         buildError("UPSTREAM_ERROR", "Unable to load lesson from GitHub"),

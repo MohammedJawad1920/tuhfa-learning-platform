@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const fetchLessonsMock = vi.fn();
+const getLessonByIdMock = vi.fn();
 const checkPublicRateLimitMock = vi.fn();
 
 vi.mock("@/lib/github", async () => {
   class UpstreamError extends Error {}
 
   return {
-    fetchLessons: fetchLessonsMock,
+    getLessonById: getLessonByIdMock,
     UpstreamError,
   };
 });
@@ -21,7 +21,7 @@ import { GET } from "@/app/api/v1/lessons/[id]/route";
 
 describe("lessons by id route", () => {
   beforeEach(() => {
-    fetchLessonsMock.mockReset();
+    getLessonByIdMock.mockReset();
     checkPublicRateLimitMock.mockReset();
     checkPublicRateLimitMock.mockResolvedValue({
       success: true,
@@ -32,25 +32,16 @@ describe("lessons by id route", () => {
   });
 
   it("returns the lesson when found", async () => {
-    fetchLessonsMock.mockResolvedValue({
-      data: {
-        version: 1,
-        last_updated: "2026-05-03T00:00:00.000Z",
-        lessons: [
-          {
-            id: 7,
-            volume: 1,
-            lesson_number: 7,
-            title_ar: "درس",
-            chapter: { kitab: "كتاب الطهارة", bab: "باب الماء", fasl: null },
-            duration_seconds: 3600,
-            upload_date: "2026-05-03",
-            archive_url: "https://archive.org/download/col/lesson-v1-007.mp3",
-            telegram_post_id: 10,
-          },
-        ],
-      },
-      sha: "abc123",
+    getLessonByIdMock.mockResolvedValue({
+      id: 7,
+      volume: 1,
+      lesson_number: 7,
+      title_ar: "درس",
+      chapter: { kitab: "كتاب الطهارة", bab: "باب الماء", fasl: null },
+      duration_seconds: 3600,
+      upload_date: "2026-05-03",
+      archive_url: "https://archive.org/download/col/lesson-v1-007.mp3",
+      telegram_post_id: 10,
     });
 
     const request = new NextRequest("http://localhost/api/v1/lessons/7");
@@ -64,18 +55,11 @@ describe("lessons by id route", () => {
     expect(body.data.lesson.title_ar).toBe("درس");
     expect(typeof body.meta.requestId).toBe("string");
     expect(typeof body.meta.timestamp).toBe("string");
-    expect(fetchLessonsMock).toHaveBeenCalledTimes(1);
+    expect(getLessonByIdMock).toHaveBeenCalledTimes(1);
   });
 
   it("returns 404 when the lesson is missing", async () => {
-    fetchLessonsMock.mockResolvedValue({
-      data: {
-        version: 1,
-        last_updated: "2026-05-03T00:00:00.000Z",
-        lessons: [],
-      },
-      sha: "abc123",
-    });
+    getLessonByIdMock.mockResolvedValue(null);
 
     const request = new NextRequest("http://localhost/api/v1/lessons/99");
     const response = await GET(request, {
@@ -90,7 +74,7 @@ describe("lessons by id route", () => {
 
   it("returns 502 when GitHub is unavailable", async () => {
     const { UpstreamError } = await import("@/lib/github");
-    fetchLessonsMock.mockRejectedValue(new UpstreamError("boom"));
+    getLessonByIdMock.mockRejectedValue(new UpstreamError("boom"));
 
     const request = new NextRequest("http://localhost/api/v1/lessons/7");
     const response = await GET(request, {

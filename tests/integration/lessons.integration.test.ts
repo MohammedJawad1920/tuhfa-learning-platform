@@ -30,6 +30,15 @@ describe("Integration: /api/v1/lessons (mock proxy)", () => {
       expect(body.meta).toHaveProperty("offset");
     });
 
+    it("accepts filter parameters including fasl and search", async () => {
+      const res = await fetch(
+        `${baseUrl}/lessons?volume=1&kitab=كتاب%20الطهارة&bab=باب%20الماء&fasl=فصل%20في%20المياه&search=الطهارة`,
+      );
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.meta).toHaveProperty("total");
+    });
+
     it("returns valid lesson objects", async () => {
       const res = await fetch(`${baseUrl}/lessons`);
       const body = await res.json();
