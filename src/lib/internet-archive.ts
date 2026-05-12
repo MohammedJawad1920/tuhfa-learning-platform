@@ -52,8 +52,7 @@ export async function generatePresignedUrl(
   const filename = generateIAFilename(volume, lesson_number);
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     const command = new PutObjectCommand({
       Bucket: env.IA_COLLECTION_IDENTIFIER,
@@ -65,23 +64,37 @@ export async function generatePresignedUrl(
       },
     });
 
-    const presigned_url = await getSignedUrl(s3Client, command, {
-      expiresIn,
-      signingDate: new Date(),
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(
+        () => reject(new UploadError("Presign request timed out")),
+        5000,
+      );
     });
 
-    clearTimeout(timeoutId);
+    try {
+      const presigned_url = await Promise.race([
+        getSignedUrl(s3Client, command, {
+          expiresIn,
+          signingDate: new Date(),
+        }),
+        timeoutPromise,
+      ]);
 
-    const archive_url = `https://archive.org/download/${env.IA_COLLECTION_IDENTIFIER}/${filename}`;
+      const archive_url = `https://archive.org/download/${env.IA_COLLECTION_IDENTIFIER}/${filename}`;
 
-    return {
-      presigned_url,
-      archive_url,
-      filename,
-      expires_in: expiresIn,
-      method: "PUT" as const,
-      required_headers: { "Content-Type": contentType },
-    };
+      return {
+        presigned_url,
+        archive_url,
+        filename,
+        expires_in: expiresIn,
+        method: "PUT" as const,
+        required_headers: { "Content-Type": contentType },
+      };
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Unknown error during presign";

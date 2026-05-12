@@ -142,6 +142,30 @@ describe("proxy", () => {
     expect(body.error.code).toBe("UNAUTHORIZED");
   });
 
+  it("returns 401 JSON for unauthenticated upload presign routes", async () => {
+    getIronSessionMock.mockResolvedValue({
+      authenticated: false,
+      createdAt: undefined,
+      save: vi.fn(),
+      destroy: vi.fn(),
+      updateConfig: vi.fn(),
+    });
+
+    const request = new NextRequest(
+      "http://localhost/api/v1/admin/upload/presign",
+      {
+        method: "POST",
+        headers: { origin: "http://localhost:3000" },
+      },
+    );
+
+    const response = await proxy(request);
+
+    expect(response.status).toBe(401);
+    const body = await response.json();
+    expect(body.error.code).toBe("UNAUTHORIZED");
+  });
+
   it("allows /api/v1/admin/auth through without requiring session", async () => {
     const request = new NextRequest("http://localhost/api/v1/admin/auth", {
       method: "POST",

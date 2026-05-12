@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { env } from "@/config/env";
 import { generatePresignedUrl } from "@/lib/internet-archive";
 import { buildError, buildSuccess } from "@/utils/response";
 import { logger } from "@/lib/logger";
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
       volume,
       lesson_number,
       content_type,
-      Math.floor(Number(process.env.UPLOAD_PRESIGN_EXPIRY_SECONDS ?? "900")),
+      env.UPLOAD_PRESIGN_EXPIRY_SECONDS,
     );
 
     logger.info({

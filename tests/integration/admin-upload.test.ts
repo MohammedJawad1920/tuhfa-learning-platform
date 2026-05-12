@@ -101,6 +101,23 @@ describe("admin presign upload route", () => {
     expect(data.data.method).toBe("PUT");
   });
 
+  it("returns 422 on invalid content_type", async () => {
+    const { POST } = await import("@/app/api/v1/admin/upload/presign/route");
+
+    const req = new Request("http://localhost/api/v1/admin/upload/presign", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        volume: 1,
+        lesson_number: 100,
+        content_type: "video/mp4",
+      }),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(422);
+  });
+
   it("returns 429 on rate limit exceeded", async () => {
     checkPresignRateLimitMock.mockResolvedValue({
       success: false,

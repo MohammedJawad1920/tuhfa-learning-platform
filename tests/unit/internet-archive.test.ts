@@ -1,4 +1,33 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+const getSignedUrlMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@aws-sdk/client-s3", () => {
+  class PutObjectCommand {
+    input: Record<string, unknown>;
+
+    constructor(input: Record<string, unknown>) {
+      this.input = input;
+    }
+  }
+
+  class S3Client {
+    config: Record<string, unknown>;
+
+    constructor(config: Record<string, unknown>) {
+      this.config = config;
+    }
+  }
+
+  return {
+    PutObjectCommand,
+    S3Client,
+  };
+});
+
+vi.mock("@aws-sdk/s3-request-presigner", () => ({
+  getSignedUrl: getSignedUrlMock,
+}));
 
 beforeEach(() => {
   // Ensure required env variables exist for the module under test
@@ -47,5 +76,33 @@ describe("internet-archive client", () => {
 
     expect(generatePresignedUrl).toBeDefined();
     expect(typeof generatePresignedUrl).toBe("function");
+  });
+
+  it("generatePresignedUrl returns the expected presign payload", async () => {
+    getSignedUrlMock.mockResolvedValueOnce("https://signed.example/presign");
+
+    const { generatePresignedUrl } = await import("@/lib/internet-archive");
+
+    const result = await generatePresignedUrl(1, 7, "audio/mpeg", 1200);
+
+    expect(result).toEqual({
+      presigned_url: "https://signed.example/presign",
+      archive_url:
+        "https://archive.org/download/test-collection/lesson-v1-007.mp3",
+      filename: "lesson-v1-007.mp3",
+      expires_in: 1200,
+      method: "PUT",
+      required_headers: { "Content-Type": "audio/mpeg" },
+    });
+
+    expect(getSignedUrlMock).toHaveBeenCalledTimes(1);
+    const [, command, options] = getSignedUrlMock.mock.calls[0];
+    expect(options.expiresIn).toBe(1200);
+    expect(command.input).toMatchObject({
+      Bucket: "test-collection",
+      Key: "lesson-v1-007.mp3",
+      ContentType: "audio/mpeg",
+      Metadata: { volume: "1", lesson_number: "7" },
+    });
   });
 });

@@ -16,6 +16,11 @@ export const envSchema = z.object({
   IA_SECRET_KEY: z.string().min(1),
   IA_COLLECTION_IDENTIFIER: z.string().min(1),
   IA_S3_ENDPOINT: z.string().url(),
+  UPLOAD_PRESIGN_EXPIRY_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(900),
   UPSTASH_REDIS_REST_URL: z
     .string()
     .url()

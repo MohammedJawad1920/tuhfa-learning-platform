@@ -16,6 +16,7 @@ const validEnv = {
   IA_SECRET_KEY: "ia-secret",
   IA_COLLECTION_IDENTIFIER: "tuhfat-al-muhtaj-abdulhakim-saadi",
   IA_S3_ENDPOINT: "https://s3.us.archive.org",
+  UPLOAD_PRESIGN_EXPIRY_SECONDS: "900",
   UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
   UPSTASH_REDIS_REST_TOKEN: "upstash-token",
   ALLOWED_ORIGINS: "http://localhost:3000",
@@ -70,6 +71,7 @@ describe("env validation", () => {
 
     expect(parsed.ADMIN_PASSWORD).toBe(validEnv.ADMIN_PASSWORD);
     expect(parsed.SESSION_MAX_AGE_SECONDS).toBe(86400);
+    expect(parsed.UPLOAD_PRESIGN_EXPIRY_SECONDS).toBe(900);
     expect(parsed.UPSTASH_REDIS_REST_URL).toBe(validEnv.UPSTASH_REDIS_REST_URL);
 
     process.env = originalEnv;
