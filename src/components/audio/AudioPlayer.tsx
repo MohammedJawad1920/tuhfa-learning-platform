@@ -132,7 +132,8 @@ export function AudioPlayer({ src, lessonId, title }: AudioPlayerProps) {
           className="p-4 bg-error/10 border border-error rounded text-error text-sm"
           role="alert"
         >
-          تعذّر تحميل الصوت — قد يكون أرشيف الإنترنت غير متاح مؤقتاً
+          Audio could not be loaded - Internet Archive may be temporarily
+          unavailable.
         </div>
       )}
 

@@ -6,9 +6,13 @@ import { Button } from "@/components/ui/Button";
 
 interface MarkCompleteButtonProps {
   lessonId: number;
+  onCompleted?: () => void;
 }
 
-export function MarkCompleteButton({ lessonId }: MarkCompleteButtonProps) {
+export function MarkCompleteButton({
+  lessonId,
+  onCompleted,
+}: MarkCompleteButtonProps) {
   const { getProgress, markComplete } = useProgress();
   const [isCompleted, setIsCompleted] = useState(false);
 
@@ -21,6 +25,7 @@ export function MarkCompleteButton({ lessonId }: MarkCompleteButtonProps) {
   const handleClick = () => {
     markComplete(lessonId);
     setIsCompleted(true);
+    onCompleted?.();
   };
 
   return (

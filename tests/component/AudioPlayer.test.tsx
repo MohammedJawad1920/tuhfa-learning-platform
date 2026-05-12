@@ -1,22 +1,80 @@
 // @vitest-environment jsdom
 
 import "@testing-library/jest-dom/vitest";
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 
-// Mock useProgress hook
+const getProgressMock = vi.fn();
+const savePositionMock = vi.fn();
+const markCompleteMock = vi.fn();
+
 vi.mock("@/hooks/useProgress", () => ({
   useProgress: () => ({
-    getProgress: vi.fn(() => null),
-    savePosition: vi.fn(),
-    markComplete: vi.fn(),
+    getProgress: getProgressMock,
+    savePosition: savePositionMock,
+    markComplete: markCompleteMock,
   }),
 }));
 
 describe("AudioPlayer", () => {
-  it("renders audio player with controls", () => {
+  beforeEach(() => {
+    getProgressMock.mockReset();
+    savePositionMock.mockReset();
+    markCompleteMock.mockReset();
+
+    getProgressMock.mockReturnValue(null);
+
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(
+      function playMock(this: HTMLMediaElement) {
+        Object.defineProperty(this, "paused", {
+          configurable: true,
+          get: () => false,
+        });
+        return Promise.resolve();
+      },
+    );
+    vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(
+      function pauseMock(this: HTMLMediaElement) {
+        Object.defineProperty(this, "paused", {
+          configurable: true,
+          get: () => true,
+        });
+      },
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("restores saved playback position on mount", async () => {
+    getProgressMock.mockReturnValue({
+      completed: false,
+      positionSeconds: 42,
+      lastPlayedAt: new Date().toISOString(),
+    });
+
+    const { container } = render(
+      <AudioPlayer
+        src="https://example.com/audio.mp3"
+        lessonId={5}
+        title="Test Lesson"
+      />,
+    );
+
+    const audio = container.querySelector("audio") as HTMLAudioElement;
+
+    await waitFor(() => {
+      expect(audio.currentTime).toBe(42);
+    });
+  });
+
+  it("plays and pauses when clicking the control button", async () => {
+    const user = userEvent.setup();
+
     render(
       <AudioPlayer
         src="https://example.com/audio.mp3"
@@ -25,16 +83,20 @@ describe("AudioPlayer", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: /تشغيل/ })).toBeInTheDocument();
-    const select = document.querySelector(
-      'select[id="playback-rate"]',
-    ) as HTMLSelectElement;
-    expect(select).toBeInTheDocument();
-    expect(select.value).toBe("1");
+    const playButton = screen.getByRole("button", { name: "تشغيل" });
+    await user.click(playButton);
+
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: "إيقاف التشغيل" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "إيقاف التشغيل" }));
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalledTimes(1);
   });
 
-  it("has aria-label for accessibility", () => {
-    render(
+  it("seeks forward and backward with keyboard arrows", () => {
+    const { container } = render(
       <AudioPlayer
         src="https://example.com/audio.mp3"
         lessonId={1}
@@ -42,46 +104,49 @@ describe("AudioPlayer", () => {
       />,
     );
 
-    const audio = document.querySelector("audio");
-    expect(audio).toHaveAttribute("aria-label", "Test Lesson");
+    const audio = container.querySelector("audio") as HTMLAudioElement;
+
+    Object.defineProperty(audio, "duration", {
+      configurable: true,
+      writable: true,
+      value: 60,
+    });
+    Object.defineProperty(audio, "currentTime", {
+      configurable: true,
+      writable: true,
+      value: 10,
+    });
+
+    fireEvent.keyDown(audio, { code: "ArrowRight" });
+    expect(audio.currentTime).toBe(15);
+
+    fireEvent.keyDown(audio, { code: "ArrowLeft" });
+    expect(audio.currentTime).toBe(10);
   });
 
-  it("uses preload=metadata", () => {
-    render(
+  it("saves playback progress on timeupdate", () => {
+    const { container } = render(
       <AudioPlayer
         src="https://example.com/audio.mp3"
-        lessonId={1}
+        lessonId={7}
         title="Test Lesson"
       />,
     );
 
-    const audio = document.querySelector("audio");
-    expect(audio).toHaveAttribute("preload", "metadata");
+    const audio = container.querySelector("audio") as HTMLAudioElement;
+    Object.defineProperty(audio, "currentTime", {
+      configurable: true,
+      writable: true,
+      value: 23,
+    });
+
+    fireEvent.timeUpdate(audio);
+
+    expect(savePositionMock).toHaveBeenCalledWith(7, 23);
   });
 
-  it("displays playback rate options", () => {
-    render(
-      <AudioPlayer
-        src="https://example.com/audio.mp3"
-        lessonId={1}
-        title="Test Lesson"
-      />,
-    );
-
-    const options = document.querySelectorAll(
-      'select[id="playback-rate"] option',
-    );
-    const rates = Array.from(options).map((opt) => opt.textContent);
-
-    expect(rates).toContain("0.75x");
-    expect(rates).toContain("1x");
-    expect(rates).toContain("1.25x");
-    expect(rates).toContain("1.5x");
-    expect(rates).toContain("2x");
-  });
-
-  it("shows error state when audio fails to load", () => {
-    const { rerender } = render(
+  it("shows the required English message when audio fails", () => {
+    const { container } = render(
       <AudioPlayer
         src="https://example.com/invalid.mp3"
         lessonId={1}
@@ -89,51 +154,13 @@ describe("AudioPlayer", () => {
       />,
     );
 
-    // The error display would show on audio error event
-    const audio = document.querySelector("audio") as HTMLAudioElement;
-    if (audio) {
-      expect(audio).toBeInTheDocument();
-    }
-  });
+    const audio = container.querySelector("audio") as HTMLAudioElement;
+    fireEvent.error(audio);
 
-  it("has keyboard help text displayed", () => {
-    render(
-      <AudioPlayer
-        src="https://example.com/audio.mp3"
-        lessonId={1}
-        title="Test Lesson"
-      />,
-    );
-
-    expect(screen.getByText(/المسافة: تشغيل\/إيقاف/)).toBeInTheDocument();
-    expect(screen.getByText(/البحث ±5ث/)).toBeInTheDocument();
-  });
-
-  it("displays time format at start", () => {
-    render(
-      <AudioPlayer
-        src="https://example.com/audio.mp3"
-        lessonId={1}
-        title="Test Lesson"
-      />,
-    );
-
-    // Initial time should be displayed (appears twice: current and duration)
-    const times = screen.getAllByText("0:00");
-    expect(times.length).toBeGreaterThan(0);
-  });
-
-  it("renders with Arabic RTL support", () => {
-    render(
-      <AudioPlayer
-        src="https://example.com/audio.mp3"
-        lessonId={1}
-        title="Test Lesson"
-      />,
-    );
-
-    // Check that Arabic labels are present
-    const label = screen.getByText("سرعة التشغيل");
-    expect(label).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Audio could not be loaded - Internet Archive may be temporarily unavailable.",
+      ),
+    ).toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import * as endpoints from "@/api/endpoints";
 import { AudioPlayer } from "@/components/audio/AudioPlayer";
 import { MarkCompleteButton } from "@/features/progress/MarkCompleteButton";
@@ -16,7 +17,9 @@ interface LessonDetailProps {
 }
 
 export function LessonDetail({ lessonId }: LessonDetailProps) {
-  const query = useQuery<Lesson, Error>({
+  const [badgeVersion, setBadgeVersion] = useState(0);
+
+  const query = useQuery<Lesson | null, Error>({
     queryKey: ["lesson", lessonId],
     queryFn: async () => {
       const resp = await endpoints.getLessonById(lessonId);
@@ -28,7 +31,7 @@ export function LessonDetail({ lessonId }: LessonDetailProps) {
 
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("ar-SA", {
+    return date.toLocaleDateString("en-GB", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -60,13 +63,10 @@ export function LessonDetail({ lessonId }: LessonDetailProps) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface px-4">
         <div className="rounded-lg border border-error bg-surface-card p-8 text-center max-w-md">
-          <p className="text-lg text-error mb-4">الدرس غير موجود</p>
-          <p className="text-text-secondary mb-6 text-sm">
-            ക്ലാസ്സ് കണ്ടെത്തിയില്ല
-          </p>
+          <p className="text-lg text-error mb-4">Lesson not found</p>
           <Link href="/">
             <Button variant="primary" className="w-full">
-              العودة إلى الدروس
+              Back to lessons
             </Button>
           </Link>
         </div>
@@ -85,7 +85,7 @@ export function LessonDetail({ lessonId }: LessonDetailProps) {
           className="inline-flex items-center gap-2 text-primary hover:text-primary-hover transition-colors mb-6"
         >
           <span>←</span>
-          <span>العودة إلى الدروس</span>
+          <span>Back to lessons</span>
         </Link>
 
         {/* Lesson header */}
@@ -100,10 +100,13 @@ export function LessonDetail({ lessonId }: LessonDetailProps) {
                 {lesson.title_ar}
               </h1>
               <p className="text-sm text-text-secondary">
-                الدرس {lesson.lesson_number} • المجلد {lesson.volume}
+                Lesson {lesson.lesson_number} • Volume {lesson.volume}
               </p>
             </div>
-            <ProgressBadge lessonId={lessonId} />
+            <ProgressBadge
+              key={`${lessonId}-${badgeVersion}`}
+              lessonId={lessonId}
+            />
           </div>
 
           {/* Chapter breadcrumb */}
@@ -134,13 +137,13 @@ export function LessonDetail({ lessonId }: LessonDetailProps) {
           {/* Metadata */}
           <div className="flex flex-wrap gap-4 text-sm text-text-secondary mb-6 pb-6 border-b border-border">
             <div>
-              <span className="text-text-secondary">المدة:</span>
+              <span className="text-text-secondary">Duration:</span>
               <span className="ml-2 font-medium">
                 {formatDuration(lesson.duration_seconds)}
               </span>
             </div>
             <div>
-              <span className="text-text-secondary">تاريخ التحميل:</span>
+              <span className="text-text-secondary">Upload date:</span>
               <span className="ml-2 font-medium">
                 {formatDate(lesson.upload_date)}
               </span>
@@ -149,7 +152,10 @@ export function LessonDetail({ lessonId }: LessonDetailProps) {
 
           {/* Action buttons */}
           <div className="flex gap-3">
-            <MarkCompleteButton lessonId={lessonId} />
+            <MarkCompleteButton
+              lessonId={lessonId}
+              onCompleted={() => setBadgeVersion((value) => value + 1)}
+            />
           </div>
         </div>
 

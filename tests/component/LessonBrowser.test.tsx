@@ -33,15 +33,18 @@ const useAllLessonsMock = vi.fn(() => ({
   refetch: vi.fn(),
 }));
 
-const useFilteredLessonsMock = vi.fn(() => ({
-  data: filteredLessons,
-  isLoading: false,
-  isError: false,
-}));
+const useFilteredLessonsMock = vi.fn(
+  (_filters?: unknown, _page?: unknown, _limit?: unknown) => ({
+    data: filteredLessons,
+    isLoading: false,
+    isError: false,
+  }),
+);
 
 vi.mock("@/hooks/useLessons", () => ({
   useAllLessons: () => useAllLessonsMock(),
-  useFilteredLessons: (...args: unknown[]) => useFilteredLessonsMock(...args),
+  useFilteredLessons: (filters?: unknown, page?: unknown, limit?: unknown) =>
+    useFilteredLessonsMock(filters, page, limit),
 }));
 
 describe("LessonBrowser", () => {
@@ -65,6 +68,10 @@ describe("LessonBrowser", () => {
     await user.type(screen.getByLabelText("Search lessons"), "a");
 
     const lastCall = useFilteredLessonsMock.mock.calls.at(-1);
-    expect(lastCall?.[0]).toMatchObject({ search: undefined });
+    expect(lastCall).toBeDefined();
+    if (!lastCall) {
+      throw new Error("Expected useFilteredLessons to be called");
+    }
+    expect(lastCall[0]).toMatchObject({ search: undefined });
   });
 });
