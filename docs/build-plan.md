@@ -877,7 +877,7 @@ Run all items against production URL:
 - [ ] Admin can add, edit, delete a lesson end-to-end in production.
 - [ ] Lesson appears on site within 90 seconds of creation.
 - [ ] Vercel Analytics shows p95 latency < 200ms on GET /api/v1/lessons.
-- [ ] Auth lockout after 5 failed attempts (verified manually).
+- [ ] Auth lockout after 5 failed attempts (verified ).
 - [ ] No Google Fonts requests in production network tab.
 - [ ] No `as any` in production build (ESLint CI gate confirmed it).
 - [ ] Permission from Sheikh confirmed (pre-launch gate).
