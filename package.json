@@ -15,7 +15,8 @@
     "test:integration": "vitest run tests/integration/",
     "test:contract": "vitest run tests/contract/",
     "test:coverage": "vitest run tests/unit/ --coverage && node scripts/check-coverage-thresholds.mjs",
-    "mock": "node scripts/mock-server.mjs"
+    "mock": "node scripts/mock-server.mjs",
+    "generate-types": "openapi-typescript docs/openapi.yaml -o src/types/api.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1042.0",
@@ -56,6 +57,7 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.34.0",
-    "vitest": "^2.1.5"
+    "vitest": "^2.1.5",
+    "openapi-typescript": "^11.0.0"
   }
 }

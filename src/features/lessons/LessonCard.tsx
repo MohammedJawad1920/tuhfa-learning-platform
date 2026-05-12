@@ -71,4 +71,6 @@ export const LessonCard = forwardRef<HTMLLIElement, LessonCardProps>(
   },
 );
 
+export default LessonCard;
+
 LessonCard.displayName = "LessonCard";

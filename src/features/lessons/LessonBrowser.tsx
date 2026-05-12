@@ -1,26 +1,26 @@
 "use client";
 
-import { useReducer, useEffect, useRef } from "react";
+import { useReducer } from "react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Pagination } from "@/components/ui/Pagination";
+import { Spinner } from "@/components/ui/Spinner";
 import {
   useAllLessons,
   useFilteredLessons,
   type FilterParams,
 } from "@/hooks/useLessons";
-import { ChapterNav } from "./ChapterNav";
 import { LessonCard } from "./LessonCard";
-import { Spinner } from "@/components/ui/Spinner";
-import { Pagination } from "@/components/ui/Pagination";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
+import { ChapterNav } from "./ChapterNav";
 
-interface LessonBrowserState {
-  activeVolume?: number;
+type LessonBrowserState = {
+  activeVolume?: 1 | 2 | 3 | 4;
   activeKitab?: string;
   activeBab?: string;
   activeFasl?: string;
   searchQuery: string;
   currentPage: number;
-}
+};
 
 type LessonBrowserAction =
   | { type: "SET_FILTERS"; payload: FilterParams }
@@ -44,8 +44,8 @@ function reducer(
         activeVolume: action.payload.volume,
         activeKitab: action.payload.kitab,
         activeBab: action.payload.bab,
-        activeFasl: action.payload.search ? undefined : state.activeFasl,
-        currentPage: 1, // Reset to page 1 on filter change
+        activeFasl: action.payload.fasl,
+        currentPage: 1,
       };
     case "SET_SEARCH":
       return {
@@ -69,30 +69,22 @@ const LIMIT = 50;
 
 export function LessonBrowser() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const firstLessonRef = useRef<HTMLLIElement>(null);
 
-  // Fetch all lessons for chapter nav
   const allLessonsQuery = useAllLessons();
+  const allLessons = allLessonsQuery.data ?? [];
 
-  // Fetch filtered lessons
   const filters: FilterParams = {
-    volume: state.activeVolume as 1 | 2 | 3 | 4 | undefined,
+    volume: state.activeVolume,
     kitab: state.activeKitab,
     bab: state.activeBab,
     fasl: state.activeFasl,
     search: state.searchQuery.length >= 2 ? state.searchQuery : undefined,
   };
-  const filteredQuery = useFilteredLessons(filters, state.currentPage, LIMIT);
 
-  // Handle pagination - focus on first lesson
-  useEffect(() => {
-    if (firstLessonRef.current && !filteredQuery.isLoading) {
-      firstLessonRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }, [state.currentPage, filteredQuery.isLoading]);
+  const filteredQuery = useFilteredLessons(filters, state.currentPage, LIMIT);
+  const lessons = filteredQuery.data?.lessons ?? [];
+  const total = filteredQuery.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
   const handleFilterChange = (newFilters: FilterParams) => {
     dispatch({ type: "SET_FILTERS", payload: newFilters });
@@ -110,7 +102,6 @@ export function LessonBrowser() {
     dispatch({ type: "RESET" });
   };
 
-  // Loading state - show spinner while fetching all lessons
   if (allLessonsQuery.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -119,132 +110,93 @@ export function LessonBrowser() {
     );
   }
 
-  // Error state for all lessons load
   if (allLessonsQuery.isError) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="rounded-lg border border-error bg-surface-card p-6 text-center">
-          <p className="text-error mb-4">خطأ في تحميل الدروس</p>
-          <Button onClick={() => allLessonsQuery.refetch()}>
-            إعادة المحاولة
-          </Button>
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="rounded-lg border border-border bg-surface-card p-6 text-center">
+          <p className="mb-4 text-error">Failed to load lessons</p>
+          <Button onClick={() => allLessonsQuery.refetch()}>Retry</Button>
         </div>
       </div>
     );
   }
 
-  const allLessons = allLessonsQuery.data || [];
-
-  // Render filtered results
-  const lessons = filteredQuery.data || [];
-  const isLoading = filteredQuery.isLoading;
-  const isError = filteredQuery.isError;
-  const isEmpty = !isLoading && lessons.length === 0;
-
-  const totalPages = Math.ceil(
-    (lessons.length === 0 ? 0 : LIMIT * state.currentPage) / LIMIT,
-  );
+  const isEmpty = !filteredQuery.isLoading && lessons.length === 0;
 
   return (
-    <main className="min-h-screen bg-surface py-8 px-4">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="mb-8 text-4xl font-bold text-text-primary">
-          متصفح الدروس
-        </h1>
+    <main className="min-h-screen bg-surface px-4 py-8">
+      <div className="mx-auto max-w-6xl space-y-8">
+        <header className="space-y-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-display font-bold text-text-primary">
+                Tuhfa Learning Platform
+              </h1>
+              <p className="mt-2 text-text-secondary">
+                Browse lessons and filter by chapter structure.
+              </p>
+            </div>
 
-        <div className="grid gap-8 lg:grid-cols-4 lg:gap-6">
-          {/* Chapter Nav Sidebar */}
-          <aside className="lg:col-span-1">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Input
+                aria-label="Search lessons"
+                value={state.searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search lessons"
+                className="sm:w-72"
+              />
+              <Button variant="ghost" onClick={handleReset}>
+                Reset
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="lg:sticky lg:top-6 lg:self-start">
             <ChapterNav
               lessons={allLessons}
               onFilterChange={handleFilterChange}
             />
           </aside>
 
-          {/* Main Content */}
-          <section className="lg:col-span-3">
-            {/* Search Input */}
-            <div className="mb-6">
-              <label htmlFor="search" className="sr-only">
-                البحث عن الدروس
-              </label>
-              <Input
-                id="search"
-                type="text"
-                placeholder="ابحث عن درس..."
-                value={state.searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                dir="rtl"
-                lang="ar"
-                aria-label="البحث عن الدروس"
-              />
-              {state.searchQuery.length > 0 && state.searchQuery.length < 2 && (
-                <p className="mt-2 text-sm text-warning">
-                  يرجى إدخال حرفين على الأقل
-                </p>
-              )}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between text-sm text-text-secondary">
+              <span>{total} lessons</span>
+              <span>
+                Page {state.currentPage} of {totalPages}
+              </span>
             </div>
 
-            {/* Loading State */}
-            {isLoading && (
-              <div className="flex justify-center py-12">
+            {filteredQuery.isLoading ? (
+              <div className="rounded-lg border border-border bg-surface-card p-8 text-center">
                 <Spinner />
               </div>
-            )}
-
-            {/* Error State */}
-            {isError && (
-              <div className="rounded-lg border border-error bg-surface-card p-6">
-                <p className="text-error mb-4">خطأ في تحميل الدروس</p>
-                <Button onClick={() => filteredQuery.refetch()}>
-                  إعادة المحاولة
-                </Button>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {isEmpty && !isLoading && !isError && (
-              <div className="text-center py-12 rounded-lg border border-border bg-surface-card p-6">
-                <p className="text-lg text-text-secondary mb-4">
+            ) : isEmpty ? (
+              <div className="rounded-lg border border-border bg-surface-card p-8 text-center">
+                <p className="text-text-primary">No matching lessons</p>
+                <p dir="rtl" lang="ar" className="mt-2 text-text-secondary">
                   لا توجد دروس مطابقة
                 </p>
-                <p className="text-text-secondary mb-6">
-                  ഉയർപ്പെടുത്തിയ കോഴ്സുകൾ ഇല്ല
-                </p>
-                <Button onClick={handleReset} variant="ghost">
-                  إعادة تعيين الفلاتر
-                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3 rounded-lg border border-border bg-surface-card">
+                {lessons.map((lesson) => (
+                  <LessonCard key={lesson.id} lesson={lesson} />
+                ))}
               </div>
             )}
 
-            {/* Lesson List */}
-            {!isLoading && !isError && lessons.length > 0 && (
-              <>
-                <ul className="rounded-lg border border-border divide-y divide-border bg-surface-card overflow-hidden">
-                  {lessons.map((lesson, index) => (
-                    <LessonCard
-                      key={lesson.id}
-                      lesson={lesson}
-                      ref={index === 0 ? firstLessonRef : undefined}
-                    />
-                  ))}
-                </ul>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8">
-                    <Pagination
-                      currentPage={state.currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
-                )}
-              </>
-            )}
+            <Pagination
+              currentPage={state.currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </section>
         </div>
       </div>
     </main>
   );
 }
+
+export default LessonBrowser;

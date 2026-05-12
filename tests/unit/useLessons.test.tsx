@@ -61,13 +61,17 @@ describe("useFilteredLessons", () => {
     function C() {
       const q = useFilteredLessons({ volume: 1, kitab: "K" }, 2, 10);
       if (q.isLoading) return <div>loading</div>;
-      return <div data-testid="first">{(q.data as any)[0].id}</div>;
+      return (
+        <div data-testid="first">
+          {q.data?.lessons[0].id}:{q.data?.total}
+        </div>
+      );
     }
 
     renderWithClient(<C />);
 
     await waitFor(() =>
-      expect(screen.getByTestId("first")).toHaveTextContent("10"),
+      expect(screen.getByTestId("first")).toHaveTextContent("10:0"),
     );
 
     expect(spy).toHaveBeenCalledWith({

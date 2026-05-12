@@ -37,7 +37,7 @@ export function useFilteredLessons(
   page = 1,
   limit = 50,
 ) {
-  return useQuery<Lesson[], Error>({
+  return useQuery<{ lessons: Lesson[]; total: number }, Error>({
     queryKey: ["lessons", "filtered", filters ?? {}, page],
     queryFn: async () => {
       const offset = Math.max(0, (page - 1) * limit);
@@ -46,7 +46,10 @@ export function useFilteredLessons(
         limit,
         offset,
       });
-      return resp.data?.lessons ?? [];
+      return {
+        lessons: resp.data?.lessons ?? [],
+        total: resp.meta?.total ?? 0,
+      };
     },
     staleTime: 60_000,
   });
