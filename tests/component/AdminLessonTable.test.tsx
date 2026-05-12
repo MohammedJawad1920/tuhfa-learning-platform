@@ -48,13 +48,13 @@ describe("AdminLessonTable", () => {
     );
 
     expect(
-      screen.getByRole("table", { name: "قائمة الدروس الإدارية" }),
+      screen.getByRole("table", { name: "Admin lesson list" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("columnheader", { name: "المجلد" }),
+      screen.getByRole("columnheader", { name: "Volume" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("columnheader", { name: "الإجراءات" }),
+      screen.getByRole("columnheader", { name: "Actions" }),
     ).toBeInTheDocument();
     expect(screen.getByText("درس الطهارة")).toBeInTheDocument();
     expect(screen.getByText("كتاب الطهارة")).toBeInTheDocument();
@@ -75,8 +75,8 @@ describe("AdminLessonTable", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "تعديل الدرس 1" }));
-    await user.click(screen.getByRole("button", { name: "حذف الدرس 2" }));
+    await user.click(screen.getByRole("button", { name: "Edit lesson 1" }));
+    await user.click(screen.getByRole("button", { name: "Delete lesson 2" }));
 
     expect(onEdit).toHaveBeenCalledWith(1);
     expect(onDelete).toHaveBeenCalledWith(2);

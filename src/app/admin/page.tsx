@@ -57,7 +57,7 @@ export default function AdminLessonsPage() {
       setToast({
         open: true,
         variant: "success",
-        message: "تم الحذف بنجاح",
+        message: "Lesson deleted.",
       });
     },
     onError: (error: unknown) => {
@@ -72,7 +72,7 @@ export default function AdminLessonsPage() {
         setToast({
           open: true,
           variant: "warning",
-          message: "الدرس غير موجود بالفعل",
+          message: "Lesson no longer exists.",
         });
         void lessonsQuery.refetch();
         setDeleteTargetId(null);
@@ -83,7 +83,7 @@ export default function AdminLessonsPage() {
         setToast({
           open: true,
           variant: "error",
-          message: "تعارض تزامن — أعد المحاولة",
+          message: "Concurrent edit conflict — please retry.",
         });
         setDeleteTargetId(null);
         return;
@@ -93,7 +93,7 @@ export default function AdminLessonsPage() {
         setToast({
           open: true,
           variant: "warning",
-          message: "تم تجاوز الحد — حاول لاحقاً",
+          message: "Rate limit exceeded. Please try again later.",
         });
         setDeleteTargetId(null);
         return;
@@ -102,7 +102,7 @@ export default function AdminLessonsPage() {
       setToast({
         open: true,
         variant: "error",
-        message: "فشل حذف الدرس",
+        message: "Failed to delete lesson.",
       });
       setDeleteTargetId(null);
     },
@@ -145,9 +145,9 @@ export default function AdminLessonsPage() {
     return (
       <main className="min-h-screen bg-surface px-4 py-10">
         <div className="mx-auto max-w-5xl rounded-2xl border border-border bg-surface-card p-6">
-          <p className="text-sm text-error">تعذّر تحميل قائمة الدروس</p>
+          <p className="text-sm text-error">Failed to load lessons.</p>
           <Button className="mt-4" onClick={() => lessonsQuery.refetch()}>
-            إعادة المحاولة
+            Try again
           </Button>
         </div>
       </main>
@@ -161,9 +161,9 @@ export default function AdminLessonsPage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-display text-text-primary">إدارة الدروس</h1>
+            <h1 className="text-display text-text-primary">Manage Lessons</h1>
             <p className="mt-2 text-sm text-text-secondary">
-              عرض وحذف الدروس مع الحفاظ على ترتيبها في المصدر
+              View, edit, and delete lessons
             </p>
           </div>
 
@@ -171,23 +171,23 @@ export default function AdminLessonsPage() {
             href="/admin/lessons/new"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            درس جديد
+            Add Lesson
           </Link>
         </div>
 
         {lessons.length === 0 ? (
           <div className="rounded-2xl border border-border bg-surface-card p-8 text-center">
             <p className="text-lg font-semibold text-text-primary">
-              لا توجد دروس بعد
+              No lessons yet.
             </p>
             <p className="mt-2 text-sm text-text-secondary">
-              ابدأ بإضافة أول درس من صفحة الإنشاء.
+              Start by adding your first lesson.
             </p>
             <Link
               href="/admin/lessons/new"
               className="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              إضافة درس
+              Add Lesson
             </Link>
           </div>
         ) : (

@@ -20,13 +20,15 @@ describe("DeleteModal", () => {
     );
 
     expect(
-      screen.getByRole("dialog", { name: "حذف الدرس" }),
+      screen.getByRole("dialog", { name: "Delete Lesson" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("هل تريد حذف الدرس 7؟ لا يمكن التراجع عن هذا الإجراء."),
+      screen.getByText(
+        "Are you sure you want to delete lesson 7? This action cannot be undone.",
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "حذف" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "إلغاء" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
   });
 
   it("calls confirm, cancel, and escape handlers", async () => {
@@ -43,11 +45,11 @@ describe("DeleteModal", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "حذف" }));
+    await user.click(screen.getByRole("button", { name: "Delete" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("status")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "إلغاء" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(onCancel).toHaveBeenCalledTimes(1);
 
     fireEvent.keyDown(document, { key: "Escape" });

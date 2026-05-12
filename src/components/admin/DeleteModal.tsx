@@ -31,18 +31,19 @@ export function DeleteModal({
   };
 
   return (
-    <Modal open={isOpen} title="حذف الدرس" onClose={handleClose}>
+    <Modal open={isOpen} title="Delete Lesson" onClose={handleClose}>
       <div className="space-y-4">
         <p className="text-sm text-text-secondary">
-          هل تريد حذف الدرس {lessonId ?? ""}؟ لا يمكن التراجع عن هذا الإجراء.
+          Are you sure you want to delete lesson {lessonId}? This action cannot
+          be undone.
         </p>
 
         <div className="flex flex-wrap gap-3">
           <Button variant="danger" onClick={handleConfirm} loading={isDeleting}>
-            حذف
+            Delete
           </Button>
           <Button variant="secondary" onClick={handleClose}>
-            إلغاء
+            Cancel
           </Button>
         </div>
       </div>

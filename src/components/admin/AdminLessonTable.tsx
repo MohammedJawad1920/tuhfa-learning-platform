@@ -15,29 +15,29 @@ export function AdminLessonTable({
 }: AdminLessonTableProps) {
   return (
     <table className="min-w-full border-separate border-spacing-0">
-      <caption className="sr-only">قائمة الدروس الإدارية</caption>
+      <caption className="sr-only">Admin lesson list</caption>
       <thead>
         <tr className="text-left text-xs uppercase tracking-wide text-text-secondary">
           <th scope="col" className="border-b border-border px-4 py-3">
-            المجلد
+            Volume
           </th>
           <th scope="col" className="border-b border-border px-4 py-3">
-            رقم الدرس
+            Lesson #
           </th>
           <th scope="col" className="border-b border-border px-4 py-3">
-            العنوان العربي
+            Title
           </th>
           <th scope="col" className="border-b border-border px-4 py-3">
-            الكتاب
+            Chapter
           </th>
           <th scope="col" className="border-b border-border px-4 py-3">
-            المدة
+            Duration
           </th>
           <th scope="col" className="border-b border-border px-4 py-3">
-            تاريخ الرفع
+            Uploaded
           </th>
           <th scope="col" className="border-b border-border px-4 py-3">
-            الإجراءات
+            Actions
           </th>
         </tr>
       </thead>
@@ -72,17 +72,17 @@ export function AdminLessonTable({
                   type="button"
                   variant="secondary"
                   onClick={() => onEdit(lesson.id)}
-                  aria-label={`تعديل الدرس ${lesson.id}`}
+                  aria-label={`Edit lesson ${lesson.id}`}
                 >
-                  تعديل
+                  Edit
                 </Button>
                 <Button
                   type="button"
                   variant="danger"
                   onClick={() => onDelete(lesson.id)}
-                  aria-label={`حذف الدرس ${lesson.id}`}
+                  aria-label={`Delete lesson ${lesson.id}`}
                 >
-                  حذف
+                  Delete
                 </Button>
               </div>
             </td>
