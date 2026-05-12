@@ -1,0 +1,1423 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mD:/Projects/tuhfa-learning-platform[39m
+
+ [31m❯[39m tests/component/EditLessonForm.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 389[2mms[22m[39m
+[31m   [31m×[31m EditLessonForm[2m > [22mrenders immutable fields as text and submits only dirty fields[90m 130[2mms[22m[31m[39m
+[31m     → Unable to find a label with the text of: العنوان العربي
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<form[31m
+      [33mclass[31m=[32m"space-y-6"[31m
+    [36m>[31m
+      [36m<section[31m
+        [33mclass[31m=[32m"rounded-2xl border border-border bg-surface-card p-5"[31m
+      [36m>[31m
+        [36m<h2[31m
+          [33mclass[31m=[32m"text-subheading text-text-primary"[31m
+        [36m>[31m
+          [0mImmutable Fields[0m
+        [36m</h2>[31m
+        [36m<dl[31m
+          [33mclass[31m=[32m"mt-4 grid gap-4 md:grid-cols-3"[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<dt[31m
+              [33mclass[31m=[32m"text-xs uppercase tracking-wide text-text-secondary"[31m
+            [36m>[31m
+              [0mID[0m
+            [36m</dt>[31m
+            [36m<dd[31m
+              [33maria-readonly[31m=[32m"true"[31m
+              [33mclass[31m=[32m"mt-1 text-sm text-text-primary"[31m
+            [36m>[31m
+              [0m9[0m
+            [36m</dd>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<dt[31m
+              [33mclass[31m=[32m"text-xs uppercase tracking-wide text-text-secondary"[31m
+            [36m>[31m
+              [0mVolume[0m
+            [36m</dt>[31m
+            [36m<dd[31m
+              [33maria-readonly[31m=[32m"true"[31m
+              [33mclass[31m=[32m"mt-1 text-sm text-text-primary"[31m
+            [36m>[31m
+              [0m2[0m
+            [36m</dd>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<dt[31m
+              [33mclass[31m=[32m"text-xs uppercase tracking-wide text-text-secondary"[31m
+            [36m>[31m
+              [0mLesson #[0m
+            [36m</dt>[31m
+            [36m<dd[31m
+              [33maria-readonly[31m=[32m"true"[31m
+              [33mclass[31m=[32m"mt-1 text-sm text-text-primary"[31m
+            [36m>[31m
+              [0m14[0m
+            [36m</dd>[31m
+          [36m</div>[31m
+        [36m</dl>[31m
+      [36m</section>[31m
+      [36m<section[31m
+        [33mclass[31m=[32m"space-y-4 rounded-2xl border border-border bg-surface-card p-5"[31m
+      [36m>[31m
+        [36m<div>[31m
+          [36m<label[31m
+            [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+            [33mfor[31m=[32m"title_ar"[31m
+          [36m>[31m
+            [0mTitle (Arabic)[0m
+          [36m</label>[31m
+          [36m<textarea[31m
+            [33mclass[31m=[32m"block min-h-24 w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+            [33mdir[31m=[32m"rtl"[31m
+            [33mid[31m=[32m"title_ar"[31m
+            [33mlang[31m=[32m"ar"[31m
+            [33mname[31m=[32m"title_ar"[31m
+            [33mplaceholder[31m=[32m"اكتب عنوان الدرس بالعربية"[31m
+            [33mrows[31m=[32m"3"[31m
+          [36m/>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"grid gap-4 md:grid-cols-3"[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"chapter_kitab"[31m
+            [36m>[31m
+              [0mChapter (Arabic)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mdir[31m=[32m"rtl"[31m
+              [33mid[31m=[32m"chapter_kitab"[31m
+              [33mlang[31m=[32m"ar"[31m
+              [33mname[31m=[32m"chapter_kitab"[31m
+              [33mplaceholder[31m=[32m"كتاب"[31m
+              [33mtype[31m=[32m"text"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"chapter_bab"[31m
+            [36m>[31m
+              [0mSection (Arabic)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mdir[31m=[32m"rtl"[31m
+              [33mid[31m=[32m"chapter_bab"[31m
+              [33mlang[31m=[32m"ar"[31m
+              [33mname[31m=[32m"chapter_bab"[31m
+              [33mplaceholder[31m=[32m"باب"[31m
+              [33mtype[31m=[32m"text"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"chapter_fasl"[31m
+            [36m>[31m
+              [0mSubsection (Arabic)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mdir[31m=[32m"rtl"[31m
+              [33mid[31m=[32m"chapter_fasl"[31m
+              [33mlang[31m=[32m"ar"[31m
+              [33mname[31m=[32m"chapter_fasl"[31m
+              [33mplaceholder[31m=[32m"فصل"[31m
+              [33mtype[31m=[32m"text"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"grid gap-4 md:grid-cols-3"[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"duration_seconds"[31m
+            [36m>[31m
+              [0mDuration (seconds)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mid[31m=[32m"duration_seconds"[31m
+              [33minputmode[31m=[32m"numeric"[31m
+              [33mname[31m=[32m"duration_seconds"[31m
+              [33mtype[31m=[32m"number"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"upload_date"[31m
+            [36m>[31m
+              [0mUpload Date[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mid[31m=[32m"upload_date"[31m
+              [33mname[31m=[32m"upload_date"[31m
+              [33mtype[31m=[32m"date"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"telegram_post_id"[31m
+            [36m>[31m
+              [0mTelegram Post ID[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mid[31m=[32m"telegram_post_id"[31m
+              [33minputmode[31m=[32m"numeric"[31m
+              [33mname[31m=[32m"telegram_post_id"[31m
+              [33mtype[31m=[32m"number"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div>[31m
+          [36m<label[31m
+            [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+            [33mfor[31m=[32m"archive_url"[31m
+          [36m>[31m
+            [0mAudio URL[0m
+          [36m</label>[31m
+          [36m<input[31m
+            [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+            [33mid[31m=[32m"archive_url"[31m
+            [33mname[31m=[32m"archive_url"[31m
+            [33mreadonly[31m=[32m""[31m
+            [33mtype[31m=[32m"text"[31m
+          [36m/>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"mt-1 text-xs text-text-secondary"[31m
+          [36m>[31m
+            [0mUploaded from Internet Archive[0m
+          [36m</p>[31m
+        [36m</div>[31m
+      [36m</section>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"flex flex-wrap gap-3"[31m
+      [36m>[31m
+        [36m<button[31m
+          [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-primary text-white hover:bg-primary-hover"[31m
+          [33mtype[31m=[32m"submit"[31m
+        [36m>[31m
+          [36m<span>[31m
+            [0mSave[0m
+          [36m</span>[31m
+        [36m</button>[31m
+        [36m<button[31m
+          [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[31m
+          [33mtype[31m=[32m"button"[31m
+        [36m>[31m
+          [36m<span>[31m
+            [0mCancel[0m
+          [36m</span>[31m
+        [36m</button>[31m
+      [36m</div>[31m
+    [36m</form>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+[31m   [31m×[31m EditLessonForm[2m > [22mshows inline error for 404 and toast for 409[90m 257[2mms[22m[31m[39m
+[31m     → Unable to find an accessible element with the role "button" and name "حفظ"
+
+Here are the accessible roles:
+
+  heading:
+
+  Name "Immutable Fields":
+  [36m<h2[31m
+    [33mclass[31m=[32m"text-subheading text-text-primary"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  term:
+
+  Name "":
+  [36m<dt[31m
+    [33mclass[31m=[32m"text-xs uppercase tracking-wide text-text-secondary"[31m
+  [36m/>[31m
+
+  Name "":
+  [36m<dt[31m
+    [33mclass[31m=[32m"text-xs uppercase tracking-wide text-text-secondary"[31m
+  [36m/>[31m
+
+  Name "":
+  [36m<dt[31m
+    [33mclass[31m=[32m"text-xs uppercase tracking-wide text-text-secondary"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  definition:
+
+  Name "":
+  [36m<dd[31m
+    [33maria-readonly[31m=[32m"true"[31m
+    [33mclass[31m=[32m"mt-1 text-sm text-text-primary"[31m
+  [36m/>[31m
+
+  Name "":
+  [36m<dd[31m
+    [33maria-readonly[31m=[32m"true"[31m
+    [33mclass[31m=[32m"mt-1 text-sm text-text-primary"[31m
+  [36m/>[31m
+
+  Name "":
+  [36m<dd[31m
+    [33maria-readonly[31m=[32m"true"[31m
+    [33mclass[31m=[32m"mt-1 text-sm text-text-primary"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Title (Arabic)":
+  [36m<textarea[31m
+    [33mclass[31m=[32m"block min-h-24 w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+    [33mdir[31m=[32m"rtl"[31m
+    [33mid[31m=[32m"title_ar"[31m
+    [33mlang[31m=[32m"ar"[31m
+    [33mname[31m=[32m"title_ar"[31m
+    [33mplaceholder[31m=[32m"اكتب عنوان الدرس بالعربية"[31m
+    [33mrows[31m=[32m"3"[31m
+  [36m/>[31m
+
+  Name "Chapter (Arabic)":
+  [36m<input[31m
+    [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+    [33mdir[31m=[32m"rtl"[31m
+    [33mid[31m=[32m"chapter_kitab"[31m
+    [33mlang[31m=[32m"ar"[31m
+    [33mname[31m=[32m"chapter_kitab"[31m
+    [33mplaceholder[31m=[32m"كتاب"[31m
+    [33mtype[31m=[32m"text"[31m
+  [36m/>[31m
+
+  Name "Section (Arabic)":
+  [36m<input[31m
+    [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+    [33mdir[31m=[32m"rtl"[31m
+    [33mid[31m=[32m"chapter_bab"[31m
+    [33mlang[31m=[32m"ar"[31m
+    [33mname[31m=[32m"chapter_bab"[31m
+    [33mplaceholder[31m=[32m"باب"[31m
+    [33mtype[31m=[32m"text"[31m
+  [36m/>[31m
+
+  Name "Subsection (Arabic)":
+  [36m<input[31m
+    [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+    [33mdir[31m=[32m"rtl"[31m
+    [33mid[31m=[32m"chapter_fasl"[31m
+    [33mlang[31m=[32m"ar"[31m
+    [33mname[31m=[32m"chapter_fasl"[31m
+    [33mplaceholder[31m=[32m"فصل"[31m
+    [33mtype[31m=[32m"text"[31m
+  [36m/>[31m
+
+  Name "Audio URL":
+  [36m<input[31m
+    [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+    [33mid[31m=[32m"archive_url"[31m
+    [33mname[31m=[32m"archive_url"[31m
+    [33mreadonly[31m=[32m""[31m
+    [33mtype[31m=[32m"text"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  spinbutton:
+
+  Name "Duration (seconds)":
+  [36m<input[31m
+    [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+    [33mid[31m=[32m"duration_seconds"[31m
+    [33minputmode[31m=[32m"numeric"[31m
+    [33mname[31m=[32m"duration_seconds"[31m
+    [33mtype[31m=[32m"number"[31m
+  [36m/>[31m
+
+  Name "Telegram Post ID":
+  [36m<input[31m
+    [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+    [33mid[31m=[32m"telegram_post_id"[31m
+    [33minputmode[31m=[32m"numeric"[31m
+    [33mname[31m=[32m"telegram_post_id"[31m
+    [33mtype[31m=[32m"number"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[31m
+    [33mclass[31m=[32m"mt-1 text-xs text-text-secondary"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+  button:
+
+  Name "Save":
+  [36m<button[31m
+    [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-primary text-white hover:bg-primary-hover"[31m
+    [33mtype[31m=[32m"submit"[31m
+  [36m/>[31m
+
+  Name "Cancel":
+  [36m<button[31m
+    [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[31m
+    [33mtype[31m=[32m"button"[31m
+  [36m/>[31m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<form[31m
+      [33mclass[31m=[32m"space-y-6"[31m
+    [36m>[31m
+      [36m<section[31m
+        [33mclass[31m=[32m"rounded-2xl border border-border bg-surface-card p-5"[31m
+      [36m>[31m
+        [36m<h2[31m
+          [33mclass[31m=[32m"text-subheading text-text-primary"[31m
+        [36m>[31m
+          [0mImmutable Fields[0m
+        [36m</h2>[31m
+        [36m<dl[31m
+          [33mclass[31m=[32m"mt-4 grid gap-4 md:grid-cols-3"[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<dt[31m
+              [33mclass[31m=[32m"text-xs uppercase tracking-wide text-text-secondary"[31m
+            [36m>[31m
+              [0mID[0m
+            [36m</dt>[31m
+            [36m<dd[31m
+              [33maria-readonly[31m=[32m"true"[31m
+              [33mclass[31m=[32m"mt-1 text-sm text-text-primary"[31m
+            [36m>[31m
+              [0m9[0m
+            [36m</dd>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<dt[31m
+              [33mclass[31m=[32m"text-xs uppercase tracking-wide text-text-secondary"[31m
+            [36m>[31m
+              [0mVolume[0m
+            [36m</dt>[31m
+            [36m<dd[31m
+              [33maria-readonly[31m=[32m"true"[31m
+              [33mclass[31m=[32m"mt-1 text-sm text-text-primary"[31m
+            [36m>[31m
+              [0m2[0m
+            [36m</dd>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<dt[31m
+              [33mclass[31m=[32m"text-xs uppercase tracking-wide text-text-secondary"[31m
+            [36m>[31m
+              [0mLesson #[0m
+            [36m</dt>[31m
+            [36m<dd[31m
+              [33maria-readonly[31m=[32m"true"[31m
+              [33mclass[31m=[32m"mt-1 text-sm text-text-primary"[31m
+            [36m>[31m
+              [0m14[0m
+            [36m</dd>[31m
+          [36m</div>[31m
+        [36m</dl>[31m
+      [36m</section>[31m
+      [36m<section[31m
+        [33mclass[31m=[32m"space-y-4 rounded-2xl border border-border bg-surface-card p-5"[31m
+      [36m>[31m
+        [36m<div>[31m
+          [36m<label[31m
+            [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+            [33mfor[31m=[32m"title_ar"[31m
+          [36m>[31m
+            [0mTitle (Arabic)[0m
+          [36m</label>[31m
+          [36m<textarea[31m
+            [33mclass[31m=[32m"block min-h-24 w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+            [33mdir[31m=[32m"rtl"[31m
+            [33mid[31m=[32m"title_ar"[31m
+            [33mlang[31m=[32m"ar"[31m
+            [33mname[31m=[32m"title_ar"[31m
+            [33mplaceholder[31m=[32m"اكتب عنوان الدرس بالعربية"[31m
+            [33mrows[31m=[32m"3"[31m
+          [36m/>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"grid gap-4 md:grid-cols-3"[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"chapter_kitab"[31m
+            [36m>[31m
+              [0mChapter (Arabic)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mdir[31m=[32m"rtl"[31m
+              [33mid[31m=[32m"chapter_kitab"[31m
+              [33mlang[31m=[32m"ar"[31m
+              [33mname[31m=[32m"chapter_kitab"[31m
+              [33mplaceholder[31m=[32m"كتاب"[31m
+              [33mtype[31m=[32m"text"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"chapter_bab"[31m
+            [36m>[31m
+              [0mSection (Arabic)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mdir[31m=[32m"rtl"[31m
+              [33mid[31m=[32m"chapter_bab"[31m
+              [33mlang[31m=[32m"ar"[31m
+              [33mname[31m=[32m"chapter_bab"[31m
+              [33mplaceholder[31m=[32m"باب"[31m
+              [33mtype[31m=[32m"text"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"chapter_fasl"[31m
+            [36m>[31m
+              [0mSubsection (Arabic)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mdir[31m=[32m"rtl"[31m
+              [33mid[31m=[32m"chapter_fasl"[31m
+              [33mlang[31m=[32m"ar"[31m
+              [33mname[31m=[32m"chapter_fasl"[31m
+              [33mplaceholder[31m=[32m"فصل"[31m
+              [33mtype[31m=[32m"text"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"grid gap-4 md:grid-cols-3"[31m
+        [36m>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"duration_seconds"[31m
+            [36m>[31m
+              [0mDuration (seconds)[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mid[31m=[32m"duration_seconds"[31m
+              [33minputmode[31m=[32m"numeric"[31m
+              [33mname[31m=[32m"duration_seconds"[31m
+              [33mtype[31m=[32m"number"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"upload_date"[31m
+            [36m>[31m
+              [0mUpload Date[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mid[31m=[32m"upload_date"[31m
+              [33mname[31m=[32m"upload_date"[31m
+              [33mtype[31m=[32m"date"[31m
+            [36m/>[31m
+          [36m</div>[31m
+          [36m<div>[31m
+            [36m<label[31m
+              [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+              [33mfor[31m=[32m"telegram_post_id"[31m
+            [36m>[31m
+              [0mTelegram Post ID[0m
+            [36m</label>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+              [33mid[31m=[32m"telegram_post_id"[31m
+              [33minputmode[31m=[32m"numeric"[31m
+              [33mname[31m=[32m"telegram_post_id"[31m
+              [33mtype[31m=[32m"number"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div>[31m
+          [36m<label[31m
+            [33mclass[31m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[31m
+            [33mfor[31m=[32m"archive_url"[31m
+          [36m>[31m
+            [0mAudio URL[0m
+          [36m</label>[31m
+          [36m<input[31m
+            [33mclass[31m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[31m
+            [33mid[31m=[32m"archive_url"[31m
+            [33mname[31m=[32m"archive_url"[31m
+            [33mreadonly[31m=[32m""[31m
+            [33mtype[31m=[32m"text"[31m
+          [36m/>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"mt-1 text-xs text-text-secondary"[31m
+          [36m>[31m
+            [0mUploaded from Internet Archive[0m
+          [36m</p>[31m
+        [36m</div>[31m
+      [36m</section>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"flex flex-wrap gap-3"[31m
+      [36m>[31m
+        [36m<button[31m
+          [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-primary text-white hover:bg-primary-hover"[31m
+          [33mtype[31m=[32m"submit"[31m
+        [36m>[31m
+          [36m<span>[31m
+            [0mSave[0m
+          [36m</span>[31m
+        [36m</button>[31m
+        [36m<button[31m
+          [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[31m
+          [33mtype[31m=[32m"button"[31m
+        [36m>[31m
+          [36m<span>[31m
+            [0mCancel[0m
+          [36m</span>[31m
+        [36m</button>[31m
+      [36m</div>[31m
+    [36m</form>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+ [31m❯[39m tests/component/EditLessonPage.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 1299[2mms[22m[39m
+[31m   [31m×[31m EditLessonPage[2m > [22mshows not-found state when the lesson is missing[33m 1024[2mms[22m[31m[39m
+[31m     → Unable to find an element with the text: الدرس لم يعد موجوداً. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<main[31m
+      [33mclass[31m=[32m"min-h-screen bg-surface px-4 py-10"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"mx-auto max-w-3xl rounded-2xl border border-border bg-surface-card p-6 text-center"[31m
+      [36m>[31m
+        [36m<p[31m
+          [33mclass[31m=[32m"text-lg font-semibold text-text-primary"[31m
+        [36m>[31m
+          [0mLesson not found.[0m
+        [36m</p>[31m
+        [36m<p[31m
+          [33mclass[31m=[32m"mt-2 text-sm text-text-secondary"[31m
+        [36m>[31m
+          [0mIt may have been deleted or moved.[0m
+        [36m</p>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"mt-6 inline-block"[31m
+          [33mhref[31m=[32m"/admin"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[31m
+            [33mtype[31m=[32m"button"[31m
+          [36m>[31m
+            [36m<span>[31m
+              [0mBack to Admin[0m
+            [36m</span>[31m
+          [36m</button>[31m
+        [36m</a>[31m
+      [36m</div>[31m
+    [36m</main>[31m
+  [36m</div>[31m
+[36m</body>[31m
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<main[31m
+        [33mclass[31m=[32m"min-h-screen bg-surface px-4 py-10"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"mx-auto max-w-3xl rounded-2xl border border-border bg-surface-card p-6 text-center"[31m
+        [36m>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-lg font-semibold text-text-primary"[31m
+          [36m>[31m
+            [0mLesson not found.[0m
+          [36m</p>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"mt-2 text-sm text-text-secondary"[31m
+          [36m>[31m
+            [0mIt may have been deleted or moved.[0m
+          [36m</p>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"mt-6 inline-block"[31m
+            [33mhref[31m=[32m"/admin"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[31m
+              [33mtype[31m=[32m"button"[31m
+            [36m>[31m
+              [36m<span>[31m
+                [0mBack to Admin[0m
+              [36m</span>[31m
+            [36m</button>[31m
+          [36m</a>[31m
+        [36m</div>[31m
+      [36m</main>[31m
+    [36m</div>[31m
+  [36m</body>[31m
+[36m</html>[31m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[1m[7m Failed Tests 3 [27m[22m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[31m[1m[7m FAIL [27m[22m[39m tests/component/EditLessonForm.test.tsx[2m > [22mEditLessonForm[2m > [22mrenders immutable fields as text and submits only dirty fields
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find a label with the text of: العنوان العربي
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-6"[39m
+    [36m>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"rounded-2xl border border-border bg-surface-card p-5"[39m
+      [36m>[39m
+        [36m<h2[39m
+          [33mclass[39m=[32m"text-subheading text-text-primary"[39m
+        [36m>[39m
+          [0mImmutable Fields[0m
+        [36m</h2>[39m
+        [36m<dl[39m
+          [33mclass[39m=[32m"mt-4 grid gap-4 md:grid-cols-3"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<dt[39m
+              [33mclass[39m=[32m"text-xs uppercase tracking-wide text-text-secondary"[39m
+            [36m>[39m
+              [0mID[0m
+            [36m</dt>[39m
+            [36m<dd[39m
+              [33maria-readonly[39m=[32m"true"[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-text-primary"[39m
+            [36m>[39m
+              [0m9[0m
+            [36m</dd>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<dt[39m
+              [33mclass[39m=[32m"text-xs uppercase tracking-wide text-text-secondary"[39m
+            [36m>[39m
+              [0mVolume[0m
+            [36m</dt>[39m
+            [36m<dd[39m
+              [33maria-readonly[39m=[32m"true"[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-text-primary"[39m
+            [36m>[39m
+              [0m2[0m
+            [36m</dd>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<dt[39m
+              [33mclass[39m=[32m"text-xs uppercase tracking-wide text-text-secondary"[39m
+            [36m>[39m
+              [0mLesson #[0m
+            [36m</dt>[39m
+            [36m<dd[39m
+              [33maria-readonly[39m=[32m"true"[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-text-primary"[39m
+            [36m>[39m
+              [0m14[0m
+            [36m</dd>[39m
+          [36m</div>[39m
+        [36m</dl>[39m
+      [36m</section>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"space-y-4 rounded-2xl border border-border bg-surface-card p-5"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+            [33mfor[39m=[32m"title_ar"[39m
+          [36m>[39m
+            [0mTitle (Arabic)[0m
+          [36m</label>[39m
+          [36m<textarea[39m
+            [33mclass[39m=[32m"block min-h-24 w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+            [33mdir[39m=[32m"rtl"[39m
+            [33mid[39m=[32m"title_ar"[39m
+            [33mlang[39m=[32m"ar"[39m
+            [33mname[39m=[32m"title_ar"[39m
+            [33mplaceholder[39m=[32m"اكتب عنوان الدرس بالعربية"[39m
+            [33mrows[39m=[32m"3"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"grid gap-4 md:grid-cols-3"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"chapter_kitab"[39m
+            [36m>[39m
+              [0mChapter (Arabic)[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mdir[39m=[32m"rtl"[39m
+              [33mid[39m=[32m"chapter_kitab"[39m
+              [33mlang[39m=[32m"ar"[39m
+              [33mname[39m=[32m"chapter_kitab"[39m
+              [33mplaceholder[39m=[32m"كتاب"[39m
+              [33mtype[39m=[32m"text"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"chapter_bab"[39m
+            [36m>[39m
+              [0mSection (Arabic)[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mdir[39m=[32m"rtl"[39m
+              [33mid[39m=[32m"chapter_bab"[39m
+              [33mlang[39m=[32m"ar"[39m
+              [33mname[39m=[32m"chapter_bab"[39m
+              [33mplaceholder[39m=[32m"باب"[39m
+              [33mtype[39m=[32m"text"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"chapter_fasl"[39m
+            [36m>[39m
+              [0mSubsection (Arabic)[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mdir[39m=[32m"rtl"[39m
+              [33mid[39m=[32m"chapter_fasl"[39m
+              [33mlang[39m=[32m"ar"[39m
+              [33mname[39m=[32m"chapter_fasl"[39m
+              [33mplaceholder[39m=[32m"فصل"[39m
+              [33mtype[39m=[32m"text"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"grid gap-4 md:grid-cols-3"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"duration_seconds"[39m
+            [36m>[39m
+              [0mDuration (seconds)[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mid[39m=[32m"duration_seconds"[39m
+              [33minputmode[39m=[32m"numeric"[39m
+              [33mname[39m=[32m"duration_seconds"[39m
+              [33mtype[39m=[32m"number"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"upload_date"[39m
+            [36m>[39m
+              [0mUpload Date[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mid[39m=[32m"upload_date"[39m
+              [33mname[39m=[32m"upload_date"[39m
+              [33mtype[39m=[32m"date"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"telegram_post_id"[39m
+            [36m>[39m
+              [0mTelegram Post ID[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mid[39m=[32m"telegram_post_id"[39m
+              [33minputmode[39m=[32m"numeric"[39m
+              [33mname[39m=[32m"telegram_post_id"[39m
+              [33mtype[39m=[32m"number"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+            [33mfor[39m=[32m"archive_url"[39m
+          [36m>[39m
+            [0mAudio URL[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+            [33mid[39m=[32m"archive_url"[39m
+            [33mname[39m=[32m"archive_url"[39m
+            [33mreadonly[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+          [36m/>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-1 text-xs text-text-secondary"[39m
+          [36m>[39m
+            [0mUploaded from Internet Archive[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</section>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap gap-3"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-primary text-white hover:bg-primary-hover"[39m
+          [33mtype[39m=[32m"submit"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mSave[0m
+          [36m</span>[39m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mCancel[0m
+          [36m</span>[39m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</form>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m getAllByLabelText node_modules/@testing-library/dom/dist/queries/label-text.js:[2m111:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m tests/component/EditLessonForm.test.tsx:[2m68:29[22m[39m
+    [90m 66| [39m    [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m"14"[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+    [90m 67| [39m
+    [90m 68| [39m    [35mawait[39m user[33m.[39m[34mclear[39m(screen[33m.[39m[34mgetByLabelText[39m([32m"العنوان العربي"[39m))[33m;[39m
+    [90m   | [39m                            [31m^[39m
+    [90m 69| [39m    [35mawait[39m user[33m.[39m[34mtype[39m(
+    [90m 70| [39m      screen[33m.[39m[34mgetByLabelText[39m([32m"العنوان العربي"[39m)[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m tests/component/EditLessonForm.test.tsx[2m > [22mEditLessonForm[2m > [22mshows inline error for 404 and toast for 409
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an accessible element with the role "button" and name "حفظ"
+
+Here are the accessible roles:
+
+  heading:
+
+  Name "Immutable Fields":
+  [36m<h2[39m
+    [33mclass[39m=[32m"text-subheading text-text-primary"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  term:
+
+  Name "":
+  [36m<dt[39m
+    [33mclass[39m=[32m"text-xs uppercase tracking-wide text-text-secondary"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<dt[39m
+    [33mclass[39m=[32m"text-xs uppercase tracking-wide text-text-secondary"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<dt[39m
+    [33mclass[39m=[32m"text-xs uppercase tracking-wide text-text-secondary"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  definition:
+
+  Name "":
+  [36m<dd[39m
+    [33maria-readonly[39m=[32m"true"[39m
+    [33mclass[39m=[32m"mt-1 text-sm text-text-primary"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<dd[39m
+    [33maria-readonly[39m=[32m"true"[39m
+    [33mclass[39m=[32m"mt-1 text-sm text-text-primary"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<dd[39m
+    [33maria-readonly[39m=[32m"true"[39m
+    [33mclass[39m=[32m"mt-1 text-sm text-text-primary"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Title (Arabic)":
+  [36m<textarea[39m
+    [33mclass[39m=[32m"block min-h-24 w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+    [33mdir[39m=[32m"rtl"[39m
+    [33mid[39m=[32m"title_ar"[39m
+    [33mlang[39m=[32m"ar"[39m
+    [33mname[39m=[32m"title_ar"[39m
+    [33mplaceholder[39m=[32m"اكتب عنوان الدرس بالعربية"[39m
+    [33mrows[39m=[32m"3"[39m
+  [36m/>[39m
+
+  Name "Chapter (Arabic)":
+  [36m<input[39m
+    [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+    [33mdir[39m=[32m"rtl"[39m
+    [33mid[39m=[32m"chapter_kitab"[39m
+    [33mlang[39m=[32m"ar"[39m
+    [33mname[39m=[32m"chapter_kitab"[39m
+    [33mplaceholder[39m=[32m"كتاب"[39m
+    [33mtype[39m=[32m"text"[39m
+  [36m/>[39m
+
+  Name "Section (Arabic)":
+  [36m<input[39m
+    [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+    [33mdir[39m=[32m"rtl"[39m
+    [33mid[39m=[32m"chapter_bab"[39m
+    [33mlang[39m=[32m"ar"[39m
+    [33mname[39m=[32m"chapter_bab"[39m
+    [33mplaceholder[39m=[32m"باب"[39m
+    [33mtype[39m=[32m"text"[39m
+  [36m/>[39m
+
+  Name "Subsection (Arabic)":
+  [36m<input[39m
+    [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+    [33mdir[39m=[32m"rtl"[39m
+    [33mid[39m=[32m"chapter_fasl"[39m
+    [33mlang[39m=[32m"ar"[39m
+    [33mname[39m=[32m"chapter_fasl"[39m
+    [33mplaceholder[39m=[32m"فصل"[39m
+    [33mtype[39m=[32m"text"[39m
+  [36m/>[39m
+
+  Name "Audio URL":
+  [36m<input[39m
+    [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+    [33mid[39m=[32m"archive_url"[39m
+    [33mname[39m=[32m"archive_url"[39m
+    [33mreadonly[39m=[32m""[39m
+    [33mtype[39m=[32m"text"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  spinbutton:
+
+  Name "Duration (seconds)":
+  [36m<input[39m
+    [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+    [33mid[39m=[32m"duration_seconds"[39m
+    [33minputmode[39m=[32m"numeric"[39m
+    [33mname[39m=[32m"duration_seconds"[39m
+    [33mtype[39m=[32m"number"[39m
+  [36m/>[39m
+
+  Name "Telegram Post ID":
+  [36m<input[39m
+    [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+    [33mid[39m=[32m"telegram_post_id"[39m
+    [33minputmode[39m=[32m"numeric"[39m
+    [33mname[39m=[32m"telegram_post_id"[39m
+    [33mtype[39m=[32m"number"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"mt-1 text-xs text-text-secondary"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Save":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-primary text-white hover:bg-primary-hover"[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Cancel":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-6"[39m
+    [36m>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"rounded-2xl border border-border bg-surface-card p-5"[39m
+      [36m>[39m
+        [36m<h2[39m
+          [33mclass[39m=[32m"text-subheading text-text-primary"[39m
+        [36m>[39m
+          [0mImmutable Fields[0m
+        [36m</h2>[39m
+        [36m<dl[39m
+          [33mclass[39m=[32m"mt-4 grid gap-4 md:grid-cols-3"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<dt[39m
+              [33mclass[39m=[32m"text-xs uppercase tracking-wide text-text-secondary"[39m
+            [36m>[39m
+              [0mID[0m
+            [36m</dt>[39m
+            [36m<dd[39m
+              [33maria-readonly[39m=[32m"true"[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-text-primary"[39m
+            [36m>[39m
+              [0m9[0m
+            [36m</dd>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<dt[39m
+              [33mclass[39m=[32m"text-xs uppercase tracking-wide text-text-secondary"[39m
+            [36m>[39m
+              [0mVolume[0m
+            [36m</dt>[39m
+            [36m<dd[39m
+              [33maria-readonly[39m=[32m"true"[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-text-primary"[39m
+            [36m>[39m
+              [0m2[0m
+            [36m</dd>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<dt[39m
+              [33mclass[39m=[32m"text-xs uppercase tracking-wide text-text-secondary"[39m
+            [36m>[39m
+              [0mLesson #[0m
+            [36m</dt>[39m
+            [36m<dd[39m
+              [33maria-readonly[39m=[32m"true"[39m
+              [33mclass[39m=[32m"mt-1 text-sm text-text-primary"[39m
+            [36m>[39m
+              [0m14[0m
+            [36m</dd>[39m
+          [36m</div>[39m
+        [36m</dl>[39m
+      [36m</section>[39m
+      [36m<section[39m
+        [33mclass[39m=[32m"space-y-4 rounded-2xl border border-border bg-surface-card p-5"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+            [33mfor[39m=[32m"title_ar"[39m
+          [36m>[39m
+            [0mTitle (Arabic)[0m
+          [36m</label>[39m
+          [36m<textarea[39m
+            [33mclass[39m=[32m"block min-h-24 w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+            [33mdir[39m=[32m"rtl"[39m
+            [33mid[39m=[32m"title_ar"[39m
+            [33mlang[39m=[32m"ar"[39m
+            [33mname[39m=[32m"title_ar"[39m
+            [33mplaceholder[39m=[32m"اكتب عنوان الدرس بالعربية"[39m
+            [33mrows[39m=[32m"3"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"grid gap-4 md:grid-cols-3"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"chapter_kitab"[39m
+            [36m>[39m
+              [0mChapter (Arabic)[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mdir[39m=[32m"rtl"[39m
+              [33mid[39m=[32m"chapter_kitab"[39m
+              [33mlang[39m=[32m"ar"[39m
+              [33mname[39m=[32m"chapter_kitab"[39m
+              [33mplaceholder[39m=[32m"كتاب"[39m
+              [33mtype[39m=[32m"text"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"chapter_bab"[39m
+            [36m>[39m
+              [0mSection (Arabic)[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mdir[39m=[32m"rtl"[39m
+              [33mid[39m=[32m"chapter_bab"[39m
+              [33mlang[39m=[32m"ar"[39m
+              [33mname[39m=[32m"chapter_bab"[39m
+              [33mplaceholder[39m=[32m"باب"[39m
+              [33mtype[39m=[32m"text"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"chapter_fasl"[39m
+            [36m>[39m
+              [0mSubsection (Arabic)[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mdir[39m=[32m"rtl"[39m
+              [33mid[39m=[32m"chapter_fasl"[39m
+              [33mlang[39m=[32m"ar"[39m
+              [33mname[39m=[32m"chapter_fasl"[39m
+              [33mplaceholder[39m=[32m"فصل"[39m
+              [33mtype[39m=[32m"text"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"grid gap-4 md:grid-cols-3"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"duration_seconds"[39m
+            [36m>[39m
+              [0mDuration (seconds)[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mid[39m=[32m"duration_seconds"[39m
+              [33minputmode[39m=[32m"numeric"[39m
+              [33mname[39m=[32m"duration_seconds"[39m
+              [33mtype[39m=[32m"number"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"upload_date"[39m
+            [36m>[39m
+              [0mUpload Date[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mid[39m=[32m"upload_date"[39m
+              [33mname[39m=[32m"upload_date"[39m
+              [33mtype[39m=[32m"date"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+              [33mfor[39m=[32m"telegram_post_id"[39m
+            [36m>[39m
+              [0mTelegram Post ID[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+              [33mid[39m=[32m"telegram_post_id"[39m
+              [33minputmode[39m=[32m"numeric"[39m
+              [33mname[39m=[32m"telegram_post_id"[39m
+              [33mtype[39m=[32m"number"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary"[39m
+            [33mfor[39m=[32m"archive_url"[39m
+          [36m>[39m
+            [0mAudio URL[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"[39m
+            [33mid[39m=[32m"archive_url"[39m
+            [33mname[39m=[32m"archive_url"[39m
+            [33mreadonly[39m=[32m""[39m
+            [33mtype[39m=[32m"text"[39m
+          [36m/>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-1 text-xs text-text-secondary"[39m
+          [36m>[39m
+            [0mUploaded from Internet Archive[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</section>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap gap-3"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-primary text-white hover:bg-primary-hover"[39m
+          [33mtype[39m=[32m"submit"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mSave[0m
+          [36m</span>[39m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mCancel[0m
+          [36m</span>[39m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</form>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m tests/component/EditLessonForm.test.tsx:[2m99:29[22m[39m
+    [90m 97| [39m    [35mconst[39m { rerender } [33m=[39m [34mrender[39m([33m<[39m[33mEditLessonForm[39m [33mlesson[39m[33m=[39m[33m{[39mlesson[33m}[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 98| [39m
+    [90m 99| [39m    [35mawait[39m user[33m.[39m[34mclick[39m(screen[33m.[39m[34mgetByRole[39m([32m"button"[39m[33m,[39m { name[33m:[39m [32m"حفظ"[39m }))[33m;[39m
+    [90m   | [39m                            [31m^[39m
+    [90m100| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m101| [39m      [34mexpect[39m(screen[33m.[39m[34mgetByRole[39m([32m"alert"[39m))[33m.[39m[34mtoHaveTextContent[39m(
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m tests/component/EditLessonPage.test.tsx[2m > [22mEditLessonPage[2m > [22mshows not-found state when the lesson is missing
+[31m[1mTestingLibraryElementError[22m: Unable to find an element with the text: الدرس لم يعد موجوداً. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<main[31m
+      [33mclass[31m=[32m"min-h-screen bg-surface px-4 py-10"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"mx-auto max-w-3xl rounded-2xl border border-border bg-surface-card p-6 text-center"[31m
+      [36m>[31m
+        [36m<p[31m
+          [33mclass[31m=[32m"text-lg font-semibold text-text-primary"[31m
+        [36m>[31m
+          [0mLesson not found.[0m
+        [36m</p>[31m
+        [36m<p[31m
+          [33mclass[31m=[32m"mt-2 text-sm text-text-secondary"[31m
+        [36m>[31m
+          [0mIt may have been deleted or moved.[0m
+        [36m</p>[31m
+        [36m<a[31m
+          [33mclass[31m=[32m"mt-6 inline-block"[31m
+          [33mhref[31m=[32m"/admin"[31m
+        [36m>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[31m
+            [33mtype[31m=[32m"button"[31m
+          [36m>[31m
+            [36m<span>[31m
+              [0mBack to Admin[0m
+            [36m</span>[31m
+          [36m</button>[31m
+        [36m</a>[31m
+      [36m</div>[31m
+    [36m</main>[31m
+  [36m</div>[31m
+[36m</body>[31m
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<main[31m
+        [33mclass[31m=[32m"min-h-screen bg-surface px-4 py-10"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"mx-auto max-w-3xl rounded-2xl border border-border bg-surface-card p-6 text-center"[31m
+        [36m>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"text-lg font-semibold text-text-primary"[31m
+          [36m>[31m
+            [0mLesson not found.[0m
+          [36m</p>[31m
+          [36m<p[31m
+            [33mclass[31m=[32m"mt-2 text-sm text-text-secondary"[31m
+          [36m>[31m
+            [0mIt may have been deleted or moved.[0m
+          [36m</p>[31m
+          [36m<a[31m
+            [33mclass[31m=[32m"mt-6 inline-block"[31m
+            [33mhref[31m=[32m"/admin"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border border-border bg-surface-card text-text-primary hover:bg-surface"[31m
+              [33mtype[31m=[32m"button"[31m
+            [36m>[31m
+              [36m<span>[31m
+                [0mBack to Admin[0m
+              [36m</span>[31m
+            [36m</button>[31m
+          [36m</a>[31m
+        [36m</div>[31m
+      [36m</main>[31m
+    [36m</div>[31m
+  [36m</body>[31m
+[36m</html>[31m[39m
+[90m [2m❯[22m Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:[2m163:27[22m[39m
+[36m [2m❯[22m tests/component/EditLessonPage.test.tsx:[2m81:11[22m[39m
+    [90m 79| [39m    [34mrenderWithClient[39m()[33m;[39m
+    [90m 80| [39m
+    [90m 81| [39m    [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m   | [39m          [31m^[39m
+    [90m 82| [39m      [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m"الدرس لم يعد موجوداً"[39m))[33m.[39m[34mtoBeInTheDocume[39m…
+    [90m 83| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 18:00:42
+[2m   Duration [22m 18.26s[2m (transform 1.56s, setup 0ms, collect 8.93s, tests 1.69s, environment 23.14s, prepare 1.16s)[22m
+

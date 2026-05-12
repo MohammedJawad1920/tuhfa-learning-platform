@@ -79,7 +79,7 @@ describe("EditLessonPage", () => {
     renderWithClient();
 
     await waitFor(() => {
-      expect(screen.getByText("الدرس لم يعد موجوداً")).toBeInTheDocument();
+      expect(screen.getByText("Lesson not found.")).toBeInTheDocument();
     });
   });
 });

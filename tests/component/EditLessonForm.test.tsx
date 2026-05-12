@@ -65,17 +65,14 @@ describe("EditLessonForm", () => {
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("14")).toBeInTheDocument();
 
-    await user.clear(screen.getByLabelText("العنوان العربي"));
+    await user.clear(screen.getByLabelText("Title (Arabic)"));
     await user.type(
-      screen.getByLabelText("العنوان العربي"),
+      screen.getByLabelText("Title (Arabic)"),
       "درس الصلاة - مراجع",
     );
-    await user.clear(screen.getByLabelText("archive_url"));
-    await user.type(
-      screen.getByLabelText("archive_url"),
-      "https://archive.org/download/example/lesson-v2-014-updated.mp3",
-    );
-    await user.click(screen.getByRole("button", { name: "حفظ" }));
+    await user.clear(screen.getByLabelText("Duration (seconds)"));
+    await user.type(screen.getByLabelText("Duration (seconds)"), "2400");
+    await user.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => {
       expect(updateLessonMock).toHaveBeenCalledTimes(1);
@@ -83,8 +80,7 @@ describe("EditLessonForm", () => {
 
     expect(updateLessonMock).toHaveBeenCalledWith(9, {
       title_ar: "درس الصلاة - مراجع",
-      archive_url:
-        "https://archive.org/download/example/lesson-v2-014-updated.mp3",
+      duration_seconds: 2400,
     });
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["lesson", 9] });
     expect(replace).toHaveBeenCalledWith("/admin");
@@ -96,20 +92,20 @@ describe("EditLessonForm", () => {
     updateLessonMock.mockRejectedValueOnce({ status: 404, body: {} });
     const { rerender } = render(<EditLessonForm lesson={lesson} />);
 
-    await user.click(screen.getByRole("button", { name: "حفظ" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "الدرس لم يعد موجوداً",
+        "Lesson no longer exists.",
       );
     });
 
     updateLessonMock.mockRejectedValueOnce({ status: 409, body: {} });
     rerender(<EditLessonForm lesson={lesson} />);
-    await user.click(screen.getByRole("button", { name: "حفظ" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "تعارض — أعد المحاولة",
+        "Concurrent edit conflict — please retry.",
       );
     });
   });

@@ -37,9 +37,9 @@ export default function EditLessonPage() {
     return (
       <main className="min-h-screen bg-surface px-4 py-10">
         <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-surface-card p-6">
-          <p className="text-sm text-error">معرف الدرس غير صالح</p>
+          <p className="text-sm text-error">Invalid lesson ID.</p>
           <Link href="/admin" className="mt-4 inline-block text-primary">
-            العودة إلى الإدارة
+            Back to Admin
           </Link>
         </div>
       </main>
@@ -62,13 +62,13 @@ export default function EditLessonPage() {
         <main className="min-h-screen bg-surface px-4 py-10">
           <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-surface-card p-6 text-center">
             <p className="text-lg font-semibold text-text-primary">
-              الدرس لم يعد موجوداً
+              Lesson not found.
             </p>
             <p className="mt-2 text-sm text-text-secondary">
-              يمكن أن يكون قد حُذف أو تغير موقعه.
+              It may have been deleted or moved.
             </p>
             <Link href="/admin" className="mt-6 inline-block">
-              <Button variant="secondary">العودة إلى الإدارة</Button>
+              <Button variant="secondary">Back to Admin</Button>
             </Link>
           </div>
         </main>
@@ -85,9 +85,9 @@ export default function EditLessonPage() {
       <div className="mx-auto max-w-4xl">
         <div className="mb-6">
           <Link href="/admin" className="text-sm text-primary">
-            العودة إلى الإدارة
+            Back to Admin
           </Link>
-          <h1 className="mt-2 text-display text-text-primary">تعديل الدرس</h1>
+          <h1 className="mt-2 text-display text-text-primary">Edit Lesson</h1>
         </div>
 
         <EditLessonForm lesson={lessonQuery.data} />

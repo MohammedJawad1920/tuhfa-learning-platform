@@ -113,7 +113,7 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
       setToast({
         open: true,
         variant: "success",
-        message: "تم الحفظ",
+        message: "Saved.",
       });
       router.replace("/admin");
     } catch (error) {
@@ -126,7 +126,7 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
       }
 
       if (status === 404) {
-        setInlineErrors({ form: "الدرس لم يعد موجوداً" });
+        setInlineErrors({ form: "Lesson no longer exists." });
         return;
       }
 
@@ -134,7 +134,7 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
         setToast({
           open: true,
           variant: "error",
-          message: "تعارض — أعد المحاولة",
+          message: "Concurrent edit conflict — please retry.",
         });
         return;
       }
@@ -148,7 +148,7 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
         return;
       }
 
-      setInlineErrors({ form: "فشل حفظ التغييرات — حاول لاحقاً" });
+      setInlineErrors({ form: "Failed to save changes. Please try again." });
     }
   });
 
@@ -157,11 +157,11 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
       {inlineErrors.form ? <FieldError>{inlineErrors.form}</FieldError> : null}
 
       <section className="rounded-2xl border border-border bg-surface-card p-5">
-        <h2 className="text-subheading text-text-primary">البيانات الثابتة</h2>
+        <h2 className="text-subheading text-text-primary">Immutable Fields</h2>
         <dl className="mt-4 grid gap-4 md:grid-cols-3">
           <div>
             <dt className="text-xs uppercase tracking-wide text-text-secondary">
-              المعرّف
+              ID
             </dt>
             <dd aria-readonly="true" className="mt-1 text-sm text-text-primary">
               {lesson.id}
@@ -169,7 +169,7 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-text-secondary">
-              المجلد
+              Volume
             </dt>
             <dd aria-readonly="true" className="mt-1 text-sm text-text-primary">
               {lesson.volume}
@@ -177,7 +177,7 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-text-secondary">
-              رقم الدرس
+              Lesson #
             </dt>
             <dd aria-readonly="true" className="mt-1 text-sm text-text-primary">
               {lesson.lesson_number}
@@ -188,12 +188,15 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
 
       <section className="space-y-4 rounded-2xl border border-border bg-surface-card p-5">
         <div>
-          <Label htmlFor="title_ar">العنوان العربي</Label>
+          <Label htmlFor="title_ar">Title (Arabic)</Label>
           <Textarea
             id="title_ar"
             rows={3}
+            dir="rtl"
+            lang="ar"
+            placeholder="اكتب عنوان الدرس بالعربية"
             {...form.register("title_ar", {
-              required: "العنوان العربي مطلوب",
+              required: "Title is required.",
             })}
           />
           {inlineErrors.title_ar ? (
@@ -203,11 +206,14 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
 
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <Label htmlFor="chapter_kitab">الكتاب</Label>
+            <Label htmlFor="chapter_kitab">Chapter (Arabic)</Label>
             <Input
               id="chapter_kitab"
+              dir="rtl"
+              lang="ar"
+              placeholder="كتاب"
               {...form.register("chapter_kitab", {
-                required: "الكتاب مطلوب",
+                required: "Chapter is required.",
               })}
             />
             {inlineErrors.chapter_kitab ? (
@@ -216,24 +222,38 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
           </div>
 
           <div>
-            <Label htmlFor="chapter_bab">الباب</Label>
-            <Input id="chapter_bab" {...form.register("chapter_bab")} />
+            <Label htmlFor="chapter_bab">Section (Arabic)</Label>
+            <Input
+              id="chapter_bab"
+              dir="rtl"
+              lang="ar"
+              placeholder="باب"
+              {...form.register("chapter_bab")}
+            />
           </div>
 
           <div>
-            <Label htmlFor="chapter_fasl">الفصل</Label>
-            <Input id="chapter_fasl" {...form.register("chapter_fasl")} />
+            <Label htmlFor="chapter_fasl">Subsection (Arabic)</Label>
+            <Input
+              id="chapter_fasl"
+              dir="rtl"
+              lang="ar"
+              placeholder="فصل"
+              {...form.register("chapter_fasl")}
+            />
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <Label htmlFor="duration_seconds">المدة بالثواني</Label>
+            <Label htmlFor="duration_seconds">Duration (seconds)</Label>
             <Input
               id="duration_seconds"
               type="number"
+              inputMode="numeric"
               {...form.register("duration_seconds", {
-                required: "المدة مطلوبة",
+                required: "Duration is required.",
+                valueAsNumber: true,
               })}
             />
             {inlineErrors.duration_seconds ? (
@@ -242,12 +262,12 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
           </div>
 
           <div>
-            <Label htmlFor="upload_date">تاريخ الرفع</Label>
+            <Label htmlFor="upload_date">Upload Date</Label>
             <Input
               id="upload_date"
               type="date"
               {...form.register("upload_date", {
-                required: "تاريخ الرفع مطلوب",
+                required: "Upload date is required.",
               })}
             />
             {inlineErrors.upload_date ? (
@@ -256,12 +276,14 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
           </div>
 
           <div>
-            <Label htmlFor="telegram_post_id">معرف منشور Telegram</Label>
+            <Label htmlFor="telegram_post_id">Telegram Post ID</Label>
             <Input
               id="telegram_post_id"
               type="number"
+              inputMode="numeric"
               {...form.register("telegram_post_id", {
-                required: "معرف المنشور مطلوب",
+                required: "Telegram post ID is required.",
+                valueAsNumber: true,
               })}
             />
             {inlineErrors.telegram_post_id ? (
@@ -271,18 +293,17 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
         </div>
 
         <div>
-          <Label htmlFor="archive_url">archive_url</Label>
+          <Label htmlFor="archive_url">Audio URL</Label>
           <Input
             id="archive_url"
+            readOnly
             {...form.register("archive_url", {
-              required: "archive_url مطلوب",
-              pattern: {
-                value: /^https:\/\/archive\.org\/download\//,
-                message:
-                  "archive_url must start with https://archive.org/download/",
-              },
+              required: "Audio URL is required.",
             })}
           />
+          <p className="mt-1 text-xs text-text-secondary">
+            Uploaded from Internet Archive
+          </p>
           {inlineErrors.archive_url ? (
             <FieldError>{inlineErrors.archive_url}</FieldError>
           ) : null}
@@ -295,14 +316,14 @@ export function EditLessonForm({ lesson }: { lesson: Lesson }) {
           loading={form.formState.isSubmitting}
           disabled={form.formState.isSubmitting}
         >
-          {form.formState.isSubmitting ? "جارٍ الحفظ" : "حفظ"}
+          {form.formState.isSubmitting ? "Saving..." : "Save"}
         </Button>
         <Button
           type="button"
           variant="secondary"
           onClick={() => router.replace("/admin")}
         >
-          إلغاء
+          Cancel
         </Button>
       </div>
 
