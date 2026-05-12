@@ -28,7 +28,7 @@ export function useAdminAuth() {
 
         if (status === 401) {
           throw {
-            fieldErrors: { password: "كلمة المرور غير صحيحة" },
+            fieldErrors: { password: "Incorrect password" },
           } as AdminAuthError;
         }
 
@@ -42,13 +42,13 @@ export function useAdminAuth() {
 
         if (status === 429) {
           throw {
-            inlineError: "تم تجاوز الحد — حاول بعد 15 دقيقة",
+            inlineError: "Rate limit exceeded — try again in 15 minutes",
           } as AdminAuthError;
         }
 
         if (status === 500 || status === 502) {
           throw {
-            inlineError: "خطأ في الخادم — حاول لاحقاً",
+            inlineError: "Server error — try again later",
           } as AdminAuthError;
         }
 

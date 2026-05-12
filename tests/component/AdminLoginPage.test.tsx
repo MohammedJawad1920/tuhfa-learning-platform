@@ -1,29 +1,34 @@
 // @vitest-environment jsdom
 
 import "@testing-library/jest-dom/vitest";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import AdminLoginPage from "@/app/admin/login/page";
+
+import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 vi.mock("@/hooks/useAdminAuth");
 
-const mockUseAdminAuth = useAdminAuth as any;
+const mockUseAdminAuth = useAdminAuth as unknown as {
+  mockReturnValue: (value: unknown) => void;
+};
 
 function renderPage() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
+
   return render(
     <QueryClientProvider client={queryClient}>
-      <AdminLoginPage />
+      <AdminLoginForm />
     </QueryClientProvider>,
   );
 }
 
-describe("Admin Login Page", () => {
+describe("AdminLoginForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseAdminAuth.mockReturnValue({
@@ -35,16 +40,14 @@ describe("Admin Login Page", () => {
 
   it("renders the login form", () => {
     renderPage();
-    expect(screen.getByText("دخول المسؤول")).toBeInTheDocument();
-    expect(screen.getByLabelText("كلمة المرور")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "دخول" })).toBeInTheDocument();
+    expect(screen.getByText("Admin login")).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
   });
 
   it("focuses on password input on mount", async () => {
     renderPage();
-    const passwordInput = screen.getByLabelText(
-      "كلمة المرور",
-    ) as HTMLInputElement;
+    const passwordInput = screen.getByLabelText("Password") as HTMLInputElement;
     await waitFor(() => {
       expect(passwordInput).toHaveFocus();
     });
@@ -61,8 +64,8 @@ describe("Admin Login Page", () => {
     renderPage();
     const user = userEvent.setup();
 
-    const passwordInput = screen.getByLabelText("كلمة المرور");
-    const submitButton = screen.getByRole("button", { name: "دخول" });
+    const passwordInput = screen.getByLabelText("Password");
+    const submitButton = screen.getByRole("button", { name: "Sign in" });
 
     await user.type(passwordInput, "test_password");
     await user.click(submitButton);
@@ -76,11 +79,11 @@ describe("Admin Login Page", () => {
     renderPage();
     const user = userEvent.setup();
 
-    const submitButton = screen.getByRole("button", { name: "دخول" });
+    const submitButton = screen.getByRole("button", { name: "Sign in" });
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText("كلمة المرور مطلوبة")).toBeInTheDocument();
+      expect(screen.getByText("Password is required")).toBeInTheDocument();
     });
   });
 
@@ -89,14 +92,14 @@ describe("Admin Login Page", () => {
       authenticate: vi.fn(),
       isLoading: false,
       error: {
-        fieldErrors: { password: "كلمة المرور غير صحيحة" },
+        fieldErrors: { password: "Incorrect password" },
       },
     });
 
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText("كلمة المرور غير صحيحة")).toBeInTheDocument();
+      expect(screen.getByText("Incorrect password")).toBeInTheDocument();
     });
   });
 
@@ -118,12 +121,12 @@ describe("Admin Login Page", () => {
     });
   });
 
-  it("shows inline error toast for 429 rate limit", async () => {
+  it("shows inline error for 429 rate limit", async () => {
     mockUseAdminAuth.mockReturnValue({
       authenticate: vi.fn(),
       isLoading: false,
       error: {
-        inlineError: "تم تجاوز الحد — حاول بعد 15 دقيقة",
+        inlineError: "Rate limit exceeded — try again in 15 minutes",
       },
     });
 
@@ -131,17 +134,17 @@ describe("Admin Login Page", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("تم تجاوز الحد — حاول بعد 15 دقيقة"),
+        screen.getByText("Rate limit exceeded — try again in 15 minutes"),
       ).toBeInTheDocument();
     });
   });
 
-  it("shows inline error toast for 500 server error", async () => {
+  it("shows inline error for 500 server error", async () => {
     mockUseAdminAuth.mockReturnValue({
       authenticate: vi.fn(),
       isLoading: false,
       error: {
-        inlineError: "خطأ في الخادم — حاول لاحقاً",
+        inlineError: "Server error — try again later",
       },
     });
 
@@ -149,12 +152,12 @@ describe("Admin Login Page", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("خطأ في الخادم — حاول لاحقاً"),
+        screen.getByText("Server error — try again later"),
       ).toBeInTheDocument();
     });
   });
 
-  it("shows loading state and disables button during submission", async () => {
+  it("shows loading state and disables button during submission", () => {
     const authenticate = vi.fn();
     mockUseAdminAuth.mockReturnValue({
       authenticate,
@@ -173,16 +176,14 @@ describe("Admin Login Page", () => {
       authenticate: vi.fn(),
       isLoading: false,
       error: {
-        fieldErrors: { password: "كلمة المرور غير صحيحة" },
+        fieldErrors: { password: "Incorrect password" },
       },
     });
 
     renderPage();
 
-    const passwordInput = screen.getByLabelText(
-      "كلمة المرور",
-    ) as HTMLInputElement;
-    const errorElement = screen.getByText("كلمة المرور غير صحيحة");
+    const passwordInput = screen.getByLabelText("Password") as HTMLInputElement;
+    const errorElement = screen.getByText("Incorrect password");
 
     await waitFor(() => {
       expect(passwordInput.getAttribute("aria-describedby")).toBe(
@@ -195,9 +196,7 @@ describe("Admin Login Page", () => {
   it("does not set aria-describedby when no error", () => {
     renderPage();
 
-    const passwordInput = screen.getByLabelText(
-      "كلمة المرور",
-    ) as HTMLInputElement;
+    const passwordInput = screen.getByLabelText("Password") as HTMLInputElement;
     expect(passwordInput.getAttribute("aria-describedby")).toBeNull();
   });
 });
