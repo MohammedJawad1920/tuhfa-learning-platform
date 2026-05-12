@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-import { createLesson } from "@/api/endpoints";
+import { createLesson, presignUpload } from "@/api/endpoints";
 import { Button } from "@/components/ui/Button";
 import { FieldError, Label } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
@@ -17,12 +17,13 @@ type WizardStep = "upload" | "form" | "submitting" | "done";
 
 type UploadFormValues = {
   file: FileList | null;
-  volume: "1" | "2" | "3" | "4";
+  volume: 1 | 2 | 3 | 4;
   lesson_number: string;
+  content_type?: string;
 };
 
 type LessonFormValues = {
-  volume: "1" | "2" | "3" | "4";
+  volume: 1 | 2 | 3 | 4;
   lesson_number: string;
   title_ar: string;
   chapter_kitab: string;
@@ -34,71 +35,44 @@ type LessonFormValues = {
   telegram_post_id: string;
 };
 
-type InlineErrorState = Record<string, string>;
-
 type ToastState = {
   open: boolean;
   variant: "success" | "error" | "warning";
   message: string;
 };
 
-type RequestErrorBody = {
-  error?: {
-    message?: string;
-    details?: Record<string, unknown>;
-  };
-};
-
 const acceptedMimeTypes = ["audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav"];
-
-function fileToFormData(values: UploadFormValues): FormData | null {
-  const file = values.file?.item(0);
-  if (!file) {
-    return null;
-  }
-
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("volume", values.volume);
-  formData.append("lesson_number", values.lesson_number);
-  return formData;
-}
 
 function normalizeText(value: string | undefined | null): string {
   return value?.trim() ?? "";
-}
-
-function safeJsonParse(body: string | null): Record<string, unknown> | null {
-  if (!body) return null;
-
-  try {
-    return JSON.parse(body) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
 }
 
 export function AddLessonWizard() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const uploadXhrRef = useRef<XMLHttpRequest | null>(null);
+
   const [step, setStep] = useState<WizardStep>("upload");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [archiveUrl, setArchiveUrl] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
-  const [inlineErrors, setInlineErrors] = useState<InlineErrorState>({});
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [showCurlFallback, setShowCurlFallback] = useState(false);
+  const [curlCommand, setCurlCommand] = useState<string>("");
+  const [copiedCurl, setCopiedCurl] = useState(false);
+  const [requestNewLink, setRequestNewLink] = useState(false);
 
   const uploadForm = useForm<UploadFormValues>({
     defaultValues: {
       file: null,
-      volume: "1",
+      volume: 1,
       lesson_number: "",
     },
   });
 
   const lessonForm = useForm<LessonFormValues>({
     defaultValues: {
-      volume: "1",
+      volume: 1,
       lesson_number: "",
       title_ar: "",
       chapter_kitab: "",
@@ -114,7 +88,6 @@ export function AddLessonWizard() {
   useEffect(() => {
     if (archiveUrl) {
       lessonForm.setValue("archive_url", archiveUrl, {
-        shouldDirty: true,
         shouldValidate: true,
       });
     }
@@ -123,110 +96,181 @@ export function AddLessonWizard() {
   const handleUploadSubmit = uploadForm.handleSubmit(async (values) => {
     const file = values.file?.item(0);
 
-    setInlineErrors({});
+    setUploadError(null);
     setToast(null);
+    setShowCurlFallback(false);
+    setRequestNewLink(false);
 
     if (!file) {
-      setInlineErrors({ file: "يجب اختيار ملف صوتي" });
+      setUploadError("Please select a file.");
       return;
     }
 
     if (!acceptedMimeTypes.includes(file.type)) {
-      setInlineErrors({ file: "نوع الملف غير مدعوم" });
+      setUploadError("This file type is not supported.");
       return;
     }
 
+    // Client-side guard: reject file > 500MB before any API call
     if (file.size > 500 * 1024 * 1024) {
-      setInlineErrors({ file: "File exceeds 500MB" });
+      setUploadError("File exceeds 500MB.");
       return;
     }
 
-    const formData = fileToFormData(values);
-    if (!formData) {
-      setInlineErrors({ file: "يجب اختيار ملف صوتي" });
-      return;
-    }
-
-    const xhr = new XMLHttpRequest();
-    uploadXhrRef.current = xhr;
     setStep("upload");
     setUploadProgress(0);
 
-    const result = await new Promise<Response | null>((resolve) => {
-      xhr.open("POST", "/api/v1/admin/upload");
-      xhr.withCredentials = true;
-      xhr.upload.onprogress = (event) => {
-        if (!event.lengthComputable) return;
-        setUploadProgress(Math.round((event.loaded / event.total) * 100));
-      };
-      xhr.onload = () => {
-        const response = new Response(xhr.responseText, {
-          status: xhr.status,
-          headers: { "content-type": "application/json" },
-        });
-        resolve(response);
-      };
-      xhr.onerror = () => resolve(null);
-      xhr.send(formData);
-    });
-
-    if (!result) {
-      setInlineErrors({ file: "Internet Archive unreachable — retry" });
-      return;
-    }
-
-    const body = safeJsonParse(await result.text());
-    const status = result.status;
-
-    if (status === 401) {
-      router.replace("/admin/login");
-      return;
-    }
-
-    if (status === 413) {
-      setInlineErrors({ file: "File exceeds 500MB" });
-      return;
-    }
-
-    if (status === 422) {
-      const errorBody = body as { error?: { message?: string } } | null;
-      setInlineErrors({
-        file: errorBody?.error?.message ?? "البيانات غير صالحة",
+    try {
+      // Step 1: Call presignUpload
+      const presignResponse = await presignUpload({
+        volume: Number(values.volume) as 1 | 2 | 3 | 4,
+        lesson_number: Number(values.lesson_number),
+        content_type: file.type || "audio/mpeg",
       });
-      return;
-    }
 
-    if (status === 429) {
-      setInlineErrors({ file: "تم تجاوز الحد — حاول لاحقاً" });
-      return;
-    }
+      const presignData = presignResponse?.data;
+      if (!presignData?.presigned_url) {
+        setUploadError("Failed to get upload URL.");
+        setStep("upload");
+        return;
+      }
 
-    if (status !== 200) {
-      setInlineErrors({ file: "Internet Archive unreachable — retry" });
-      return;
-    }
+      const archiveUrlToUse = presignData.archive_url || "";
+      const presignedUrl = presignData.presigned_url;
+      const contentType = file.type || "audio/mpeg";
 
-    const dataBody = body as { data?: { archive_url?: string } } | null;
-    const nextArchiveUrl = dataBody?.data?.archive_url;
-    if (!nextArchiveUrl) {
-      setInlineErrors({ file: "Internet Archive unreachable — retry" });
-      return;
-    }
+      // Step 2: XHR PUT to presigned URL
+      const xhr = new XMLHttpRequest();
+      uploadXhrRef.current = xhr;
 
-    setArchiveUrl(nextArchiveUrl);
-    setStep("form");
-    lessonForm.setValue("volume", values.volume, { shouldDirty: true });
-    lessonForm.setValue("lesson_number", values.lesson_number, {
-      shouldDirty: true,
-    });
-    lessonForm.setValue("archive_url", nextArchiveUrl, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+      const xhrResult = await new Promise<{
+        status: number;
+        text: string;
+      } | null>((resolve) => {
+        xhr.open("PUT", presignedUrl);
+        xhr.setRequestHeader("Content-Type", contentType);
+        xhr.withCredentials = false; // IA presigned URLs don't need credentials
+
+        xhr.upload.onprogress = (event) => {
+          if (!event.lengthComputable) return;
+          setUploadProgress(Math.round((event.loaded / event.total) * 100));
+        };
+
+        xhr.onload = () => {
+          resolve({
+            status: xhr.status,
+            text: xhr.responseText,
+          });
+        };
+
+        xhr.onerror = () => {
+          // Status 0 = CORS block or network error
+          resolve({
+            status: 0,
+            text: "",
+          });
+        };
+
+        xhr.send(file);
+      });
+
+      if (!xhrResult) {
+        setUploadError("Upload failed. Please try again.");
+        setStep("upload");
+        return;
+      }
+
+      // Handle different response statuses
+      if (xhrResult.status === 0) {
+        // CORS block - show curl fallback
+        const curlCmd = `curl -X PUT "${presignedUrl}" \\
+  -H "Content-Type: ${contentType}" \\
+  --data-binary @"${file.name}"`;
+        setCurlCommand(curlCmd);
+        setShowCurlFallback(true);
+        setArchiveUrl(archiveUrlToUse);
+        return;
+      }
+
+      if (xhrResult.status === 200) {
+        // Success
+        setArchiveUrl(archiveUrlToUse);
+        setUploadProgress(100);
+        // Advance to step 2 automatically
+        lessonForm.setValue("volume", values.volume, { shouldValidate: true });
+        lessonForm.setValue("lesson_number", values.lesson_number, {
+          shouldValidate: true,
+        });
+        lessonForm.setValue("archive_url", archiveUrlToUse, {
+          shouldValidate: true,
+        });
+        setStep("form");
+        return;
+      }
+
+      if (xhrResult.status === 403) {
+        // Presign URL expired
+        setUploadError("Upload link expired. Request a new one.");
+        setRequestNewLink(true);
+        setStep("upload");
+        return;
+      }
+
+      if (xhrResult.status === 429) {
+        // Rate limited - parse Retry-After header
+        const retryAfter = xhr.getResponseHeader("Retry-After");
+        const retryMsg = retryAfter
+          ? `Rate limit exceeded. Try again in ${retryAfter} seconds.`
+          : "Rate limit exceeded. Try again later.";
+        setUploadError(retryMsg);
+        setStep("upload");
+        return;
+      }
+
+      if (xhrResult.status === 502) {
+        setUploadError("Upload service unavailable. Please try again.");
+        setStep("upload");
+        return;
+      }
+
+      // Other errors
+      setUploadError("Upload failed. Please try again.");
+      setStep("upload");
+    } catch (error) {
+      const status = (error as { status?: number })?.status;
+
+      if (status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+
+      if (status === 422) {
+        const body = (error as { body?: Record<string, unknown> })?.body;
+        const message =
+          (body?.error as Record<string, unknown>)?.message || "Invalid input.";
+        setUploadError(String(message));
+        setStep("upload");
+        return;
+      }
+
+      if (status === 429) {
+        setUploadError("Rate limit exceeded. Try again in a few minutes.");
+        setStep("upload");
+        return;
+      }
+
+      if (status === 502) {
+        setUploadError("Upload service unavailable. Please try again.");
+        setStep("upload");
+        return;
+      }
+
+      setUploadError("Upload failed. Please try again.");
+      setStep("upload");
+    }
   });
 
   const handleLessonSubmit = lessonForm.handleSubmit(async (values) => {
-    setInlineErrors({});
     setToast(null);
     setStep("submitting");
 
@@ -248,7 +292,7 @@ export function AddLessonWizard() {
     };
 
     try {
-      const response = await createLesson(body);
+      await createLesson(body);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["lessons", "all"] }),
         queryClient.invalidateQueries({
@@ -259,16 +303,14 @@ export function AddLessonWizard() {
       setToast({
         open: true,
         variant: "success",
-        message: "تم حفظ الدرس بنجاح",
+        message: "Lesson created.",
       });
-
-      const lessonId = response?.data?.lesson?.id;
-      if (typeof lessonId === "number") {
-        router.replace("/admin");
-      }
+      router.replace("/admin");
     } catch (error) {
       const status = (error as { status?: number })?.status;
-      const bodyError = (error as { body?: RequestErrorBody })?.body;
+      const bodyError = (
+        error as { body?: { error?: Record<string, unknown> } }
+      )?.body;
 
       if (status === 401) {
         router.replace("/admin/login");
@@ -279,19 +321,23 @@ export function AddLessonWizard() {
         setToast({
           open: true,
           variant: "error",
-          message: "تعارض — أعد المحاولة",
+          message: "Duplicate lesson number in this volume.",
         });
         setStep("form");
         return;
       }
 
       if (status === 422) {
-        const details = bodyError?.error?.details ?? {};
-        setInlineErrors(
-          Object.fromEntries(
-            Object.entries(details).map(([key, value]) => [key, String(value)]),
-          ),
+        const details =
+          (bodyError?.error?.details as Record<string, unknown>) || {};
+        const fieldErrors = Object.fromEntries(
+          Object.entries(details).map(([key, value]) => [key, String(value)]),
         );
+        Object.entries(fieldErrors).forEach(([key, value]) => {
+          lessonForm.setError(key as keyof LessonFormValues, {
+            message: String(value),
+          });
+        });
         setStep("form");
         return;
       }
@@ -299,143 +345,231 @@ export function AddLessonWizard() {
       setToast({
         open: true,
         variant: "error",
-        message: "فشل حفظ الدرس",
+        message: "Failed to create lesson.",
       });
       setStep("form");
     }
   });
+
+  const stepNumber =
+    step === "form" || step === "submitting" || step === "done" ? 2 : 1;
 
   return (
     <main className="min-h-screen bg-surface px-4 py-10">
       <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-surface-card p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-text-secondary" aria-current="step">
-              الخطوة{" "}
-              {step === "form" || step === "submitting" || step === "done"
-                ? "2"
-                : "1"}{" "}
-              من 2
+            <p
+              className="text-sm text-text-secondary"
+              aria-current={step !== "done" ? "step" : undefined}
+            >
+              Step {stepNumber} of 2
             </p>
-            <h1 className="mt-1 text-heading text-text-primary">
-              إضافة درس جديد
-            </h1>
+            <h1 className="mt-1 text-heading text-text-primary">Add Lesson</h1>
           </div>
 
-          {step === "form" ? (
-            <span className="text-sm text-success">تم رفع الملف</span>
+          {step === "form" || step === "submitting" || step === "done" ? (
+            <span className="text-sm text-success">Upload complete</span>
           ) : null}
         </div>
+
+        {toast?.open && (
+          <Toast
+            open={true}
+            variant={toast.variant}
+            onClose={() => setToast(null)}
+          >
+            {toast.message}
+          </Toast>
+        )}
 
         {step === "upload" ? (
           <form onSubmit={handleUploadSubmit} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label htmlFor="volume">المجلد</Label>
+                <Label htmlFor="volume">Volume</Label>
                 <select
                   id="volume"
                   className="block w-full rounded-md border border-border bg-surface-card px-3 py-2 text-sm text-text-primary shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                  {...uploadForm.register("volume", { required: true })}
+                  {...uploadForm.register("volume", {
+                    required: true,
+                    valueAsNumber: true,
+                  })}
                 >
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
                 </select>
               </div>
 
               <div>
-                <Label htmlFor="lesson_number">رقم الدرس</Label>
+                <Label htmlFor="lesson_number">Lesson #</Label>
                 <Input
                   id="lesson_number"
                   inputMode="numeric"
+                  placeholder="e.g., 1, 2, 3"
                   {...uploadForm.register("lesson_number", {
-                    required: "رقم الدرس مطلوب",
+                    required: "Lesson number is required.",
                     pattern: {
                       value: /^[1-9][0-9]*$/,
-                      message: "رقم الدرس غير صالح",
+                      message: "Lesson number must be positive.",
                     },
                   })}
                 />
+                {uploadForm.formState.errors.lesson_number && (
+                  <FieldError>
+                    {uploadForm.formState.errors.lesson_number.message}
+                  </FieldError>
+                )}
               </div>
             </div>
 
             <div>
-              <Label htmlFor="file">الملف الصوتي</Label>
+              <Label htmlFor="file">Audio File</Label>
               <Input
                 id="file"
                 type="file"
                 accept={acceptedMimeTypes.join(",")}
+                aria-describedby="file-help"
                 {...uploadForm.register("file", { required: true })}
               />
-              {inlineErrors.file ? (
-                <FieldError>{inlineErrors.file}</FieldError>
-              ) : null}
-              {uploadForm.formState.errors.file ? (
-                <FieldError>يجب اختيار ملف صوتي</FieldError>
-              ) : null}
+              <p id="file-help" className="mt-1 text-xs text-text-secondary">
+                Accepted: MP3, M4A, OGG, WAV (max 500MB)
+              </p>
+              {uploadError && <FieldError>{uploadError}</FieldError>}
             </div>
 
-            <ProgressBar value={uploadProgress} label="تقدم الرفع" />
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <ProgressBar value={uploadProgress} label="Upload progress" />
+            )}
 
-            <Button type="submit">رفع الملف</Button>
+            {showCurlFallback && (
+              <div className="rounded-md border border-border bg-surface p-4">
+                <p className="mb-3 text-sm text-text-secondary">
+                  Browser upload blocked (CORS). Use this command instead:
+                </p>
+                <div className="mb-3 flex items-center gap-2">
+                  <code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 text-xs font-mono">
+                    {curlCommand}
+                  </code>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      navigator.clipboard.writeText(curlCommand);
+                      setCopiedCurl(true);
+                      setTimeout(() => setCopiedCurl(false), 2000);
+                    }}
+                  >
+                    {copiedCurl ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setShowCurlFallback(false);
+                    setArchiveUrl(archiveUrl);
+                    lessonForm.setValue("archive_url", archiveUrl || "", {
+                      shouldValidate: true,
+                    });
+                    setStep("form");
+                  }}
+                >
+                  I uploaded successfully →
+                </Button>
+              </div>
+            )}
+
+            {requestNewLink && (
+              <Button
+                type="button"
+                onClick={() => {
+                  setRequestNewLink(false);
+                  setUploadError(null);
+                  uploadForm.reset();
+                }}
+              >
+                Request new upload link
+              </Button>
+            )}
+
+            <div className="flex gap-3">
+              <Button type="submit" disabled={step !== "upload"}>
+                Request Upload Link
+              </Button>
+            </div>
           </form>
         ) : null}
 
         {step === "form" || step === "submitting" || step === "done" ? (
           <form onSubmit={handleLessonSubmit} className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="title_ar">العنوان العربي</Label>
-                <Textarea
-                  id="title_ar"
-                  rows={3}
-                  {...lessonForm.register("title_ar", {
-                    required: "العنوان العربي مطلوب",
-                  })}
-                />
-                {inlineErrors.title_ar ? (
-                  <FieldError>{inlineErrors.title_ar}</FieldError>
-                ) : null}
-              </div>
+            <div>
+              <Label htmlFor="title_ar">Title (Arabic)</Label>
+              <Textarea
+                id="title_ar"
+                rows={3}
+                dir="rtl"
+                lang="ar"
+                placeholder="اكتب عنوان الدرس بالعربية"
+                {...lessonForm.register("title_ar", {
+                  required: "Title is required.",
+                })}
+              />
+              {lessonForm.formState.errors.title_ar && (
+                <FieldError>
+                  {lessonForm.formState.errors.title_ar.message}
+                </FieldError>
+              )}
+            </div>
 
-              <div>
-                <Label htmlFor="archive_url">archive_url</Label>
-                <Input
-                  id="archive_url"
-                  readOnly
-                  {...lessonForm.register("archive_url")}
-                />
-                <p className="mt-1 text-xs text-text-secondary">
-                  الرابط يُملأ تلقائياً بعد الرفع.
-                </p>
-              </div>
+            <div>
+              <Label htmlFor="archive_url">Audio URL</Label>
+              <Input
+                id="archive_url"
+                readOnly
+                {...lessonForm.register("archive_url")}
+              />
+              <p className="mt-1 text-xs text-text-secondary">
+                Auto-filled after successful upload
+              </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <Label htmlFor="chapter_kitab">الكتاب</Label>
+                <Label htmlFor="chapter_kitab">Chapter (Arabic)</Label>
                 <Input
                   id="chapter_kitab"
+                  dir="rtl"
+                  lang="ar"
+                  placeholder="كتاب"
                   {...lessonForm.register("chapter_kitab", {
-                    required: "الكتاب مطلوب",
+                    required: "Chapter is required.",
                   })}
                 />
-                {inlineErrors.chapter_kitab ? (
-                  <FieldError>{inlineErrors.chapter_kitab}</FieldError>
-                ) : null}
+                {lessonForm.formState.errors.chapter_kitab && (
+                  <FieldError>
+                    {lessonForm.formState.errors.chapter_kitab.message}
+                  </FieldError>
+                )}
               </div>
               <div>
-                <Label htmlFor="chapter_bab">الباب</Label>
+                <Label htmlFor="chapter_bab">Section (Arabic)</Label>
                 <Input
                   id="chapter_bab"
+                  dir="rtl"
+                  lang="ar"
+                  placeholder="باب"
                   {...lessonForm.register("chapter_bab")}
                 />
               </div>
               <div>
-                <Label htmlFor="chapter_fasl">الفصل</Label>
+                <Label htmlFor="chapter_fasl">Subsection (Arabic)</Label>
                 <Input
                   id="chapter_fasl"
+                  dir="rtl"
+                  lang="ar"
+                  placeholder="فصل"
                   {...lessonForm.register("chapter_fasl")}
                 />
               </div>
@@ -443,45 +577,55 @@ export function AddLessonWizard() {
 
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <Label htmlFor="duration_seconds">المدة بالثواني</Label>
+                <Label htmlFor="duration_seconds">Duration (seconds)</Label>
                 <Input
                   id="duration_seconds"
                   type="number"
                   inputMode="numeric"
+                  placeholder="e.g., 3600"
                   {...lessonForm.register("duration_seconds", {
-                    required: "المدة مطلوبة",
+                    required: "Duration is required.",
+                    valueAsNumber: true,
                   })}
                 />
-                {inlineErrors.duration_seconds ? (
-                  <FieldError>{inlineErrors.duration_seconds}</FieldError>
-                ) : null}
+                {lessonForm.formState.errors.duration_seconds && (
+                  <FieldError>
+                    {lessonForm.formState.errors.duration_seconds.message}
+                  </FieldError>
+                )}
               </div>
               <div>
-                <Label htmlFor="upload_date">تاريخ الرفع</Label>
+                <Label htmlFor="upload_date">Upload Date</Label>
                 <Input
                   id="upload_date"
                   type="date"
                   {...lessonForm.register("upload_date", {
-                    required: "تاريخ الرفع مطلوب",
+                    required: "Upload date is required.",
                   })}
                 />
-                {inlineErrors.upload_date ? (
-                  <FieldError>{inlineErrors.upload_date}</FieldError>
-                ) : null}
+                {lessonForm.formState.errors.upload_date && (
+                  <FieldError>
+                    {lessonForm.formState.errors.upload_date.message}
+                  </FieldError>
+                )}
               </div>
               <div>
-                <Label htmlFor="telegram_post_id">معرف منشور Telegram</Label>
+                <Label htmlFor="telegram_post_id">Telegram Post ID</Label>
                 <Input
                   id="telegram_post_id"
                   type="number"
                   inputMode="numeric"
+                  placeholder="e.g., 123"
                   {...lessonForm.register("telegram_post_id", {
-                    required: "معرف المنشور مطلوب",
+                    required: "Telegram post ID is required.",
+                    valueAsNumber: true,
                   })}
                 />
-                {inlineErrors.telegram_post_id ? (
-                  <FieldError>{inlineErrors.telegram_post_id}</FieldError>
-                ) : null}
+                {lessonForm.formState.errors.telegram_post_id && (
+                  <FieldError>
+                    {lessonForm.formState.errors.telegram_post_id.message}
+                  </FieldError>
+                )}
               </div>
             </div>
 
@@ -491,23 +635,15 @@ export function AddLessonWizard() {
                 disabled={step === "submitting"}
                 loading={step === "submitting"}
               >
-                {step === "submitting" ? "جارٍ الحفظ" : "حفظ الدرس"}
+                {step === "submitting" ? "Saving..." : "Save Lesson"}
               </Button>
               <Button type="button" variant="secondary" disabled>
-                رجوع
+                Back
               </Button>
             </div>
           </form>
         ) : null}
       </div>
-
-      <Toast
-        open={toast?.open ?? false}
-        variant={toast?.variant ?? "success"}
-        onClose={() => setToast(null)}
-      >
-        {toast?.message ?? ""}
-      </Toast>
     </main>
   );
 }
