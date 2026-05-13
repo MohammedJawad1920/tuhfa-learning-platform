@@ -2,7 +2,7 @@
 
 ## Setup
 
-1. Install Node.js 22 LTS.
+1. Install Node.js 22 LTS locally and set the Vercel project Node.js version to 22.x so it matches `.nvmrc` and `package.json`.
 2. Run `npm ci`.
 3. Copy the required environment variables into `.env.local`.
 4. Start the local mock API with `npm run mock`.

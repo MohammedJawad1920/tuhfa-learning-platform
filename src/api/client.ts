@@ -1,6 +1,6 @@
 import type { operations } from "../types/api";
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/v1";
+const BASE = "/api/v1";
 
 type FetchError = Error & {
   status: number;
