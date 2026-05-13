@@ -47,6 +47,16 @@ function normalizeText(value: string | undefined | null): string {
   return value?.trim() ?? "";
 }
 
+function buildCurlCommand(url: string, contentType: string, fileName: string) {
+  const isWindows =
+    typeof navigator !== "undefined" &&
+    navigator.platform.toLowerCase().includes("win");
+  const curlBinary = isWindows ? "curl.exe" : "curl";
+  const escapedFileName = fileName.replace(/"/g, '\\"');
+
+  return `${curlBinary} -X PUT "${url}" -H "Content-Type: ${contentType}" --data-binary @"${escapedFileName}"`;
+}
+
 export function AddLessonWizard() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -183,9 +193,7 @@ export function AddLessonWizard() {
       // Handle different response statuses
       if (xhrResult.status === 0) {
         // CORS block - show curl fallback
-        const curlCmd = `curl -X PUT "${presignedUrl}" \\
-  -H "Content-Type: ${contentType}" \\
-  --data-binary @"${file.name}"`;
+        const curlCmd = buildCurlCommand(presignedUrl, contentType, file.name);
         setCurlCommand(curlCmd);
         setShowCurlFallback(true);
         setArchiveUrl(archiveUrlToUse);
@@ -447,7 +455,9 @@ export function AddLessonWizard() {
             {showCurlFallback && (
               <div className="rounded-md border border-border bg-surface p-4">
                 <p className="mb-3 text-sm text-text-secondary">
-                  Browser upload blocked (CORS). Use this command instead:
+                  Browser upload blocked (CORS). Use this command from the
+                  folder that contains the audio file. On Windows, run it in
+                  PowerShell or Command Prompt:
                 </p>
                 <div className="mb-3 flex items-center gap-2">
                   <code className="flex-1 overflow-x-auto rounded bg-background px-3 py-2 text-xs font-mono">

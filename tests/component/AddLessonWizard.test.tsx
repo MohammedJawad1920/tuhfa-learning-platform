@@ -215,7 +215,7 @@ describe("AddLessonWizard", () => {
     });
 
     // Check curl command is shown
-    expect(screen.getByText(/curl -X PUT/)).toBeInTheDocument();
+    expect(screen.getByText(/curl(?:\.exe)? -X PUT/)).toBeInTheDocument();
 
     // Can copy curl command
     const copyButton = screen.getByRole("button", { name: "Copy" });
